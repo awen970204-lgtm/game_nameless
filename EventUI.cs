@@ -41,9 +41,10 @@ public class EventUI : MonoBehaviour
     [Header("Dialogue UI References")]
     public GameObject DialoguePanel;
     public Image portraitImage;
-    public TextMeshProUGUI speakerText;
-    public TextMeshProUGUI contentText;
-    public TextMeshProUGUI recordText;
+    public TMP_Text speakerText;
+    public TMP_Text contentText;
+    public TMP_Text recordText;
+    public TMP_Text skipText;
     private int currentIndex = 0;
     private DialogueData lastDialogueData;
     [Header("Battle References")]
@@ -277,6 +278,7 @@ public class EventUI : MonoBehaviour
             eventPanel.SetActive(false);
         }
         recordText.text = "";
+        skipText.text = data.introduction;
         panel.SetActive(true);
         DialoguePanel.SetActive(true);
         ShowLine();
