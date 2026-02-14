@@ -91,6 +91,7 @@ public class QuestManager : MonoBehaviour
         MainQuestShedules.Add(quest, 0);
 
         GameObject questGO = Instantiate(questPrefabs, questsTransform);
+        questGO.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(()=> SetCurrentQuest(quest));
         questGO.transform.GetChild(1).GetComponent<TMP_Text>().text = quest.questName;
         questGO.transform.GetChild(2).GetComponent<TMP_Text>().text = quest.steps[0].stepDescription;
         
