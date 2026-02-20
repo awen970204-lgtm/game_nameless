@@ -22,8 +22,12 @@ public class StoryModeManager : MonoBehaviour
     [Header("Team")]
     public GameObject characterPrefab;
     public Transform chracterContainer;
-    public List<Character> characters = new List<Character>();
-    public List<Card> cards = new List<Card>();
+
+    public Button teamButton;
+    public GameObject teamPanel;
+
+    [HideInInspector] public List<Character> characters = new List<Character>();
+    [HideInInspector] public List<Card> cards = new List<Card>();
 
     void Awake()
     {
@@ -33,6 +37,7 @@ public class StoryModeManager : MonoBehaviour
     void Start()
     {
         CheckLevel();
+        teamButton.onClick.AddListener(()=> OnClickTeamButton());
     }
 
     #region level
@@ -71,6 +76,11 @@ public class StoryModeManager : MonoBehaviour
         cards.AddRange(GameModeManager.Instance.cardDatas.Where(c => c.holderCharacter == character));
 
         PlayerPrefs.SetInt($"PlayerUnlockedCharacter{GameModeManager.Instance.characterDatas.IndexOf(character)}", 1);
+    }
+
+    private void OnClickTeamButton()
+    {
+        teamPanel.SetActive(!teamPanel.activeInHierarchy);
     }
 
     #endregion
