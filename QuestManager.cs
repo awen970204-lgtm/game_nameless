@@ -13,11 +13,14 @@ public class QuestManager : MonoBehaviour
     public static bool AutoAcceptQuest = false;
 
     [Header("UI")]
+    public Button openQuestButton;
+    public Button closeQuestButton;
     public TMP_Text questName;
     public TMP_Text questDescription;
 
     public GameObject questPrefabs;
     public Transform questsTransform;
+    public GameObject questsPanel;
 
     public Toggle AutoAcceptQuest_Toggle;
 
@@ -44,15 +47,33 @@ public class QuestManager : MonoBehaviour
     }
     void Start()
     {
+        openQuestButton.gameObject.SetActive(true);
+        closeQuestButton.gameObject.SetActive(false);
+
+        if (!PlayerPrefs.HasKey("AutoAcceptQuest"))
+        {
+            PlayerPrefs.SetInt("AutoAcceptQuest", 1);
+        }
+        bool auto = PlayerPrefs.GetInt("AutoAcceptQuest") == 1;
+        AutoAcceptQuest_Toggle.SetIsOnWithoutNotify(auto);
+        AutoAcceptQuest = auto;
+
         AutoAcceptQuest_Toggle.onValueChanged.AddListener(ChangeAutoAccept);
-        ChangeAutoAccept(PlayerPrefs.GetInt("AutoAcceptQuest") == 1);
     }
     private void ChangeAutoAccept(bool auto) // 設定自動接取
     {
-        AutoAcceptQuest_Toggle.isOn = auto;
+        AutoAcceptQuest_Toggle.SetIsOnWithoutNotify(auto);
         AutoAcceptQuest = auto;
 
         PlayerPrefs.SetInt("AutoAcceptQuest", auto ? 1 : 0);
+    }
+    private void OnClickQuestButton()
+    {
+        StoryModeManager.Instance.teamPanel.SetActive(false);
+        
+        openQuestButton.gameObject.SetActive(questsPanel.activeInHierarchy);
+        closeQuestButton.gameObject.SetActive(!questsPanel.activeInHierarchy);
+        questsPanel.SetActive(!questsPanel.activeInHierarchy);
     }
 
     public void SetStoryMode()

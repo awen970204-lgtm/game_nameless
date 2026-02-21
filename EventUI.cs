@@ -74,14 +74,18 @@ public class EventUI : MonoBehaviour
         SetPanel.SetActive(false);
         StoryUI.SetActive(true);
 
-
         panel.SetActive(false);
         eventPanel.SetActive(false);
         DialoguePanel.SetActive(false);
         choiceButtonPrefab.SetActive(false);
 
-        backgroundMusicVoiceSlider.onValueChanged.AddListener(ChangeBackgroundVoice);
+        if (!PlayerPrefs.HasKey("backgroundMusicVoice"))
+        {
+            PlayerPrefs.SetInt("backgroundMusicVoice", 10);
+        }
+        backgroundMusicVoice = PlayerPrefs.GetInt("backgroundMusicVoice");
         ChangeBackgroundVoice(backgroundMusicVoice);
+        backgroundMusicVoiceSlider.onValueChanged.AddListener(ChangeBackgroundVoice);
     }
 
     // 介面互動
@@ -406,6 +410,7 @@ public class EventUI : MonoBehaviour
     private void ChangeBackgroundVoice(float value)
     {
         backgroundMusicVoice = Mathf.FloorToInt(value);
+        PlayerPrefs.SetInt("backgroundMusicVoice", backgroundMusicVoice);
         float volume = backgroundMusicVoice / backgroundMusicVoiceSlider.maxValue;
         backgroundMusicSource.volume = volume;
         backgroundMusicVoiceText.text = $"{backgroundMusicVoice}";

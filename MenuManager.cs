@@ -38,7 +38,7 @@ public class MenuManager : MonoBehaviour
 
     [Header("Story Select")]
     public static Character pendingInitialCharacter;
-    public static int currentCharacter = 0;
+    public static int currentCharacterNumber = 0;
     public Image characterImage;
     public TMP_Text characterName;
     public GameObject skillButtonPref;
@@ -60,11 +60,17 @@ public class MenuManager : MonoBehaviour
     void Start()
     {
         CheckGameMode();
+        PlayerPrefs.SetInt($"PlayerUnlockedCharacter0", 1);
         if (!gameObject.activeInHierarchy)
             return;
         
+        SetDeck();
+        CreateCharacterButtons();
+        enemyLevelText.text = $"Enemy_Level:{enemyLevel}";
+        
         StartFreeModeButton.onClick.AddListener(()=> StartFreeMode());
         StartStoryModeButton.onClick.AddListener(()=> StartStoryMode());
+        AISetToggle.SetIsOnWithoutNotify(useEnemyAI);
         AISetToggle.onValueChanged.AddListener(OnEnemyToggleChange);
         enemyLevelSlider?.onValueChanged.AddListener(ChangeEnemyLevel);
         enemyLevelSlider?.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(() => PlusEnemyLevel(1));
@@ -73,13 +79,7 @@ public class MenuManager : MonoBehaviour
         playerLevelSlider?.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(() => PlusPlayerLevel(1));
         playerLevelSlider?.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(() => PlusPlayerLevel(-1));
 
-        SetDeck();
-        CreateCharacterButtons();
-
         StartCoroutine(SetInitialCharacter(0));
-        AISetToggle.isOn = useEnemyAI;
-
-        enemyLevelText.text = $"Enemy_Level:{enemyLevel}";
     }
     public void CheckGameMode()
     {
@@ -207,7 +207,7 @@ public class MenuManager : MonoBehaviour
             pendingInitialCharacter = GameModeManager.Instance.characterDatas[number];
         else yield break;
 
-        currentCharacter = number;
+        currentCharacterNumber = number;
 
         characterImage.sprite = pendingInitialCharacter.characterPicture;
         characterName.text = pendingInitialCharacter.characterName;
@@ -244,8 +244,7 @@ public class MenuManager : MonoBehaviour
         else
             skillIntro.text = "沒有技能";
 
-        if (PlayerPrefs.
-            GetInt($"PlayerUnlockedCharacter{GameModeManager.Instance.characterDatas.IndexOf(pendingInitialCharacter)}") == 1)
+        if (PlayerPrefs.GetInt($"PlayerUnlockedCharacter{number}") == 1)
         {
             getCharacterButton.gameObject.SetActive(false);
             WarningHoldText.gameObject.SetActive(false);
@@ -267,25 +266,25 @@ public class MenuManager : MonoBehaviour
         if (index < 0 || index >= GameModeManager.Instance.characterDatas.Count)
             return;
 
-        currentCharacter = index;
+        currentCharacterNumber = index;
         StopAllCoroutines();
         StartCoroutine(SetInitialCharacter(index));
     }
     public void SetNextCharacter() // 選擇下一名
     {
-        currentCharacter ++;
-        if (currentCharacter >= GameModeManager.Instance.characterDatas.Count)
-            currentCharacter = 0;
+        currentCharacterNumber ++;
+        if (currentCharacterNumber >= GameModeManager.Instance.characterDatas.Count)
+            currentCharacterNumber = 0;
 
-        SelectCharacter(currentCharacter);
+        SelectCharacter(currentCharacterNumber);
     }
     public void SetPreviousCharacter() // 選擇上一名
     {
-        currentCharacter --;
-        if (currentCharacter < 0)
-            currentCharacter = GameModeManager.Instance.characterDatas.Count - 1;
+        currentCharacterNumber --;
+        if (currentCharacterNumber < 0)
+            currentCharacterNumber = GameModeManager.Instance.characterDatas.Count - 1;
 
-        SelectCharacter(currentCharacter);
+        SelectCharacter(currentCharacterNumber);
     }
     private void ShowSkill(Skill skill)
     {

@@ -80,6 +80,7 @@ public class StoryModeManager : MonoBehaviour
 
     private void OnClickTeamButton()
     {
+        QuestManager.Instance.questsPanel.SetActive(false);
         teamPanel.SetActive(!teamPanel.activeInHierarchy);
     }
 
