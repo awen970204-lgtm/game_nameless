@@ -71,13 +71,7 @@ public class EventUI : MonoBehaviour
         SaveButton.onClick.AddListener(()=> StartCoroutine(SaveStoryMode()));
         triggerEventButton.GetComponent<Button>().onClick.AddListener(()=> TriggerPendingEvent());
 
-        SetPanel.SetActive(false);
         StoryUI.SetActive(true);
-
-        panel.SetActive(false);
-        eventPanel.SetActive(false);
-        DialoguePanel.SetActive(false);
-        choiceButtonPrefab.SetActive(false);
 
         if (!PlayerPrefs.HasKey("backgroundMusicVoice"))
         {
@@ -316,8 +310,8 @@ public class EventUI : MonoBehaviour
 
         panel.SetActive(false);
         DialoguePanel.SetActive(false);
-        if (lastDialogueData.recordDialogue && !QuestManager.OverDialogues.Contains(lastDialogueData))
-            QuestManager.OverDialogues.Add(lastDialogueData);
+        if (lastDialogueData.recordDialogue)
+            QuestManager.Instance.OnOverDialogue(lastDialogueData);
         
         if (InEvent)
         {

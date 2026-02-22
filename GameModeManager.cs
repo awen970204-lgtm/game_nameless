@@ -79,6 +79,8 @@ public class GameModeManager : MonoBehaviour
     {
         yield return (LoadScene(0));
         yield return null;
+        yield return null;
+        
         GameCharacters?.SetActive(true);
         GameEventUI?.SetActive(true);
         EventUI.Instance?.StoryUI.SetActive(true);
@@ -92,10 +94,6 @@ public class GameModeManager : MonoBehaviour
         if (pendingInitialCharacter != null)
         {
             StoryModeManager.Instance?.GetNewMenber(pendingInitialCharacter);
-            if (pendingInitialCharacter != characterDatas[0])
-            {
-                StoryModeManager.Instance?.GetNewMenber(characterDatas[0]);
-            }
         }
 
         GameCharacterManager.Instance.SetActing(GameCharacterManager.Instance.actingCharacter);

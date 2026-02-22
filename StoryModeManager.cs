@@ -25,6 +25,9 @@ public class StoryModeManager : MonoBehaviour
 
     public Button teamButton;
     public GameObject teamPanel;
+    [Header("Activity")]
+    public GameObject activityPrefab;
+    public Transform activityContainer;
 
     [HideInInspector] public List<Character> characters = new List<Character>();
     [HideInInspector] public List<Card> cards = new List<Card>();
@@ -65,6 +68,7 @@ public class StoryModeManager : MonoBehaviour
     public void GetNewMenber(Character character)
     {
         if (characters.Contains(character)) return;
+        Debug.Log($"getGameCharacter:{character.characterName}");
 
         characters.Add(character);
 
@@ -76,12 +80,33 @@ public class StoryModeManager : MonoBehaviour
         cards.AddRange(GameModeManager.Instance.cardDatas.Where(c => c.holderCharacter == character));
 
         PlayerPrefs.SetInt($"PlayerUnlockedCharacter{GameModeManager.Instance.characterDatas.IndexOf(character)}", 1);
+
+        StartCoroutine(ShowActivity(character.characterAvatar, "角色加入隊伍", $"{character.characterName}"));
     }
 
     private void OnClickTeamButton()
     {
         QuestManager.Instance.questsPanel.SetActive(false);
+        QuestManager.Instance.openQuestButton.gameObject.SetActive(true);
+        QuestManager.Instance.closeQuestButton.gameObject.SetActive(false);
+
         teamPanel.SetActive(!teamPanel.activeInHierarchy);
+    }
+
+    #endregion
+
+    #region Activity
+
+    public IEnumerator ShowActivity(Sprite sprite, string main, string detail)
+    {
+        GameObject activity = Instantiate(activityPrefab, activityContainer);
+        activity.transform.GetChild(0).GetChild(0).GetComponent<Image>().sprite = sprite;
+        activity.transform.GetChild(0).GetChild(1).GetComponent<TMP_Text>().text = main;
+        activity.transform.GetChild(0).GetChild(2).GetComponent<TMP_Text>().text = detail;
+        activity.SetActive(true);
+
+        yield return new WaitForSeconds(1.5f);
+        Destroy(activity);
     }
 
     #endregion

@@ -4,6 +4,7 @@ using UnityEngine;
 public class QuestData : ScriptableObject
 {
     public string questName;
+    public Sprite questIcon;
     public QuestStep[] steps;
 }
 [System.Serializable]

@@ -59,6 +59,8 @@ public class QuestManager : MonoBehaviour
         AutoAcceptQuest = auto;
 
         AutoAcceptQuest_Toggle.onValueChanged.AddListener(ChangeAutoAccept);
+        openQuestButton.onClick.AddListener(()=> OnClickQuestButton());
+        closeQuestButton.onClick.AddListener(()=> OnClickQuestButton());
     }
     private void ChangeAutoAccept(bool auto) // 設定自動接取
     {
@@ -75,6 +77,8 @@ public class QuestManager : MonoBehaviour
         closeQuestButton.gameObject.SetActive(!questsPanel.activeInHierarchy);
         questsPanel.SetActive(!questsPanel.activeInHierarchy);
     }
+
+    #region Set Story Mode
 
     public void SetStoryMode()
     {
@@ -103,6 +107,10 @@ public class QuestManager : MonoBehaviour
             Destroy(child.gameObject);
     }
 
+    #endregion
+
+    #region Quest
+
     public void GetQuest(QuestData quest) // 取得任務
     {
         if (quest == null) return;
@@ -115,7 +123,9 @@ public class QuestManager : MonoBehaviour
         questGO.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(()=> SetCurrentQuest(quest));
         questGO.transform.GetChild(1).GetComponent<TMP_Text>().text = quest.questName;
         questGO.transform.GetChild(2).GetComponent<TMP_Text>().text = quest.steps[0].stepDescription;
+        questGO.SetActive(true);
         
+        StartCoroutine(StoryModeManager.Instance.ShowActivity(quest.questIcon, "獲得任務", $"{quest.questName}"));
     }
 
     private void SetCurrentQuest(QuestData quest) // 設定任務
@@ -152,6 +162,19 @@ public class QuestManager : MonoBehaviour
         if (OverEvents.Contains(eventData)) return;
 
         OverEvents.Add(eventData);
+
+        CheckQuestStep();
+    }
+    public void OnOverDialogue(DialogueData dialogueData)
+    {
+        if (OverDialogues.Contains(dialogueData)) return;
+
+        OverDialogues.Add(dialogueData);
+
+        CheckQuestStep();
+    }
+    private void CheckQuestStep()
+    {
         foreach(var quest in MainQuests)
         {
             if (questStepOver(quest))
@@ -172,7 +195,7 @@ public class QuestManager : MonoBehaviour
                             GameModeManager.Instance?.StartStoryBattle(step.battleData);
                         break;
                     case EventEffect.ClosureEvent:
-                        EventUI.Instance.ClosePanel();
+                        EventUI.Instance?.ClosePanel();
                         break;
                     case EventEffect.GetMenber:
                         if (step.characterData != null)
@@ -236,4 +259,6 @@ public class QuestManager : MonoBehaviour
             SetCurrentQuest(MainQuests[0]);
         }
     }
+
+    #endregion
 }
