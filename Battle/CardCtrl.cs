@@ -153,10 +153,10 @@ public class CardCtrl : MonoBehaviour,
 
         if (isSnapping && currentSlot != null)
         {
-            rectTransform.position = Vector2.Lerp(
-                rectTransform.position,
-                currentSlot.snapPoint.position,
-                Time.deltaTime * snapSpeed);
+            // rectTransform.position = Vector2.Lerp(
+            //     rectTransform.position,
+            //     currentSlot.snapPoint.position,
+            //     Time.deltaTime * snapSpeed);
             return;
         }
 
