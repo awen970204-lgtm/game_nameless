@@ -39,7 +39,7 @@ public class CardCtrl : MonoBehaviour,
     private bool isTriggered;
 
     [Header("UI Snap")]
-    [SerializeField] private float snapSpeed = 18f;
+    // [SerializeField] private float snapSpeed = 18f;
     private CharacterCardSlotUI currentSlot;
     private bool isSnapping;
 
@@ -151,14 +151,14 @@ public class CardCtrl : MonoBehaviour,
     {
         if (!CanStartDrag()) return;
 
-        if (isSnapping && currentSlot != null)
-        {
-            // rectTransform.position = Vector2.Lerp(
-            //     rectTransform.position,
-            //     currentSlot.snapPoint.position,
-            //     Time.deltaTime * snapSpeed);
-            return;
-        }
+        // if (isSnapping && currentSlot != null)
+        // {
+        //     rectTransform.position = Vector2.Lerp(
+        //         rectTransform.position,
+        //         currentSlot.snapPoint.position,
+        //         Time.deltaTime * 1f);
+        //     return;
+        // }
 
         Vector2 mousePos = Mouse.current.position.ReadValue();
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
@@ -201,13 +201,14 @@ public class CardCtrl : MonoBehaviour,
     {
         currentSlot = slot;
         isSnapping = true;
-        rectTransform.SetParent(slot.character.transform, true);
+        // rectTransform.SetParent(slot.character.transform, true);
         snapDisplay.SetActive(true);
     }
 
     public void ExitSnap(CharacterCardSlotUI slot)
     {
         if (currentSlot != slot) return;
+        isSnapping = false;
         rectTransform.SetParent(mainCanvas.transform, true);
         snapDisplay.SetActive(false);
         
@@ -248,8 +249,34 @@ public class CardCtrl : MonoBehaviour,
         target.usingCard = this;
 
         handLayout.RemovePlaceholder();
-        rectTransform.SetParent(target.character_Picture.GetComponentInParent<Transform>().transform, true);
+        StartCoroutine(SnapToCharacter(target));
         UseCard();
+    }
+    private IEnumerator SnapToCharacter(CharacterHealth target)
+    {
+        Vector2 start = this.transform.position;
+        Vector2 end = target.character_Picture.GetComponentInParent<Transform>().transform.position;
+        int index = target.character_Picture.GetComponentInParent<Transform>().transform.GetSiblingIndex();
+        float t = 0f;
+
+        IsMoving = true;
+        while (t < 0.25f)
+        {
+            if (target == null)
+            {
+                IsMoving = false;
+                yield break;
+            }
+
+            this.transform.position = Vector3.Lerp(start, end, t / 0.25f);
+            t += Time.deltaTime;
+            yield return null;
+        }
+        IsMoving = false;
+
+        this.transform.position = target.character_Picture.GetComponentInParent<Transform>().transform.position;
+        this.transform.SetSiblingIndex(index);
+        rectTransform.SetParent(target.character_Picture.GetComponentInParent<Transform>().transform, true);
     }
 
     private void UseCard()

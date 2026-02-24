@@ -51,7 +51,7 @@ public class EventUI : MonoBehaviour
     [HideInInspector] public EventBattleData lastEventBattleData;
 
     [Header("Typing Effect")]
-    public float typingSpeed = 0.05f;
+    [SerializeField] private float typingSpeed = 0.05f;
     private Coroutine typingCoroutine;
     private string fullText = "";
     private bool typing = false;

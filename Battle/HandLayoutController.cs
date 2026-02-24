@@ -13,15 +13,15 @@ public class HandLayoutController : MonoBehaviour
     private int placeholderIndex = -1;
 
     private Vector2 dragStartMousePos;
-    private bool isVerticalDrag;
+    // private bool isVerticalDrag;
 
     [Header("Drag Detect")]
-    public float verticalDragThreshold = 30f;
+    // [SerializeField] private float verticalDragThreshold = 30f;
 
     [Header("Scroll")]
     public ScrollRect scrollRect;
-    public float scrollEdgeThreshold = 80f;
-    public float scrollSpeed = 2000f;
+    [SerializeField] private float scrollEdgeThreshold = 80f;
+    [SerializeField] private float scrollSpeed = 2000f;
 
     void Awake()
     {
@@ -52,7 +52,7 @@ public class HandLayoutController : MonoBehaviour
         placeholderRect.SetSiblingIndex(placeholderIndex);
 
         dragStartMousePos = Mouse.current.position.ReadValue();
-        isVerticalDrag = false;
+        // isVerticalDrag = false;
     }
 
     #endregion
@@ -66,15 +66,15 @@ public class HandLayoutController : MonoBehaviour
         Vector2 currentMouse = Mouse.current.position.ReadValue();
         Vector2 delta = currentMouse - dragStartMousePos;
 
-        if (!isVerticalDrag &&
-            Mathf.Abs(delta.y) > verticalDragThreshold &&
-            Mathf.Abs(delta.y) > Mathf.Abs(delta.x))
-        {
-            isVerticalDrag = true;
-        }
+        // if (!isVerticalDrag &&
+        //     Mathf.Abs(delta.y) > verticalDragThreshold &&
+        //     Mathf.Abs(delta.y) > Mathf.Abs(delta.x))
+        // {
+        //     isVerticalDrag = true;
+        // }
 
-        if (isVerticalDrag)
-            return;
+        // if (isVerticalDrag)
+        //     return;
 
         UpdatePlaceholderPosition(draggedCard);
         TryAutoScroll();

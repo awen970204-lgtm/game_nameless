@@ -11,7 +11,7 @@ public class GamecharacterControl : MonoBehaviour
 
     private Vector2 moveInput; // 儲存輸入向量
 
-    public float moveSpeed = 5f;
+    [SerializeField] private float moveSpeed = 5f;
 
     void Awake()
     {

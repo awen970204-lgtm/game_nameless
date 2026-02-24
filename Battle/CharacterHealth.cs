@@ -35,9 +35,9 @@ public class CharacterHealth : MonoBehaviour
     public TMP_Text DefenseText;
     public Transform stateArea;
     public Transform TipsArea;
-    [Header("Long Press Settings")]
-    public float longPressTime = 0.8f;
 
+    [Header("Long Press Settings")]
+    [SerializeField] private float longPressTime = 0.8f;
     private bool isPressing;
     private float pressTimer;
     private bool longPressTriggered;

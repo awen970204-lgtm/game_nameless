@@ -3,8 +3,8 @@ using TMPro;
 
 public class FloatingText : MonoBehaviour
 {
-    public float floatSpeed = 20f;
-    public float duration = 1f;
+    [SerializeField] private float floatSpeed = 20f;
+    [SerializeField] private float duration = 1f;
     private TMP_Text tmp;
     private Color originalColor;
     private float timer;

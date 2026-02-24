@@ -26,7 +26,7 @@ public class GameModeManager : MonoBehaviour
 
     [Header("Fade")]
     public CanvasGroup canvasGroup;
-    public float fadeDuration = 1f;
+    [SerializeField] private float fadeDuration = 1f;
     [Header("Data")]
     public List<Card> cardDatas = new List<Card>();
     public List<Character> characterDatas = new List<Character>();
