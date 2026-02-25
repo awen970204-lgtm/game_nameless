@@ -5,6 +5,7 @@ using System.Collections;
 using UnityEngine.EventSystems;
 using TMPro;
 using UnityEditor.SceneManagement;
+using Unity.Mathematics;
 
 public enum TeamID { Team1, Team2, Enemy }
 public enum ActionType
@@ -30,7 +31,20 @@ public class CharacterHealth : MonoBehaviour
     [Header("UI")]
     public Image highlightRenderer;
     public Image character_Picture;
+
     public TMP_Text healthText;
+    public Image healthImage;
+    public Image whiteBufferImage;   // 扣血延遲（白）
+    public Image greenBufferImage;   // 回血預增（綠）
+    private float targetFill = 1f;
+    private bool whiteMoving = false;
+    private bool greenMoving = false;
+
+    [SerializeField] private float mainSpeed = 8f;
+    [SerializeField] private float bufferSpeed = 3f;
+    [SerializeField] float whiteDelay = 0.2f;
+    private float whiteDelayTimer;
+
     public TMP_Text AttackPowerText;
     public TMP_Text DefenseText;
     public Transform stateArea;
@@ -125,14 +139,67 @@ public class CharacterHealth : MonoBehaviour
     
     void Update()
     {
-        if (!isPressing || longPressTriggered) return;
-
-        pressTimer += Time.unscaledDeltaTime;
-
-        if (pressTimer >= longPressTime)
+        if (isPressing && !longPressTriggered)
         {
-            longPressTriggered = true;
-            Open_SkillBar.Invoke(this);
+            pressTimer += Time.unscaledDeltaTime;
+
+            if (pressTimer >= longPressTime)
+            {
+                longPressTriggered = true;
+                Open_SkillBar.Invoke(this);
+            }
+        }
+
+        UpdateHPBars();
+    }
+    private void UpdateHPBars()
+    {
+        if (healthImage == null) return;
+
+        // 主血條
+        healthImage.fillAmount = Mathf.Lerp(
+            healthImage.fillAmount,
+            targetFill,
+            Time.deltaTime * mainSpeed
+        );
+
+        // 扣血白條（延遲追）
+        if (whiteBufferImage != null && whiteMoving)
+        {
+            if (whiteBufferImage.fillAmount > healthImage.fillAmount)
+            {
+                whiteDelayTimer += Time.deltaTime;
+
+                if (whiteDelayTimer >= whiteDelay)
+                {
+                    whiteBufferImage.fillAmount = Mathf.Lerp(
+                        whiteBufferImage.fillAmount,
+                        healthImage.fillAmount,
+                        Time.deltaTime * bufferSpeed
+                    );
+                }
+            }
+            else
+            {
+                // 主條追上時立即貼齊
+                whiteBufferImage.fillAmount = healthImage.fillAmount;
+                whiteDelayTimer = 0f;
+                whiteMoving = false;
+            }
+        }
+
+        // 回血綠條（被主條追）
+        if (greenBufferImage != null && greenMoving)
+        {
+            if (greenBufferImage.fillAmount > healthImage.fillAmount)
+            {
+                // 等主條追上
+            }
+            else
+            {
+                greenBufferImage.fillAmount = healthImage.fillAmount;
+                greenMoving = false;
+            }
         }
     }
 
@@ -375,11 +442,11 @@ public class CharacterHealth : MonoBehaviour
         switch (special)
         {
             case SpecialEffects.OnDamage_Normal:
-                GameObject OD_N = Instantiate(CharacterSelectionManager.Instance.OnDamage, transform);
+                GameObject OD_N = Instantiate(CharacterSelectionManager.Instance.OnDamage, character_Picture.transform);
                 OD_N.SetActive(true);
                 break;
             case SpecialEffects.OnHeal_Normal:
-                GameObject OH_N = Instantiate(CharacterSelectionManager.Instance.OnHeal, transform);
+                GameObject OH_N = Instantiate(CharacterSelectionManager.Instance.OnHeal, character_Picture.transform);
                 OH_N.SetActive(true);
                 break;
 
@@ -389,9 +456,38 @@ public class CharacterHealth : MonoBehaviour
     private void UpdateHealthUI()// 更新血量
     {
         if (healthText != null)
-            healthText.text = $"<color=red>{currentHealth}</color>/{currentMaxHP}";
+            healthText.text = $"{currentHealth}/{currentMaxHP}";
+
+        float newFill = Mathf.Clamp01((float)currentHealth / currentMaxHP);
+
+        if (newFill < healthImage.fillAmount)
+        {
+            if (whiteBufferImage != null && greenBufferImage != null)
+            {
+                whiteBufferImage.fillAmount = healthImage.fillAmount;
+                greenBufferImage.fillAmount = newFill;
+                whiteMoving = true;
+            }
+            Debug.Log("血量降低");
+            
+            whiteDelayTimer = 0;
+            targetFill = newFill;
+        }
+        else if (newFill > healthImage.fillAmount)
+        {
+            if (whiteBufferImage != null && greenBufferImage != null)
+            {
+                whiteBufferImage.fillAmount = healthImage.fillAmount;
+                greenBufferImage.fillAmount = newFill;
+                greenMoving = true;
+            }
+
+            targetFill = newFill;
+        }
     }
     #endregion
+
+    #region Click
 
     public void SkillClick()
     {
@@ -417,4 +513,6 @@ public class CharacterHealth : MonoBehaviour
     {
         Open_SkillBar?.Invoke(this);
     }
+
+    #endregion
 }

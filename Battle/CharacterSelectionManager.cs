@@ -149,6 +149,8 @@ public class CharacterSelectionManager : MonoBehaviour
 
         StartChose();
     }
+
+    #region Create Character
     // 當選擇角色按鈕被點擊時，生成角色
     public void SelectCharacter(Character characterData)
     {
@@ -187,8 +189,7 @@ public class CharacterSelectionManager : MonoBehaviour
         ch_H.level = currentSelectingPlayer.playerLevel;
 
         currentSelectingPlayer.playerCharacters.Add(ch_H);
-        currentSelectingPlayer.PlayerMenbers.text = 
-            $"{currentSelectingPlayer.playerCharacters.Count}/{currentSelectingPlayer.MaxMenber}";
+        StartCoroutine(ShowTeamMenbers(currentSelectingPlayer));
         
         // 生成技能按鈕
         foreach (var skill in characterData.skills)
@@ -212,6 +213,14 @@ public class CharacterSelectionManager : MonoBehaviour
             stratButton.SetActive(true);
         }
     }
+    public IEnumerator ShowTeamMenbers(Player player)
+    {
+        player.PlayerMenbers.text = $"{player.playerCharacters.Count}/{player.MaxMenber}";
+        player.PlayerMenbers.gameObject.SetActive(true);
+        yield return new WaitForSeconds(1.5f);
+        player.PlayerMenbers.gameObject.SetActive(false);
+    }
+
     public void SetCharacterLevel(CharacterHealth character, int originalLevel) // 設定角色等級
     {
         int level = Mathf.Max(1, originalLevel);
@@ -288,6 +297,7 @@ public class CharacterSelectionManager : MonoBehaviour
         }
     }
 
+    #endregion
     // 確認棄牌按鈕按下
     public void ConfirmFold()
     {

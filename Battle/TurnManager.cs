@@ -112,8 +112,7 @@ public class TurnManager : MonoBehaviour
         if (IsBattleOver) return;
 
         character.ownerPlayer.playerCharacters.Remove(character);
-        character.ownerPlayer.PlayerMenbers.text = 
-            $"{character.ownerPlayer.playerCharacters.Count}/{character.ownerPlayer.MaxMenber}";
+        StartCoroutine(CharacterSelectionManager.Instance.ShowTeamMenbers(character.ownerPlayer));
         turnOrder.Remove(character);
 
         Destroy(character.gameObject);

@@ -405,7 +405,7 @@ public class EventUI : MonoBehaviour
     {
         backgroundMusicVoice = Mathf.FloorToInt(value);
         PlayerPrefs.SetInt("backgroundMusicVoice", backgroundMusicVoice);
-        float volume = backgroundMusicVoice / backgroundMusicVoiceSlider.maxValue;
+        float volume = Mathf.Clamp01(backgroundMusicVoice / backgroundMusicVoiceSlider.maxValue);
         backgroundMusicSource.volume = volume;
         backgroundMusicVoiceText.text = $"{backgroundMusicVoice}";
     }

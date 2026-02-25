@@ -1,12 +1,13 @@
 using UnityEngine;
 
-public class AutoDestory : StateMachineBehaviour
+public class AutoDestroyByAnim : MonoBehaviour
 {
-    override public void OnStateExit(
-        Animator animator,
-        AnimatorStateInfo stateInfo,
-        int layerIndex)
+    private void Start()
     {
-        Destroy(animator.gameObject);
+        Animator anim = GetComponent<Animator>();
+        if (anim == null) return;
+
+        float length = anim.GetCurrentAnimatorStateInfo(0).length;
+        Destroy(gameObject, length);
     }
 }
