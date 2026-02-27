@@ -216,11 +216,13 @@ public class ToolController : MonoBehaviour
 
     private void HandleEffectGot(ContinuedEffect effect, CharacterHealth act)
     {
+        if (!effect.logMessage) return;
         string acting = $"<color=#0080FF>{act.character_data.characterName}(P{act.ownerPlayer.Player_nunber})</color>";
         WriteReport($" {acting} 獲得了持續效果:\n <color=#FFDD55>{effect.EffectName}</color>");
     }
     private void HandleEffectLosed(ContinuedEffect effect, CharacterHealth act)
     {
+        if (!effect.logMessage) return;
         string acting = $"<color=#0080FF>{act.character_data.characterName}(P{act.ownerPlayer.Player_nunber})</color>";
         WriteReport($" {acting} 失去了持續效果:\n <color=#FFDD55>{effect.EffectName}</color>");
     }

@@ -30,6 +30,7 @@ public class ContinuedEffect : ScriptableObject
     public bool Removable = true;
     public int MaxOverlay = 1;
     public bool endable = true;
+    public bool logMessage = true;
 
     public Trigger_Character endtrigger;
     public int Duration;

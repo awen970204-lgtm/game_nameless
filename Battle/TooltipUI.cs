@@ -18,7 +18,7 @@ public class TooltipUI : MonoBehaviour
     public TMP_Text TriggerTimesText;
     public TMP_Text EffectTooltipText;
     public TMP_Text EffectOverlayText;
-    [Header("ContinuedEffect")]
+    [Header("Character")]
     public GameObject CharacterTooltipPanel;
     public TMP_Text CharacterNameText;
     public TMP_Text CharacterValueText;
@@ -44,10 +44,13 @@ public class TooltipUI : MonoBehaviour
             // FollowMouseAndClamp(CardTooltipPanel);
         }
         else if (EffectTooltipPanel.activeSelf)
-            FollowMouseAndClamp(EffectTooltipPanel);
-
+        {
+            // FollowMouseAndClamp(EffectTooltipPanel);
+        }
         else if (CharacterTooltipPanel.activeSelf)
-            FollowMouseAndClamp(CharacterTooltipPanel);
+        {
+            // FollowMouseAndClamp(CharacterTooltipPanel);
+        }
     }
     private void FollowMouseAndClamp(GameObject panel)
     {

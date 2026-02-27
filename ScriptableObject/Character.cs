@@ -15,6 +15,7 @@ public class Character : ScriptableObject
     public CHARACTER_TYPE characterTYPE;   //類型 
     public string characterName;           //角色名
     public Sprite characterPicture;        //角色表現圖
+    public Sprite characterIllustration;
     public Sprite characterAvatar;         //角色頭貼
 
     [Header("Amount")]

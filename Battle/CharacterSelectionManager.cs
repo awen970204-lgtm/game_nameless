@@ -238,13 +238,13 @@ public class CharacterSelectionManager : MonoBehaviour
         if (ch.currentSkills.Contains(skill)) return;
         currentSelectingPlayer = ch.ownerPlayer;
         ch.currentSkills.Add(skill);
-        GameObject Sk_B = Instantiate(skillPrefab, currentSelectingPlayer.Player_skillTransform);
 
+        GameObject Sk_B = Instantiate(skillPrefab, currentSelectingPlayer.Player_skillTransform);
         Sk_B.GetComponent<SkillCtrl>().Skill_data = skill;
         Sk_B.GetComponent<SkillCtrl>().self = ch;
         Sk_B.GetComponentInChildren<TMP_Text>().text = $"{skill.skillName}";
-
         Sk_B.SetActive(true);
+
         Debug.Log($"{ch.character_data.characterName}獲得技能:{skill.skillName}");
     }
     public void RemoveSkill(Skill skill, CharacterHealth ch)// 移除技能
@@ -270,13 +270,13 @@ public class CharacterSelectionManager : MonoBehaviour
         if (ch.currentPassiveSkills.Contains(skill)) return;
         currentSelectingPlayer = ch.ownerPlayer;
         ch.currentPassiveSkills.Add(skill);
-        GameObject PS_B = Instantiate(passiveSkillPrefab, currentSelectingPlayer.Player_PassiveSkillTransform);
 
+        GameObject PS_B = Instantiate(passiveSkillPrefab, currentSelectingPlayer.Player_PassiveSkillTransform);
         PS_B.GetComponentInChildren<PassiveSkill_display>().Skill_data = skill;
         PS_B.GetComponentInChildren<PassiveSkill_display>().selfHealth = ch;
         PS_B.GetComponentInChildren<TMP_Text>().text = $"{skill.skillName}(0)";
-
         PS_B.SetActive(true);
+
         Debug.Log($"{ch.character_data.characterName}獲得技能:{skill.skillName}");
     }
     public void RemovePassiveSkill(PassiveSkill skill, CharacterHealth ch)// 移除被動
