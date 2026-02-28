@@ -17,15 +17,20 @@ public class Choices
 {
     public string choiceName;        // 選項名稱
     public string choiceDescription; // 選項介紹
-    public EventEffect eventEffect;
     public bool recordEvent = true;
+    public List<EventEffectEntry> eventEffectEntries;
+}
+[System.Serializable]
+public class EventEffectEntry
+{
+    public EventEffect eventEffect;
 
     public EventData eventData;
     public DialogueData dialogueData;
     public EventBattleData battleData;
-
-    public bool getQuest = false;
     public QuestData questData;
+    public Character characterData;
+
 }
 public enum EventEffect
 {
@@ -34,7 +39,7 @@ public enum EventEffect
     OpenNewDialogue,
     OpenNewBattle,
     ClosureEvent,
-    BegetEnd,
+    GetQuest,
     // 遊戲資源
     GetMenber,
 

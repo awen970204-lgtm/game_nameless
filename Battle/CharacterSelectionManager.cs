@@ -151,8 +151,8 @@ public class CharacterSelectionManager : MonoBehaviour
     }
 
     #region Create Character
-    // 當選擇角色按鈕被點擊時，生成角色
-    public void SelectCharacter(Character characterData)
+    
+    public void SelectCharacter(Character characterData)// 當選擇角色按鈕被點擊時，生成角色
     {
         if (currentSelectingPlayer == null)
         {
@@ -213,7 +213,7 @@ public class CharacterSelectionManager : MonoBehaviour
             stratButton.SetActive(true);
         }
     }
-    public IEnumerator ShowTeamMenbers(Player player)
+    public IEnumerator ShowTeamMenbers(Player player) // 顯示隊伍人數
     {
         player.PlayerMenbers.text = $"{player.playerCharacters.Count}/{player.MaxMenber}";
         player.PlayerMenbers.gameObject.SetActive(true);
@@ -239,11 +239,11 @@ public class CharacterSelectionManager : MonoBehaviour
         currentSelectingPlayer = ch.ownerPlayer;
         ch.currentSkills.Add(skill);
 
-        GameObject Sk_B = Instantiate(skillPrefab, currentSelectingPlayer.Player_skillTransform);
-        Sk_B.GetComponent<SkillCtrl>().Skill_data = skill;
-        Sk_B.GetComponent<SkillCtrl>().self = ch;
-        Sk_B.GetComponentInChildren<TMP_Text>().text = $"{skill.skillName}";
-        Sk_B.SetActive(true);
+        // GameObject Sk_B = Instantiate(skillPrefab, currentSelectingPlayer.Player_skillTransform);
+        // Sk_B.GetComponent<SkillCtrl>().Skill_data = skill;
+        // Sk_B.GetComponent<SkillCtrl>().self = ch;
+        // Sk_B.GetComponentInChildren<TMP_Text>().text = $"{skill.skillName}";
+        // Sk_B.SetActive(true);
 
         Debug.Log($"{ch.character_data.characterName}獲得技能:{skill.skillName}");
     }
@@ -252,17 +252,18 @@ public class CharacterSelectionManager : MonoBehaviour
         // 檢查持有
         if (!ch.currentSkills.Contains(skill)) return;
 
-        foreach (Transform child in ch.ownerPlayer.Player_skillTransform)
-        {
-            SkillCtrl SC = child.GetComponent<SkillCtrl>();
-            if (SC != null && SC.Skill_data == skill && SC.self == ch)
-            {
-                Destroy(child.gameObject); // 銷毀 UI
-                ch.currentSkills.Remove(skill);
-                Debug.Log($"{ch.character_data.characterName}失去技能:{skill.skillName}");
-                break;
-            }
-        }
+        ch.currentSkills.Remove(skill);
+        Debug.Log($"{ch.character_data.characterName}失去技能:{skill.skillName}");
+
+        // foreach (Transform child in ch.ownerPlayer.Player_skillTransform)
+        // {
+        //     SkillCtrl SC = child.GetComponent<SkillCtrl>();
+        //     if (SC != null && SC.Skill_data == skill && SC.self == ch)
+        //     {
+        //         Destroy(child.gameObject); // 銷毀 UI
+        //         break;
+        //     }
+        // }
     }
     public void SelectPassiveSkill(PassiveSkill skill, CharacterHealth ch)// 生成被動
     {
@@ -271,11 +272,11 @@ public class CharacterSelectionManager : MonoBehaviour
         currentSelectingPlayer = ch.ownerPlayer;
         ch.currentPassiveSkills.Add(skill);
 
-        GameObject PS_B = Instantiate(passiveSkillPrefab, currentSelectingPlayer.Player_PassiveSkillTransform);
-        PS_B.GetComponentInChildren<PassiveSkill_display>().Skill_data = skill;
-        PS_B.GetComponentInChildren<PassiveSkill_display>().selfHealth = ch;
-        PS_B.GetComponentInChildren<TMP_Text>().text = $"{skill.skillName}(0)";
-        PS_B.SetActive(true);
+        // GameObject PS_B = Instantiate(passiveSkillPrefab, currentSelectingPlayer.Player_PassiveSkillTransform);
+        // PS_B.GetComponentInChildren<PassiveSkill_display>().Skill_data = skill;
+        // PS_B.GetComponentInChildren<PassiveSkill_display>().selfHealth = ch;
+        // PS_B.GetComponentInChildren<TMP_Text>().text = $"{skill.skillName}(0)";
+        // PS_B.SetActive(true);
 
         Debug.Log($"{ch.character_data.characterName}獲得技能:{skill.skillName}");
     }
@@ -284,17 +285,18 @@ public class CharacterSelectionManager : MonoBehaviour
         // 檢查持有
         if (!ch.currentPassiveSkills.Contains(skill)) return;
 
-        foreach (Transform child in ch.ownerPlayer.Player_PassiveSkillTransform)
-        {
-            PassiveSkill_display PSd = child.GetComponent<PassiveSkill_display>();
-            if (PSd != null && PSd.Skill_data == skill && PSd.selfHealth == ch)
-            {
-                Destroy(child.gameObject); // 銷毀 UI
-                ch.currentPassiveSkills.Remove(skill);
-                Debug.Log($"{ch.character_data.characterName}失去技能:{skill.skillName}");
-                break;
-            }
-        }
+        ch.currentPassiveSkills.Remove(skill);
+        Debug.Log($"{ch.character_data.characterName}失去技能:{skill.skillName}");
+
+        // foreach (Transform child in ch.ownerPlayer.Player_PassiveSkillTransform)
+        // {
+        //     PassiveSkill_display PSd = child.GetComponent<PassiveSkill_display>();
+        //     if (PSd != null && PSd.Skill_data == skill && PSd.selfHealth == ch)
+        //     {
+        //         Destroy(child.gameObject); // 銷毀 UI
+        //         break;
+        //     }
+        // }
     }
 
     #endregion

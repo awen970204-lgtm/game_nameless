@@ -21,12 +21,7 @@ public class EventBattleData : ScriptableObject
 public class BattleOver
 {
     public BattleResult result;
-
-    public EventEffect Effect;
-    
-    public EventData ContinuedEventData;
-    public DialogueData ContinuedDialogueData;
-    public EventBattleData ContinuedBattleData;
+    public List<EventEffectEntry> eventEffectEntries;
 }
 public enum BattleResult
 {

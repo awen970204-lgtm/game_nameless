@@ -34,13 +34,6 @@ public class SkillCtrl : MonoBehaviour
         TurnManager.OnCancleChoose -= handleCancle;
     }
 
-    public void Init(Skill skill)// 初始化按鈕
-    {
-        Skill_data = skill;
-        if (skillName != null)
-            skillName.text = skill.skillName;
-    }
-
     private void handleSkillBegin(CharacterHealth characterHealth, Skill skill)
     {
         if (self == characterHealth && Skill_data == skill)

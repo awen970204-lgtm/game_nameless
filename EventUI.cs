@@ -172,32 +172,36 @@ public class EventUI : MonoBehaviour
             btn.transform.GetChild(0).GetComponent<TMP_Text>().text = choice.choiceName;
             btn.transform.GetChild(1).GetComponent<TMP_Text>().text = choice.choiceDescription;
 
-            switch(choice.eventEffect)
+            foreach(var entry in choice.eventEffectEntries)
             {
-                case EventEffect.OpenNewEvent:
-                    if (choice.eventData != null)
-                        btn.GetComponent<Button>().onClick.AddListener(() => ShowEvent(choice.eventData));
-                    break;
-                case EventEffect.OpenNewDialogue:
-                    if (choice.dialogueData != null)
-                        btn.GetComponent<Button>().onClick.AddListener(() => StartDialogue(choice.dialogueData));
-                    break;
-                case EventEffect.OpenNewBattle:
-                    if (choice.battleData != null)
-                        btn.GetComponent<Button>().onClick.
-                        AddListener(() => GameModeManager.Instance?.StartStoryBattle(choice.battleData));
-                    break;
-                case EventEffect.ClosureEvent:
-                    btn.GetComponent<Button>().onClick.AddListener(() => ClosePanel());
-                    break;
-            }
-            if (choice.recordEvent)
-            {
-                btn.GetComponent<Button>().onClick.AddListener(() => LogEvent(lastEventData));
-            }
-            if (choice.getQuest)
-            {
-                btn.GetComponent<Button>().onClick.AddListener(() => QuestManager.Instance.GetQuest(choice.questData));
+                switch(entry.eventEffect)
+                {
+                    case EventEffect.OpenNewEvent:
+                        if (entry.eventData != null)
+                            btn.GetComponent<Button>().onClick.AddListener(() => ShowEvent(entry.eventData));
+                        break;
+                    case EventEffect.OpenNewDialogue:
+                        if (entry.dialogueData != null)
+                            btn.GetComponent<Button>().onClick.AddListener(() => StartDialogue(entry.dialogueData));
+                        break;
+                    case EventEffect.OpenNewBattle:
+                        if (entry.battleData != null)
+                            btn.GetComponent<Button>().onClick.
+                            AddListener(() => GameModeManager.Instance?.StartStoryBattle(entry.battleData));
+                        break;
+                    case EventEffect.ClosureEvent:
+                        btn.GetComponent<Button>().onClick.AddListener(() => ClosePanel());
+                        break;
+                    case EventEffect.GetQuest:
+                        if (entry.questData != null)
+                            btn.GetComponent<Button>().onClick.AddListener(() => 
+                                QuestManager.Instance.GetQuest(entry.questData));
+                        break;
+                }
+                if (choice.recordEvent)
+                {
+                    btn.GetComponent<Button>().onClick.AddListener(() => LogEvent(lastEventData));
+                }
             }
 
             btn.SetActive(true);
@@ -318,29 +322,36 @@ public class EventUI : MonoBehaviour
             panel.SetActive(true);
             eventPanel.SetActive(true);
         }
-        switch(lastDialogueData.DialogueOver)
+        foreach(var entry in lastDialogueData.eventEffectEntries)
         {
-            case EventEffect.OpenNewEvent:
-                if (lastDialogueData.ContinuedEventData != null)
-                {
-                    ShowEvent(lastDialogueData.ContinuedEventData);
-                    return;
-                }
-                break;
-            case EventEffect.OpenNewDialogue:
-                if (lastDialogueData.ContinuedDialogueData != null)
-                {
-                    StartDialogue(lastDialogueData.ContinuedDialogueData);
-                    return;
-                }
-                break;
-            case EventEffect.OpenNewBattle:
-                if (lastDialogueData.ContinuedBattleData != null)
-                {
-                    GameModeManager.Instance?.StartStoryBattle(lastDialogueData.ContinuedBattleData);
-                    return;
-                }
-                break;
+            switch(entry.eventEffect)
+            {
+                case EventEffect.OpenNewEvent:
+                    if (entry.eventData != null)
+                    {
+                        ShowEvent(entry.eventData);
+                        return;
+                    }
+                    break;
+                case EventEffect.OpenNewDialogue:
+                    if (entry.dialogueData != null)
+                    {
+                        StartDialogue(entry.dialogueData);
+                        return;
+                    }
+                    break;
+                case EventEffect.OpenNewBattle:
+                    if (entry.battleData != null)
+                    {
+                        GameModeManager.Instance?.StartStoryBattle(entry.battleData);
+                        return;
+                    }
+                    break;
+                case EventEffect.GetQuest:
+                    if (entry.questData != null)
+                        QuestManager.Instance.GetQuest(entry.questData);
+                    break;
+            }
         }
         
         lastDialogueData = null;
@@ -378,19 +389,24 @@ public class EventUI : MonoBehaviour
                     if (over.result == BattleResult.Victory && !TurnManager.playerVictory) return;
                     else if (over.result == BattleResult.Defeat && TurnManager.playerVictory) return;
                     
-                    switch(over.Effect)
+                    foreach(var entry in over.eventEffectEntries)
+                    switch(entry.eventEffect)
                     {
                         case EventEffect.OpenNewEvent:
-                            if (over.ContinuedEventData != null)
-                                ShowEvent(over.ContinuedEventData);
+                            if (entry.eventData != null)
+                                ShowEvent(entry.eventData);
                             break;
                         case EventEffect.OpenNewDialogue:
-                            if (over.ContinuedDialogueData != null)
-                                StartDialogue(over.ContinuedDialogueData);
+                            if (entry.dialogueData != null)
+                                StartDialogue(entry.dialogueData);
                             break;
                         case EventEffect.OpenNewBattle:
-                            if (over.ContinuedBattleData != null)
-                                GameModeManager.Instance?.StartStoryBattle(over.ContinuedBattleData);
+                            if (entry.battleData != null)
+                                GameModeManager.Instance?.StartStoryBattle(entry.battleData);
+                            break;
+                        case EventEffect.GetQuest:
+                            if (entry.questData != null)
+                                QuestManager.Instance.GetQuest(entry.questData);
                             break;
                     }
                 }

@@ -17,8 +17,6 @@ public class DialogueData : ScriptableObject
     public string introduction;
     
     public bool recordDialogue = true;
-    public EventEffect DialogueOver;
-    public EventData ContinuedEventData;
-    public DialogueData ContinuedDialogueData;
-    public EventBattleData ContinuedBattleData;
+    public EventEffectEntry[] eventEffectEntries;
+
 }
