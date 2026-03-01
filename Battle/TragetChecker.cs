@@ -153,11 +153,11 @@ public static class LimitChecker
                 break;
 
             case Limit.holdContinueEffect:
-                if (ch.effectCtrl.activeEffects.Any(e => e.EffectName == need.continuedEffect.EffectName))
+                if (ch.effectCtrl.activeEffects.Any(e => e.source == need.continuedEffect))
                     return true;
                 break;
             case Limit.NotholdContinueEffect:
-                if (ch.effectCtrl.activeEffects.All(e => e.EffectName != need.continuedEffect.EffectName))
+                if (ch.effectCtrl.activeEffects.All(e => e.source != need.continuedEffect))
                     return true;
                 break;
             case Limit.ContinueEffect_StackTimes:

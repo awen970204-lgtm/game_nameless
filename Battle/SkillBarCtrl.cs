@@ -180,6 +180,7 @@ public class SkillBarCtrl : MonoBehaviour
             EGO.transform.GetChild(0).GetComponent<TMP_Text>().text = effect.EffectName;
             EGO.transform.GetChild(1).GetComponent<TMP_Text>().text = $"{character.effectCtrl.effectDurations[effect]}";
             EGO.transform.GetChild(2).GetComponent<TMP_Text>().text = effect.Introduse;
+            EGO.transform.GetChild(3).GetChild(0).GetComponent<TMP_Text>().text = $"*{effect.stack}";
             EGO.SetActive(true);
         }
 

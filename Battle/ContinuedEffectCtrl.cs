@@ -63,7 +63,7 @@ public class ContinuedEffectCtrl : MonoBehaviour
         ContinuedEffect existed = null;
         foreach (var e in activeEffects)
         {
-            bool sameName = e.name == effect.name;
+            bool sameName = e.source == effect;
             bool sameDuration = (!e.endable && !effect.endable) ||
                                 (e.endable && effect.endable && e.Duration == effect.Duration);
 
@@ -96,6 +96,7 @@ public class ContinuedEffectCtrl : MonoBehaviour
         // 若沒有相同效果 → 新增 instance + UI
         ContinuedEffect newInstance = Instantiate(effect);
         newInstance.stack = 1;
+        newInstance.source = effect;
 
         activeEffects.Add(newInstance);
         effectDurations[newInstance] = newInstance.Duration;

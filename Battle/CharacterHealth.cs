@@ -212,10 +212,15 @@ public class CharacterHealth : MonoBehaviour
             Debug.Log("選擇角色");
             SkillClick();
         }
-        else if (!TooltipUI.Instance.CharacterTooltipPanel.activeInHierarchy)
-            TooltipUI.Instance.ShowCharacterTooltip(this);
-        else 
-            TooltipUI.Instance.HideTooltip();
+        if (TooltipUI.Instance.characterInformatuon.activeInHierarchy &&
+            (TooltipUI.Instance.characterInformatuon.transform.GetChild(0).GetChild(1).GetComponent<TMP_Text>().text ==
+                this.character_data.characterName))
+        {
+            TooltipUI.Instance.characterInformatuon.SetActive(false);
+        }
+        else
+            TooltipUI.Instance.ShowCharacterInformation(this);
+
     }
     public void OnPointerEnter()
     {

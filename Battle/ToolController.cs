@@ -132,11 +132,11 @@ public class ToolController : MonoBehaviour
     }
     private void HandleTurnStart(Player acting)
     {
-        WriteReport($" <color=#0080FF>(P{acting.Player_nunber})</color>的回合開始");
+        WriteReport($"<color=#0080FF>(P{acting.Player_nunber})</color>的<color=#d420bf>回合開始</color>");
     }
     private void HandleTurnEnd(Player acting)
     {
-        WriteReport($" <color=#0080FF>(P{acting.Player_nunber})</color>的回合結束");
+        WriteReport($"<color=#0080FF>(P{acting.Player_nunber})</color>的<color=#d420bf>回合結束</color>");
     }
     private void HandleAttactEvent(CharacterHealth attacker, CharacterHealth injured)
     {

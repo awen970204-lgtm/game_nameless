@@ -83,10 +83,10 @@ public class CardCtrl : MonoBehaviour,
         if (cardTypePicture != null) cardTypePicture.sprite = card_data.cardTypePicture;
         if (card_name != null) card_name.text = card_data.cardName;
 
-        if (card_data.cardType == Card.CARD_TYPE.WAIT)
-        { 
-            WaitCardManager.Instance.RegisterWaitCard(this); 
-        } 
+        // if (card_data.cardType == Card.CARD_TYPE.WAIT)
+        // { 
+        //     WaitCardManager.Instance.RegisterWaitCard(this); 
+        // } 
         LockedDisplay.SetActive(false);
 
         DisplayChange();

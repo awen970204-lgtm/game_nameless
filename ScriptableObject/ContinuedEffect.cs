@@ -39,4 +39,5 @@ public class ContinuedEffect : ScriptableObject
     public List<ContinuedEffectEntry> continuedEffectEntrys;
 
     [System.NonSerialized] public int stack = 1;
+    [System.NonSerialized] public ContinuedEffect source;
 }

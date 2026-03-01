@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using TMPro;
 using UnityEngine.InputSystem;
@@ -11,6 +12,8 @@ public class TooltipUI : MonoBehaviour
     public GameObject CardTooltipPanel;
     public TMP_Text cardNameText;
     public TMP_Text cardTooltipText;
+    [HideInInspector] public bool IsDragging = false;
+
     [Header("ContinuedEffect")]
     public GameObject EffectTooltipPanel;
     public TMP_Text EffectNameText;
@@ -18,12 +21,15 @@ public class TooltipUI : MonoBehaviour
     public TMP_Text TriggerTimesText;
     public TMP_Text EffectTooltipText;
     public TMP_Text EffectOverlayText;
+
     [Header("Character")]
     public GameObject CharacterTooltipPanel;
     public TMP_Text CharacterNameText;
     public TMP_Text CharacterValueText;
 
-    [HideInInspector] public bool IsDragging = false;
+    public GameObject characterInformatuon;
+    public GameObject skillPrefab;
+    public GameObject passiveSkillPrefab;
 
     void Awake()
     {
@@ -212,5 +218,53 @@ public class TooltipUI : MonoBehaviour
         CardTooltipPanel.SetActive(false);
         EffectTooltipPanel.SetActive(false);
         CharacterTooltipPanel.SetActive(false);
+        // characterInformatuon.SetActive(false);
+    }
+
+    public void ShowCharacterInformation(CharacterHealth character)// 角色簡介
+    {
+        characterInformatuon.transform.GetChild(0).GetChild(1).GetComponent<TMP_Text>().text = 
+            character.character_data.characterName;
+        characterInformatuon.transform.GetChild(1).GetChild(0).GetComponent<Image>().sprite = 
+            character.character_data.characterPicture;
+        // HP
+        characterInformatuon.transform.GetChild(2).GetChild(0).GetChild(0).GetComponent<Image>().fillAmount = 
+            Mathf.Clamp01((float)character.currentHealth / character.currentMaxHP);
+        characterInformatuon.transform.GetChild(2).GetChild(0).GetChild(1).GetComponent<TMP_Text>().text = 
+            $"{character.currentHealth}/{character.currentMaxHP}";
+        // Amount
+        characterInformatuon.transform.GetChild(2).GetChild(1).GetChild(0).GetComponent<TMP_Text>().text = 
+            $"{character.currentAttackPower}";
+        characterInformatuon.transform.GetChild(2).GetChild(2).GetChild(0).GetComponent<TMP_Text>().text = 
+            $"{character.currentDefense}";
+        characterInformatuon.transform.GetChild(2).GetChild(3).GetChild(0).GetComponent<TMP_Text>().text = 
+            $"{character.currentDamageMultiplier * 100}%";
+        characterInformatuon.transform.GetChild(2).GetChild(4).GetChild(0).GetComponent<TMP_Text>().text = 
+            $"{character.currentDamageReduction}";
+        // skill
+        foreach(Transform ob in characterInformatuon.transform.GetChild(3).GetChild(0))
+            Destroy(ob.gameObject);
+        foreach(Transform ob in characterInformatuon.transform.GetChild(4).GetChild(0))
+            Destroy(ob.gameObject);
+        
+        foreach(var skill in character.currentSkills)
+        {
+            GameObject PS_B = Instantiate(skillPrefab, characterInformatuon.transform.GetChild(3).GetChild(0));
+            PS_B.GetComponentInChildren<SkillCtrl>().Skill_data = skill;
+            PS_B.GetComponentInChildren<SkillCtrl>().self = character;
+            // PS_B.GetComponentInChildren<TMP_Text>().text = 
+            //     $"{skill.skillName}({TurnManager.Instance.skillUseCounter[(character, skill)]})";
+            PS_B.SetActive(true);
+        }
+        foreach(var passiveSkill in character.currentPassiveSkills)
+        {
+            GameObject PS_B = Instantiate(passiveSkillPrefab, characterInformatuon.transform.GetChild(4).GetChild(0));
+            PS_B.GetComponentInChildren<PassiveSkill_display>().Skill_data = passiveSkill;
+            PS_B.GetComponentInChildren<PassiveSkill_display>().selfHealth = character;
+
+            PS_B.SetActive(true);
+        }
+
+        characterInformatuon.SetActive(true);
     }
 }

@@ -33,6 +33,11 @@ public class SkillCtrl : MonoBehaviour
         TurnManager.OnAnySkillEnd -= handleSkillEnd;
         TurnManager.OnCancleChoose -= handleCancle;
     }
+    void Start()
+    {
+        if (Skill_data != null)
+            skillName.text = Skill_data.skillName;
+    }
 
     private void handleSkillBegin(CharacterHealth characterHealth, Skill skill)
     {
