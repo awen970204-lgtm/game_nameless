@@ -40,8 +40,8 @@ public class Player : MonoBehaviour
     // [HideInInspector] public bool IsUsingSkill = false;       // 是否在使用技能
     [HideInInspector] public int DrawCardsInTrun = 0;
     // [HideInInspector] public int UseCardTimesInTrun = 0;
-    [HideInInspector] public List<Card> disCard = new List<Card>();        // 要棄置的牌
-    [HideInInspector] public List<Card> stealCardBuffer = new List<Card>();// 被選中要偷的牌
+    [HideInInspector] public List<CardCtrl> disCard = new List<CardCtrl>();        // 要棄置的牌
+    [HideInInspector] public List<CardCtrl> stealCardBuffer = new List<CardCtrl>();// 被選中要偷的牌
     [HideInInspector] public Player Thief = null;            // 偷人的玩家
     [HideInInspector] public bool IsDising = false;          // 是否在被棄牌狀態
     [HideInInspector] public bool IsStealing = false;        // 是否在被偷牌狀態
@@ -214,7 +214,7 @@ public class Player : MonoBehaviour
         needDis = count;
         IsDising = true;
         TurnManager.Instance.checkButton.SetActive(false);
-        TurnManager.Instance.endTurnButton.SetActive(false);
+        // TurnManager.Instance.endTurnButton.SetActive(false);
         discardButton.SetActive(true);
     }
     public bool DiscardPossible() // 是否能棄置
@@ -224,7 +224,7 @@ public class Player : MonoBehaviour
         {
             if (disCard.Count < needDis)
             {
-                TurnManager.Instance.UseTips.text = "未達所需棄置數";
+                LogWarning.Instance.Warning($"未達所需棄置數");
                 discardButton.SetActive(true);
                 return false;
             }
@@ -237,19 +237,17 @@ public class Player : MonoBehaviour
 
         foreach (var card in disCard)
         {
-            if (hand.Contains(card))
+            if (handUI.Contains(card))
             {
                 discardButton.SetActive(false);
-                DiscardCard(card);
-                Debug.Log($"P{Player_nunber} 棄掉了 {card.cardName}");
+                DiscardCard(card.card_data);
+                Debug.Log($"P{Player_nunber} 棄掉了 {card.card_data.cardName}");
             }
         }
         needDis = 0;
         IsDising = false;
         Thief = null;
         disCard.Clear();
-        if (WaitCardManager.Instance.IsIdle) 
-            TurnManager.Instance.endTurnButton.SetActive(true);
     }
 
     public void DiscardRandomCards(int count) // 隨機棄置卡片
@@ -350,24 +348,23 @@ public class Player : MonoBehaviour
         }
 
         // 執行偷取
-        foreach (Card card in stealCardBuffer)
+        foreach (var card in stealCardBuffer)
         {
-            if (hand.Contains(card))
+            if (handUI.Contains(card))
             {
-                RemoveCard(card);
-                Thief.hand.Add(card);
-
                 if (cardPrefab != null && handArea != null)
                 {
                     GameObject cardGO = Instantiate(cardPrefab, Thief.handArea);
                     CardCtrl ctrl = cardGO.GetComponent<CardCtrl>();
                     Thief.handUI.Add(ctrl);
-                    ctrl.card_data = card;
+                    ctrl.card_data = card.card_data;
                     ctrl.ownerPlayer = Thief;
                     cardGO.SetActive(true);
-                    ctrl.Setup(card, Thief);
+                    ctrl.Setup(card.card_data, Thief);
                 }
-                Debug.Log($"P{Thief.Player_nunber} 偷走了 P{Player_nunber} 的 {card.cardName}");
+                RemoveCard(card.card_data);
+                Thief.hand.Add(card.card_data);
+                Debug.Log($"P{Thief.Player_nunber} 偷走了 P{Player_nunber} 的 {card.card_data.cardName}");
             }
         }
 

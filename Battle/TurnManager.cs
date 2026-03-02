@@ -774,6 +774,8 @@ public class TurnManager : MonoBehaviour
     private Coroutine currentEndTurn = null;
     public void TryToEndTrun()
     {
+        if (player1.IsDising || player2.IsDising || player1.IsStealing || player2.IsStealing) return;
+        if (!waitingForAction || waitingForTarget) return;
         if (actingPlayer.team != TeamID.Enemy)
             EndTurn();
     }

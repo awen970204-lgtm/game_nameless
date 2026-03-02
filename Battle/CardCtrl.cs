@@ -22,7 +22,7 @@ public class CardCtrl : MonoBehaviour,
     [Header("Display")]
     public GameObject checkButton;
     public GameObject cardAvailableDisplay; // 可用狀態顯示
-    public GameObject cardUsingDisplay;     // 使用中狀態顯示
+    public GameObject cardDiscardDisplay;   // 棄置狀態顯示
     public GameObject snapDisplay;          // 吸附狀態顯示
     public GameObject LockedDisplay;
     private CanvasGroup canvasGroup;
@@ -95,30 +95,46 @@ public class CardCtrl : MonoBehaviour,
     {
         if (IsUseing)
         {
-            cardUsingDisplay.SetActive(true);
             cardAvailableDisplay.SetActive(false);
         }
         else
         {
             cardAvailableDisplay.SetActive(TurnManager.Instance.actingPlayer != ownerPlayer);
-            cardUsingDisplay.SetActive(false);
             if (isTriggered)
             {
                 delayTurns.gameObject.SetActive(true);
                 delayTurns.text = $"{WaitCardManager.Instance.GetDelayTurn(this)}";
             }
+            
+            cardDiscardDisplay.SetActive(ownerPlayer.disCard.Contains(this) || ownerPlayer.stealCardBuffer.Contains(this));
         }
-
     }
 
     #region Pointer
 
     public void OnClick() // Use Event trigger
     {
-        if (!TooltipUI.Instance.CardTooltipPanel.activeInHierarchy)
-            TooltipUI.Instance.ShowCardTooltip(card_data);
-        else
-            TooltipUI.Instance.HideTooltip();
+        if (IsUseing) return;
+        if (ownerPlayer.IsDising)
+        {
+            if (ownerPlayer.stealCardBuffer.Contains(this))
+                return;
+            if (ownerPlayer.disCard.Contains(this))
+                ownerPlayer.disCard.Add(this);
+            else
+                ownerPlayer.disCard.Remove(this);
+            DisplayChange();
+        }
+        if (ownerPlayer.IsStealing)
+        {
+            if (ownerPlayer.disCard.Contains(this))
+                return;
+            if (ownerPlayer.stealCardBuffer.Contains(this))
+                ownerPlayer.stealCardBuffer.Add(this);
+            else
+                ownerPlayer.stealCardBuffer.Remove(this);
+            DisplayChange();
+        }
     }
 
     public void OnPointerEnter(PointerEventData eventData)

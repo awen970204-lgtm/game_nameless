@@ -303,7 +303,10 @@ public class CharacterSelectionManager : MonoBehaviour
     // 確認棄牌按鈕按下
     public void ConfirmFold()
     {
+        if (!player1.DiscardPossible() && !player2.DiscardPossible()) return;
 
+        player1.DiscardConfirm();
+        player2.DiscardConfirm();
     }
 
     // 偷牌按鈕按下

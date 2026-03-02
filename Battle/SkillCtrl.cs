@@ -65,11 +65,12 @@ public class SkillCtrl : MonoBehaviour
     {
         if (Skill_data == null) return;
         if (TurnManager.Instance == null || !TurnManager.Instance.GameStart) return;
+        if (self.ownerPlayer.IsDising || self.ownerPlayer.IsStealing) return;
         if (!self.currentSkills.Contains(Skill_data)) return;
         if (self.invalidSkills.Contains(Skill_data))
         {
             LogWarning.Instance.Warning($"技能:{Skill_data.skillName}失效中");
-            Debug.Log($"<color=#FFDD55>#</color> 技能:{Skill_data.skillName}失效中");
+            Debug.Log($"<color=#FFDD55># 技能:{Skill_data.skillName}失效中</color>");
             return;
         }
         if (Skill_data.skillNeed != null)
@@ -79,7 +80,7 @@ public class SkillCtrl : MonoBehaviour
                 if (!LimitChecker.CheckLimit(limit, self, self))
                 {
                     LogWarning.Instance.Warning($"不滿足技能:{Skill_data.skillName}的需求");
-                    Debug.Log($"<color=#FFDD55># 不滿足</color>技能:{Skill_data.skillName}的需求");
+                    Debug.Log($"<color=#FFDD55># 不滿足技能:{Skill_data.skillName}的需求</color>");
                     return;
                 }
             }
@@ -91,7 +92,7 @@ public class SkillCtrl : MonoBehaviour
             if (!TurnManager.Instance.CanUseSkill(self, Skill_data) && Skill_data.LimitedTimes)
             {
                 LogWarning.Instance.Warning($"技能:{Skill_data.skillName} 本回合已達使用次數上限");
-                Debug.Log($"<color=#FFDD55># </color>技能:{Skill_data.skillName} 本回合已達使用次數上限");
+                Debug.Log($"<color=#FFDD55># 技能:{Skill_data.skillName} 本回合已達使用次數上限</color>");
                 return;
             }
 
