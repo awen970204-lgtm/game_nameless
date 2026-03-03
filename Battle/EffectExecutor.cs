@@ -26,6 +26,12 @@ public static class EffectExecutor
         {
             if (!LimitChecker.CheckLimit(need, target, user)) yield break;
         }
+        switch(effect.effectTarget)
+        {
+            case EffectiveTarget.Initiator:
+                target = user;
+                break;
+        }
         float changeValue = effect.value * effect.multiplier;
         float targetvalue = GetValue(effect.targetValueEntry, user, target);
         int value = Mathf.RoundToInt(changeValue + targetvalue);
@@ -144,10 +150,10 @@ public static class EffectExecutor
         CharacterHealth ch = null;
         switch (targetEntry.valueTurget)
         {
-            case valueTarget.Initiator:
+            case EffectiveTarget.Initiator:
                 ch = user;
                 break;
-            case valueTarget.target:
+            case EffectiveTarget.target:
                 ch = target;
                 break;
         }

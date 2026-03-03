@@ -3,6 +3,13 @@ using System.Collections;
 using UnityEngine;
 using TMPro;
 
+public class EffectInstance
+{
+    public ContinuedEffect data;
+    public int stack;
+    public int duration;
+    public int triggerCount;
+}
 // 掛在角色上
 public class ContinuedEffectCtrl : MonoBehaviour
 {

@@ -47,11 +47,11 @@ public enum TargetValue
     HoldCards,
     HoldContinuedEffect,
 }
-public enum valueTarget{Initiator, target}
+public enum EffectiveTarget{target, Initiator,}
 [System.Serializable]
 public class ValueEntry
 {
-    public valueTarget valueTurget;
+    public EffectiveTarget valueTurget;
     public TargetValue targetValue;
     public float multiplier = 1f;
     public ContinuedEffect continuedEffect;
@@ -67,19 +67,20 @@ public enum SpecialEffects
 [System.Serializable]
 public class EffectEntry
 {
-    public TargetType targetType;      // 生效的目標
-    public bool NeedChoose = false;    // 是否需要玩家手動選擇
+    public TargetType targetType;       // 效果對象
+    public bool NeedChoose = false;     // 是否需要玩家手動選擇
     public bool canInputValue = false;
     public int MaxInputValue = 1;
-    public bool canCancle = true;      // 是否能取消
-    public int maxTargets = 1;         // 目標數上限
-    public int minTargets = 0;         // 目標數下限
-    public List<Effect> effects;       // 對該目標套用的效果
+    public bool canCancle = true;       // 是否能取消
+    public int maxTargets = 1;          // 目標數上限
+    public int minTargets = 0;          // 目標數下限
+    public List<Effect> effects;        // 對該目標套用的效果
 }
 // 效果
 [System.Serializable]
 public class Effect
 {
+    public EffectiveTarget effectTarget;// 生效的目標
     public List<NeedState> targetNeeds;
     public EffectType effectType;
     public Skill skill;

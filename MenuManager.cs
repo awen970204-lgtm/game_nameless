@@ -165,6 +165,10 @@ public class MenuManager : MonoBehaviour
             CardToggle CT = cardset.GetComponentInChildren<CardToggle>();
             CT.card = card;
             CT.player = 1;
+            if (!PlayerPrefs.HasKey($"FreeMode_Player1Hold{card.cardName}"))
+            {
+                PlayerPrefs.SetInt($"FreeMode_Player1Hold{card.cardName}", 1);
+            }
             cardset.SetActive(true);
         }
         foreach(Card card in player2Cards)
@@ -173,6 +177,10 @@ public class MenuManager : MonoBehaviour
             CardToggle CT = cardset.GetComponentInChildren<CardToggle>();
             CT.card = card;
             CT.player = 2;
+            if (!PlayerPrefs.HasKey($"FreeMode_Player2Hold{card.cardName}"))
+            {
+                PlayerPrefs.SetInt($"FreeMode_Player2Hold{card.cardName}", 1);
+            }
             cardset.SetActive(true);
         }
     }
@@ -183,17 +191,27 @@ public class MenuManager : MonoBehaviour
         {
             if (addIn && !player1Cards.Contains(card))
             {
+                PlayerPrefs.SetInt($"FreeMode_Player1Hold{card.cardName}", 1);
                 player1Cards.Add(card);
             }
-            else player1Cards.Remove(card);
+            else
+            {
+                PlayerPrefs.SetInt($"FreeMode_Player1Hold{card.cardName}", 0);
+                player1Cards.Remove(card);
+            } 
         }
         else
         {
             if (addIn && !player2Cards.Contains(card))
             {
+                PlayerPrefs.SetInt($"FreeMode_Player2Hold{card.cardName}", 1);
                 player2Cards.Add(card);
             }
-            else player2Cards.Remove(card);
+            else 
+            {
+                PlayerPrefs.SetInt($"FreeMode_Player2Hold{card.cardName}", 0);
+                player2Cards.Remove(card);
+            }
         }
     }
 

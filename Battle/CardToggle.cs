@@ -19,10 +19,16 @@ public class CardToggle : MonoBehaviour
     {
         cardPicture.sprite = card.cardPicture;
         cardName.text = card.cardName;
-        if (player == 1 && !MenuManager.player1Cards.Contains(card))
-            toggle.isOn = false;
-        if (player == 2 && !MenuManager.player2Cards.Contains(card))
-            toggle.isOn = false;
+        if (player == 1 && 
+            (!MenuManager.player1Cards.Contains(card) || PlayerPrefs.GetInt($"FreeMode_Player1Hold{card.cardName}") == 0))
+        {
+            toggle.SetIsOnWithoutNotify(false);
+        }
+        if (player == 2 && 
+            (!MenuManager.player2Cards.Contains(card) || PlayerPrefs.GetInt($"FreeMode_Player2Hold{card.cardName}") == 0))
+        {
+            toggle.SetIsOnWithoutNotify(false);
+        }
     }
 
     void OnToggleChange(bool isOn)

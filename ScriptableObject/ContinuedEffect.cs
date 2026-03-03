@@ -17,6 +17,15 @@ public enum EffectTendency
     Beneficial,
     harmful
 }
+public enum StackType
+{
+    Refresh,
+    Overlay,
+    Independent,
+    Replace,
+    AddDuration,
+    CapAndRefresh
+}
 
 [CreateAssetMenu(menuName = "BattleGameObjects/ContinuedEffect")]
 public class ContinuedEffect : ScriptableObject
