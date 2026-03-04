@@ -177,9 +177,9 @@ public class SkillBarCtrl : MonoBehaviour
         foreach(var effect in character.effectCtrl.activeEffects)
         {
             GameObject EGO = Instantiate(effectObject, SI.transform.GetChild(4).GetChild(0).transform);
-            EGO.transform.GetChild(0).GetComponent<TMP_Text>().text = effect.EffectName;
-            EGO.transform.GetChild(1).GetComponent<TMP_Text>().text = $"{character.effectCtrl.effectDurations[effect]}";
-            EGO.transform.GetChild(2).GetComponent<TMP_Text>().text = effect.Introduse;
+            EGO.transform.GetChild(0).GetComponent<TMP_Text>().text = effect.effectData.EffectName;
+            EGO.transform.GetChild(1).GetComponent<TMP_Text>().text = $"{effect.duration}";
+            EGO.transform.GetChild(2).GetComponent<TMP_Text>().text = effect.effectData.Introduse;
             EGO.transform.GetChild(3).GetChild(0).GetComponent<TMP_Text>().text = $"*{effect.stack}";
             EGO.SetActive(true);
         }

@@ -64,10 +64,10 @@ public static class LimitChecker
         CharacterHealth ch = null;
         switch (need.valueTarget)
         {
-            case valueTarget.Initiator:
+            case EffectiveTarget.Initiator:
                 ch = acting;
                 break;
-            case valueTarget.target:
+            case EffectiveTarget.target:
                 ch = trigger;
                 break;
         }
@@ -76,7 +76,7 @@ public static class LimitChecker
         int MinLimit = EffectExecutor.GetValue(need.min_targetValue, trigger, acting) + need.minLimit;
         int MaxLimit = EffectExecutor.GetValue(need.max_targetValue, trigger, acting) + need.maxLimit;
         var effects = ch.effectCtrl.activeEffects
-            .Where(e => e.EffectName == need.continuedEffect.EffectName);
+            .Where(e => e.effectData == need.continuedEffect);
         int totalStack = effects.Sum(e => e.stack);
         switch (need.limit)
         {
@@ -153,11 +153,11 @@ public static class LimitChecker
                 break;
 
             case Limit.holdContinueEffect:
-                if (ch.effectCtrl.activeEffects.Any(e => e.source == need.continuedEffect))
+                if (ch.effectCtrl.activeEffects.Any(e => e.effectData == need.continuedEffect))
                     return true;
                 break;
             case Limit.NotholdContinueEffect:
-                if (ch.effectCtrl.activeEffects.All(e => e.source != need.continuedEffect))
+                if (ch.effectCtrl.activeEffects.All(e => e.effectData != need.continuedEffect))
                     return true;
                 break;
             case Limit.ContinueEffect_StackTimes:

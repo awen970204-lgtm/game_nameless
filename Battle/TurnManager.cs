@@ -162,6 +162,7 @@ public class TurnManager : MonoBehaviour
         yield return new WaitForSeconds(0.1f);   // 等待0.1秒
         if (!IsBattleOver)
         {
+            yield return new WaitUntil(()=> waitingForAction && !waitingForTarget && WaitCardManager.Instance.IsIdle);
             StartTurn();
         }
     }

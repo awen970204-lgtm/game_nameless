@@ -47,6 +47,6 @@ public class ContinuedEffect : ScriptableObject
     public int TriggerTimes;
     public List<ContinuedEffectEntry> continuedEffectEntrys;
 
-    [System.NonSerialized] public int stack = 1;
-    [System.NonSerialized] public ContinuedEffect source;
+    // [System.NonSerialized] public int stack = 1;
+    // [System.NonSerialized] public ContinuedEffect source;
 }

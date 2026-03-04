@@ -214,17 +214,17 @@ public class ToolController : MonoBehaviour
         WriteReport($" {acting} 發動完被動<color=#FFDD55>{skill.skillName}</color>");
     }
 
-    private void HandleEffectGot(ContinuedEffect effect, CharacterHealth act)
+    private void HandleEffectGot(EffectInstance effect, CharacterHealth act)
     {
-        if (!effect.logMessage) return;
+        if (!effect.effectData.logMessage) return;
         string acting = $"<color=#0080FF>{act.character_data.characterName}(P{act.ownerPlayer.Player_nunber})</color>";
-        WriteReport($" {acting} 獲得了持續效果:\n <color=#FFDD55>{effect.EffectName}</color>");
+        WriteReport($" {acting} 獲得了持續效果:\n <color=#FFDD55>{effect.effectData.EffectName}</color>");
     }
-    private void HandleEffectLosed(ContinuedEffect effect, CharacterHealth act)
+    private void HandleEffectLosed(EffectInstance effect, CharacterHealth act)
     {
-        if (!effect.logMessage) return;
+        if (!effect.effectData.logMessage) return;
         string acting = $"<color=#0080FF>{act.character_data.characterName}(P{act.ownerPlayer.Player_nunber})</color>";
-        WriteReport($" {acting} 失去了持續效果:\n <color=#FFDD55>{effect.EffectName}</color>");
+        WriteReport($" {acting} 失去了持續效果:\n <color=#FFDD55>{effect.effectData.EffectName}</color>");
     }
 
     private void WriteReport(string text)

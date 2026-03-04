@@ -6,7 +6,7 @@ using System.Linq;
 
 public class ContinuedEffect_display : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
-    [HideInInspector] public ContinuedEffect effectData;
+    [HideInInspector] public EffectInstance effectDataInstance;
     [HideInInspector] public CharacterHealth selfHealth;
     [HideInInspector] public ContinuedEffectCtrl effectCtrl;
     public Image effectPicture;
@@ -17,7 +17,7 @@ public class ContinuedEffect_display : MonoBehaviour, IPointerEnterHandler, IPoi
     void Start()
     {
         effectCtrl = selfHealth?.GetComponent<ContinuedEffectCtrl>();
-        UpdateDisplay(effectData, selfHealth);
+        UpdateDisplay(effectDataInstance, selfHealth);
     }
     void OnEnable()
     {
@@ -34,30 +34,31 @@ public class ContinuedEffect_display : MonoBehaviour, IPointerEnterHandler, IPoi
         ContinuedEffectCtrl.OnEffectGot -= UpdateDisplay;
     }
 
-    public void UpdateDisplay(ContinuedEffect effect, CharacterHealth trigger)// 更新顯示邏輯
+    public void UpdateDisplay(EffectInstance effect, CharacterHealth trigger)// 更新顯示邏輯
     {
-        if (effectData == null || effectCtrl == null || selfHealth == null) return;
+        if (effectDataInstance == null || effectCtrl == null || selfHealth == null) return;
         // 僅更新自己對應的效果
-        if (effect != effectData || trigger != selfHealth) return;
+        if (effect != effectDataInstance || trigger != selfHealth) return;
 
         // 更新回合數
-        if (effectData.endable)
+        if (effectDataInstance.effectData.endable)
         {
-            if (effectCtrl.effectDurations.TryGetValue(effectData, out int remainingTurns))
-                trun_text.text = $"{remainingTurns}";
+            if (effectCtrl.activeEffects.Any(EI => EI == effectDataInstance))
+                trun_text.text = $"{effectCtrl.activeEffects.Find(EI => EI == effectDataInstance).duration}";
             else
-                trun_text.text = "-";
+                trun_text.text = "";
         }
         else
             trun_text.text = "";
 
         // 更新觸發次數
-        if (effectCtrl.effectTriggerCounts.TryGetValue(effectData, out int currentTrigger))
+        if (effectCtrl.activeEffects.Any(EI => EI == effectDataInstance))
         {
-            if (effectData.LimitedTimes)
-                TriggerTimes_text.text = $"{currentTrigger}/{effectData.TriggerTimes}";
+            int triggerTime = effectCtrl.activeEffects.Find(EI => EI == effectDataInstance).triggerCount;
+            if (effectDataInstance.effectData.LimitedTimes)
+                TriggerTimes_text.text = $"{triggerTime}/{effectDataInstance.effectData.TriggerTimes}";
             else
-                TriggerTimes_text.text = $"{currentTrigger}";
+                TriggerTimes_text.text = $"{triggerTime}";
         }
         else
         {
@@ -66,16 +67,15 @@ public class ContinuedEffect_display : MonoBehaviour, IPointerEnterHandler, IPoi
 
         // 更新圖片
         if (effectPicture != null)
-            effectPicture.sprite = effectData.EffectImage;
+            effectPicture.sprite = effectDataInstance.effectData.EffectImage;
 
         // 更新堆疊
         if (stack_text != null)
         {
             int stack = 0;
-            foreach(var continuedEffect in trigger.effectCtrl.activeEffects)
+            if (effectCtrl.activeEffects.Any(EI => EI == effectDataInstance))
             {
-                if (continuedEffect.EffectName == effectData.EffectName)
-                    stack += continuedEffect.stack;
+                stack = effectCtrl.activeEffects.Find(EI => EI == effectDataInstance).stack;
             }
             stack_text.text = stack > 1 ? stack.ToString() : "";
         }
@@ -84,7 +84,7 @@ public class ContinuedEffect_display : MonoBehaviour, IPointerEnterHandler, IPoi
     // 懸停事件
     public void OnPointerEnter(PointerEventData eventData)
     {
-        TooltipUI.Instance.ShowEffectTooltip(effectData, effectCtrl);
+        TooltipUI.Instance.ShowEffectTooltip(effectDataInstance.effectData, effectCtrl);
     }
     public void OnPointerExit(PointerEventData eventData)
     {

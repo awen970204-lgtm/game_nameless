@@ -43,7 +43,7 @@ public class PassiveTime
 [System.Serializable]
 public class NeedState
 {
-    public valueTarget valueTarget;
+    public EffectiveTarget valueTarget;
     public Limit limit;
     public Skill skill;
     public PassiveSkill passiveSkill;

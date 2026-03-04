@@ -179,7 +179,7 @@ public static class EffectExecutor
                 break;
             case TargetValue.HoldContinuedEffect:
                 targetValue = ch.effectCtrl.activeEffects
-                    .Where(e => e.EffectName == targetEntry.continuedEffect.EffectName).ToList().Count;
+                    .Where(e => e.effectData.EffectName == targetEntry.continuedEffect.EffectName).ToList().Count;
                 break;
         }
         return Mathf.FloorToInt(targetValue * targetEntry.multiplier);

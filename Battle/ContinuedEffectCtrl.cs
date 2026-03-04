@@ -2,10 +2,11 @@ using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
 using TMPro;
+using System.Linq;
 
 public class EffectInstance
 {
-    public ContinuedEffect data;
+    public ContinuedEffect effectData;
     public int stack;
     public int duration;
     public int triggerCount;
@@ -17,19 +18,19 @@ public class ContinuedEffectCtrl : MonoBehaviour
     public GameObject effectPrefab;
 
     // 角色當前持有的 Buff/Debuff
-    [HideInInspector] public List<ContinuedEffect> activeEffects = new();
+    [HideInInspector] public List<EffectInstance> activeEffects = new();
 
-    // 每個效果的剩餘回合數
-    [HideInInspector] public Dictionary<ContinuedEffect, int> effectDurations = new();
+    // // 每個效果的剩餘回合數
+    // [HideInInspector] public Dictionary<ContinuedEffect, int> effectDurations = new();
 
-    // 每個效果當前回合已觸發次數
-    [HideInInspector] public Dictionary<ContinuedEffect, int> effectTriggerCounts = new();
+    // // 每個效果當前回合已觸發次數
+    // [HideInInspector] public Dictionary<ContinuedEffect, int> effectTriggerCounts = new();
 
     // 事件
-    public static event System.Action<ContinuedEffect, CharacterHealth> OnEffectGot;
-    public static event System.Action<ContinuedEffect, CharacterHealth> OnEffectTriggered;
-    public static event System.Action<ContinuedEffect, CharacterHealth> OnEffectExpired;
-    public static event System.Action<ContinuedEffect, CharacterHealth> OnEffectRemake;
+    public static event System.Action<EffectInstance, CharacterHealth> OnEffectGot;
+    public static event System.Action<EffectInstance, CharacterHealth> OnEffectTriggered;
+    public static event System.Action<EffectInstance, CharacterHealth> OnEffectExpired;
+    public static event System.Action<EffectInstance, CharacterHealth> OnEffectRemake;
 
     void Awake()
     {
@@ -66,66 +67,88 @@ public class ContinuedEffectCtrl : MonoBehaviour
 
     public void AddContinueEffect(ContinuedEffect effect) // 套用持續效果
     {
-        // 先找是否已有同名、同持續時間(或不限時)的效果
-        ContinuedEffect existed = null;
-        foreach (var e in activeEffects)
-        {
-            bool sameName = e.source == effect;
-            bool sameDuration = (!e.endable && !effect.endable) ||
-                                (e.endable && effect.endable && e.Duration == effect.Duration);
+        EffectInstance existed = null;
 
-            if (sameName && sameDuration)
-            {
-                existed = e;
-                break;
-            }
-        }
-        // 若找到可堆疊的效果
-        if (existed != null)
+        // 先找是否已有同名的最大持續時間的效果
+        if (activeEffects.Where(e => e.effectData == effect).Sum(e => e.stack) < effect.MaxOverlay)
         {
-            if (existed.stack < existed.MaxOverlay)
+            existed = activeEffects.Where(e => e.effectData == effect).ToList().Find(e => e.duration == existed.duration);
+            if (existed != null)
             {
                 // 增加堆疊
                 existed.stack++;
-                effectTriggerCounts[existed] = 0;
                 OnEffectRemake?.Invoke(existed, self); // UI更新
+                OnEffectGot?.Invoke(existed, self);
             }
             else
             {
-                // 已達上限 → 只刷新時間，不增加堆疊
-                effectDurations[existed] = existed.Duration;
-                effectTriggerCounts[existed] = 0;
-                OnEffectRemake?.Invoke(existed, self);
+                EffectInstance newInstance = new EffectInstance
+                {
+                    effectData = effect,
+                    stack = 1,
+                    duration = effect.Duration,
+                    triggerCount = 0
+                };
+
+                activeEffects.Add(newInstance);
+                createEffect(newInstance);
+                OnEffectGot?.Invoke(newInstance, self);
             }
-
-            return;
         }
-        // 若沒有相同效果 → 新增 instance + UI
-        ContinuedEffect newInstance = Instantiate(effect);
-        newInstance.stack = 1;
-        newInstance.source = effect;
+        else
+        {
+            // 找最小
+            foreach (var e in activeEffects.Where(e => e.effectData == effect))
+            {
+                if (existed == null || e.duration <= existed.duration)
+                {
+                    existed = e;
+                }
+            }
+            if (existed != null)
+            {
+                existed.stack --;
+                OnEffectRemake?.Invoke(existed, self); // UI更新
+                OnEffectExpired?.Invoke(existed, self);
 
-        activeEffects.Add(newInstance);
-        effectDurations[newInstance] = newInstance.Duration;
-        effectTriggerCounts[newInstance] = 0;
+                if (activeEffects.Where(e => e.effectData == effect).Any(e => e.duration == effect.Duration))
+                {
+                    existed = existed = activeEffects
+                        .Where(e => e.effectData == effect).ToList().Find(e => e.duration == existed.duration);
+                    existed.stack ++;
+                    OnEffectGot?.Invoke(existed, self);
+                }
+                else
+                {
+                    EffectInstance newInstance = new EffectInstance
+                    {
+                        effectData = effect,
+                        stack = 1,
+                        duration = effect.Duration,
+                        triggerCount = 0
+                    };
 
-        createEffect(newInstance);
-        OnEffectGot?.Invoke(newInstance, self);
+                    activeEffects.Add(newInstance);
+                    createEffect(newInstance);
+                    OnEffectGot?.Invoke(newInstance, self);
+                }
+            }
+        }
     }
-    private void createEffect(ContinuedEffect effect) // 產生圖標
+    private void createEffect(EffectInstance effect) // 產生圖標
     {
         GameObject go = Instantiate(effectPrefab, self.stateArea);
         ContinuedEffect_display CED = go.GetComponent<ContinuedEffect_display>();
-        CED.effectData = effect;
+        CED.effectDataInstance = effect;
         CED.selfHealth = self;
         go.SetActive(true);
     }
-    private void RemoveEffect(ContinuedEffect effect) // 移除圖標
+    private void RemoveEffect(EffectInstance effect) // 移除圖標
     {
         foreach (Transform child in self.stateArea)
         {
             ContinuedEffect_display CED = child.GetComponent<ContinuedEffect_display>();
-            if (CED != null && CED.effectData == effect) // 直接比實例
+            if (CED != null && CED.effectDataInstance == effect) // 直接比實例
             {
                 Destroy(child.gameObject);
                 break;
@@ -137,22 +160,22 @@ public class ContinuedEffectCtrl : MonoBehaviour
     {
         if (!continuedEffect.Removable)
         {
-            Debug.LogError($"效果:{continuedEffect.EffectName}無法解除");
+            Debug.Log($"效果:{continuedEffect.EffectName}無法解除");
             return;
         }
-        if (!activeEffects.Contains(continuedEffect))
+        if (!activeEffects.Any(e => e.effectData == continuedEffect))
         {
-            Debug.LogError($"未持有效果:{continuedEffect.EffectName}");
+            Debug.Log($"未持有效果:{continuedEffect.EffectName}");
             return;
         }
-        continuedEffect.stack--;
-        OnEffectExpired?.Invoke(continuedEffect, self);
-        if (continuedEffect.stack <= 0 || effectDurations[continuedEffect] <= 0)
+
+        EffectInstance effectInstance = activeEffects.Find(e => e.effectData == continuedEffect);
+        effectInstance.stack--;
+        OnEffectExpired?.Invoke(effectInstance, self);
+        if (effectInstance.stack <= 0 || effectInstance.duration <= 0)
         {
-            activeEffects.Remove(continuedEffect);
-            effectDurations.Remove(continuedEffect);
-            effectTriggerCounts.Remove(continuedEffect);
-            RemoveEffect(continuedEffect);
+            activeEffects.Remove(effectInstance);
+            RemoveEffect(effectInstance);
         }
     }
 
@@ -164,14 +187,12 @@ public class ContinuedEffectCtrl : MonoBehaviour
         if (acting == null)
             acting = TurnManager.Instance.actingPlayer.playerCharacters[0];
         if (acting == null) return;
-
         
-        
-        List<ContinuedEffect> expired = new();
+        List<EffectInstance> expired = new();
 
         foreach (var effect in activeEffects)
         {
-            foreach (var entry in effect.continuedEffectEntrys)
+            foreach (var entry in effect.effectData.continuedEffectEntrys)
             {
                 if (entry.triggerTime != time) continue;
 
@@ -201,10 +222,9 @@ public class ContinuedEffectCtrl : MonoBehaviour
                 if (!match) continue;
                 
                 // 檢查是否達到上限
-                if (effectTriggerCounts.ContainsKey(effect) &&
-                    effectTriggerCounts[effect] >= effect.TriggerTimes)
+                if (effect.triggerCount >= effect.effectData.TriggerTimes)
                 {
-                    if (effect.LimitedTimes) continue;
+                    if (effect.effectData.LimitedTimes) continue;
                 }
                 // 套用效果
                 List<CharacterHealth> targets = new();
@@ -221,20 +241,18 @@ public class ContinuedEffectCtrl : MonoBehaviour
                         targets = new List<CharacterHealth>(TurnManager.Instance.turnOrder);
                         break;
                 }
-                Debug.Log($"持續效果:{effect.EffectName}觸發");
+                Debug.Log($"持續效果:{effect.effectData.EffectName}觸發");
                 StartCoroutine(EffectExecutor.ApplyEffects(self, targets, entry.effects));
                 // 紀錄觸發次數
-                if (!effectTriggerCounts.ContainsKey(effect))
-                    effectTriggerCounts[effect] = 0;
-                effectTriggerCounts[effect]++;
+                effect.triggerCount++;
                 OnEffectTriggered?.Invoke(effect, self);
                 
             }
 
             // 扣減持續時間
-            if (time == TriggerTime.OnRealTurnEnd && effectDurations.ContainsKey(effect))
+            if (time == TriggerTime.OnRealTurnEnd)
             {
-                switch (effect.endtrigger)
+                switch (effect.effectData.endtrigger)
                 {
                     case Trigger_Character.Self:
                         if (acting != self) continue;
@@ -243,8 +261,8 @@ public class ContinuedEffectCtrl : MonoBehaviour
                         if (acting == self) continue;
                         break;
                 }
-                effectDurations[effect]--;
-                if (effectDurations[effect] <= 0 && effect.Removable)
+                effect.duration--;
+                if (effect.duration <= 0 && effect.effectData.Removable)
                 {
                     expired.Add(effect);
                 }
@@ -254,15 +272,20 @@ public class ContinuedEffectCtrl : MonoBehaviour
         // 移除過期效果
         foreach (var e in expired)
         {
-            LoseContinueEffect(e);
+            if (e.effectData.Removable)
+            {
+                activeEffects.Remove(e);
+                OnEffectExpired?.Invoke(e, self);
+                RemoveEffect(e);
+            }
         }
     }
     // 僅檢查單一效果
-    private void TryTriggerSingle(ContinuedEffect effect, TriggerTime time, CharacterHealth acting)
+    private void TryTriggerSingle(EffectInstance effect, TriggerTime time, CharacterHealth acting)
     {        
         if (!activeEffects.Contains(effect)) return;
 
-        foreach (var entry in effect.continuedEffectEntrys)
+        foreach (var entry in effect.effectData.continuedEffectEntrys)
         {
             if (entry.triggerTime != time) continue;
 
@@ -283,8 +306,7 @@ public class ContinuedEffectCtrl : MonoBehaviour
             if (!match) continue;
 
             // 檢查觸發次數
-            if (effectTriggerCounts.ContainsKey(effect) &&
-                effectTriggerCounts[effect] >= effect.TriggerTimes)
+            if (effect.triggerCount >= effect.effectData.TriggerTimes)
             {
                 continue;
             }
@@ -304,13 +326,11 @@ public class ContinuedEffectCtrl : MonoBehaviour
                     targets = new List<CharacterHealth>(TurnManager.Instance.turnOrder);
                     break;
             }
-            Debug.Log($"持續效果:{effect.EffectName}觸發");
+            Debug.Log($"持續效果:{effect.effectData.EffectName}觸發");
             StartCoroutine(EffectExecutor.ApplyEffects(self, targets, entry.effects));
 
             // 紀錄觸發次數
-            if (!effectTriggerCounts.ContainsKey(effect))
-                effectTriggerCounts[effect] = 0;
-            effectTriggerCounts[effect]++;
+            effect.triggerCount++;
 
             OnEffectTriggered?.Invoke(effect, self);
         }
@@ -332,12 +352,12 @@ public class ContinuedEffectCtrl : MonoBehaviour
         TryTrigger(TriggerTime.OnBeAttacted, injured);
     }
 
-    private void HandleEffectGot(ContinuedEffect e, CharacterHealth acting)
+    private void HandleEffectGot(EffectInstance e, CharacterHealth acting)
     {
         if (acting == self) // 只處理自己身上的效果
             TryTriggerSingle(e, TriggerTime.OnGetEffect, acting);
     }
-    private void HandleEffectLosed(ContinuedEffect e, CharacterHealth acting)
+    private void HandleEffectLosed(EffectInstance e, CharacterHealth acting)
     {
         if (acting == self) // 只處理自己身上的效果
             TryTriggerSingle(e, TriggerTime.OnLoseEffect, acting);
@@ -347,11 +367,10 @@ public class ContinuedEffectCtrl : MonoBehaviour
     private void HandleRealTurnEnd(Player player)
     {
         // 回合結束 -> 重置每個效果的觸發次數
-        List<ContinuedEffect> effectsCopy = new(activeEffects);
+        List<EffectInstance> effectsCopy = new(activeEffects);
         foreach (var e in effectsCopy)
         {
-            if (effectTriggerCounts.ContainsKey(e))
-                effectTriggerCounts[e] = 0;
+            e.triggerCount = 0;
         }
         TryTrigger(TriggerTime.OnRealTurnEnd, null);
     }
