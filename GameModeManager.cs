@@ -15,6 +15,7 @@ public class GameModeManager : MonoBehaviour
     public GameMode gameMode;
     public static bool GameStarted = false;
     public static bool BattleStarted = false;
+    private static int BattleScene = 1;
     
     [Header("Systems")]
     public GameObject GameCharacters;
@@ -56,7 +57,7 @@ public class GameModeManager : MonoBehaviour
     }
     private IEnumerator FreeModeBegin()
     {
-        yield return (LoadScene(0));
+        yield return (LoadScene(BattleScene));
         yield return null;
         GameCharacters?.SetActive(false);
         GameEventUI?.SetActive(false);
@@ -77,7 +78,7 @@ public class GameModeManager : MonoBehaviour
     }
     private IEnumerator StoryModeBegin()
     {
-        yield return (LoadScene(0));
+        yield return (LoadScene(BattleScene));
         yield return null;
         yield return null;
         
@@ -108,7 +109,7 @@ public class GameModeManager : MonoBehaviour
     }
     private IEnumerator StoryBattleBegin(EventBattleData data)
     {
-        yield return (LoadScene(0));
+        yield return (LoadScene(BattleScene));
         yield return null;
         GameCharacters.SetActive(false);
         EventUI.Instance?.BattleBegin(data);
@@ -174,7 +175,7 @@ public class GameModeManager : MonoBehaviour
         {
             GameStarted = false;
             BattleStarted = false;
-            yield return (LoadScene(0));
+            yield return (LoadScene(BattleScene));
 
             if(MenuManager.Instance != null)
             {
@@ -206,7 +207,7 @@ public class GameModeManager : MonoBehaviour
         GameStarted = false;
         BattleStarted = false;
         GameCharacterManager.Instance.actingCharacter = null;
-        yield return (LoadScene(0));
+        yield return (LoadScene(BattleScene));
         yield return null;
 
         if(MenuManager.Instance != null)

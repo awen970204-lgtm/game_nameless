@@ -84,7 +84,7 @@ public class ContinuedEffect_display : MonoBehaviour, IPointerEnterHandler, IPoi
     // 懸停事件
     public void OnPointerEnter(PointerEventData eventData)
     {
-        TooltipUI.Instance.ShowEffectTooltip(effectDataInstance.effectData, effectCtrl);
+        TooltipUI.Instance.ShowEffectTooltip(effectDataInstance, effectCtrl);
     }
     public void OnPointerExit(PointerEventData eventData)
     {

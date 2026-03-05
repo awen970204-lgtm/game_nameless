@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 using TMPro;
 using UnityEngine.InputSystem;
+using Unity.VisualScripting;
 
 public class TooltipUI : MonoBehaviour
 {
@@ -134,7 +135,7 @@ public class TooltipUI : MonoBehaviour
         CharacterTooltipPanel.SetActive(false);
     }
 
-    public void ShowEffectTooltip(ContinuedEffect Effect, ContinuedEffectCtrl EffectCtrl)
+    public void ShowEffectTooltip(EffectInstance Effect, ContinuedEffectCtrl EffectCtrl)
     {
         if (Effect == null) return;
 
@@ -145,39 +146,31 @@ public class TooltipUI : MonoBehaviour
             hideCoroutine = null;
         }
 
-        if (Effect.Removable)
-            EffectNameText.text = $"{Effect.EffectName}";
-        else EffectNameText.text = $"{Effect.EffectName}(無法移除)";
+        if (Effect.effectData.Removable)
+            EffectNameText.text = $"{Effect.effectData.EffectName}";
+        else EffectNameText.text = $"{Effect.effectData.EffectName}(無法移除)";
 
         // 取得當前的持續回合
-        int currentDuration = 0;
-        if (EffectCtrl.effectDurations.TryGetValue(Effect, out int dur))
-            currentDuration = dur;
-
+        int currentDuration = Effect.duration;
+        
         // 取得當前已觸發次數
-        int currentTriggers = 0;
-        if (EffectCtrl.effectTriggerCounts.TryGetValue(Effect, out int trig))
-            currentTriggers = trig;
-        int remainingTriggers = Mathf.Max(Effect.TriggerTimes - currentTriggers, 0);
+        int currentTriggers = Effect.triggerCount;
+        int remainingTriggers = Mathf.Max(Effect.triggerCount - currentTriggers, 0);
 
         // 取得同名疊加次數
-        int currentOverlay = 0;
-        foreach (ContinuedEffect effect in EffectCtrl.activeEffects)
-        {
-            if (effect.EffectName == Effect.EffectName) currentOverlay++;
-        }
+        int currentOverlay = Effect.stack;
 
         // 顯示資訊
-        if (Effect.endable)
+        if (Effect.effectData.endable)
             DurationText.text = $"剩餘回合數:{currentDuration}";
         else DurationText.text = "";
 
-        if (Effect.MaxOverlay > 1)
-            EffectOverlayText.text = $"疊加層數:{currentOverlay}/{Effect.MaxOverlay}";
+        if (Effect.stack > 1)
+            EffectOverlayText.text = $"疊加層數:{currentOverlay}/{Effect.effectData.MaxOverlay}";
         else EffectOverlayText.text = "";
 
         TriggerTimesText.text = $"剩餘觸發次數:{remainingTriggers}";
-        EffectTooltipText.text = Effect.Introduse;
+        EffectTooltipText.text = Effect.effectData.Introduse;
 
         CardTooltipPanel.SetActive(false);
         EffectTooltipPanel.SetActive(true);
@@ -225,6 +218,18 @@ public class TooltipUI : MonoBehaviour
     {
         characterInformatuon.transform.GetChild(0).GetChild(1).GetComponent<TMP_Text>().text = 
             character.character_data.characterName;
+        switch(character.team)
+        {
+            case TeamID.Team1:
+                characterInformatuon.transform.GetChild(0).GetChild(2).GetComponent<TMP_Text>().text = "P1";
+                break;
+            case TeamID.Team2:
+                characterInformatuon.transform.GetChild(0).GetChild(2).GetComponent<TMP_Text>().text = "P2";
+                break;
+            case TeamID.Enemy:
+                characterInformatuon.transform.GetChild(0).GetChild(2).GetComponent<TMP_Text>().text = "Enemy";
+                break;
+        }
         characterInformatuon.transform.GetChild(1).GetChild(0).GetComponent<Image>().sprite = 
             character.character_data.characterPicture;
         // HP
