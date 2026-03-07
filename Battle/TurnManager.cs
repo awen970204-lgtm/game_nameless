@@ -49,9 +49,6 @@ public class TurnManager : MonoBehaviour
     public GameObject checkButton;
     public GameObject endTurnButton;
     public GameObject battleOverPanel;
-    // 共用牌堆
-    private List<Card> drawPile = new List<Card>();    // 當前可抽取
-    private List<Card> discardPile = new List<Card>(); // 棄牌堆
 
     #region Event
     public static event System.Action OnBattleBegin;
@@ -370,6 +367,7 @@ public class TurnManager : MonoBehaviour
         StartCoroutine(ApplyCardEntrys(cardCtrl.card_data.initiativeTiggerEffect, user, player));
     }
 
+    // 執行卡片效果
     private IEnumerator ApplyCardEntrys(List<EffectEntry> entries, CharacterHealth user, Player player)
     {
         Player enemyPlayer = (player == player1)? player2 : player2;
@@ -428,6 +426,21 @@ public class TurnManager : MonoBehaviour
         player.UseCardOver(cardCtrl);
     }
 
+    public void ConfirmFold()// 確認棄牌按鈕按下
+    {
+        if (!player1.DiscardPossible() && !player2.DiscardPossible()) return;
+
+        player1.DiscardConfirm();
+        player2.DiscardConfirm();
+    }
+
+    public void ConfirmSteal()// 偷牌按鈕按下
+    {
+        if (!player1.IsStealing && !player2.IsStealing) return;
+
+        player1.ConfirmStealCards();
+        player2.ConfirmStealCards();
+    }
     #endregion
 
     private void ApplyEffectImmediate(EffectEntry entry) // 立即生效的效果

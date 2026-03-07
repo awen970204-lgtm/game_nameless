@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Collections;
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
@@ -27,8 +26,10 @@ public class GameModeManager : MonoBehaviour
 
     [Header("Fade")]
     public CanvasGroup canvasGroup;
+    public TMP_Text tip;
     [SerializeField] private float fadeDuration = 1f;
     [Header("Data")]
+    public List<string> fadeTips = new List<string>();
     public List<Card> cardDatas = new List<Card>();
     public List<Character> characterDatas = new List<Character>();
     public List<QuestData> questDatas = new List<QuestData>();
@@ -130,6 +131,8 @@ public class GameModeManager : MonoBehaviour
         }
 
         yield return FadeIn();
+        if (fadeTips.Count > 0)
+            tip.text = fadeTips[Random.Range(0, fadeTips.Count)];
 
         // 等場景完全啟用
         AsyncOperation async = SceneManager.LoadSceneAsync(index, LoadSceneMode.Single);

@@ -64,13 +64,13 @@ public static class EffectExecutor
                 target.ownerPlayer?.DiscardRandomCards(value);
                 break;
             case EffectType.Discard_Specific:
-                target.ownerPlayer?.DiscardSpecificCard(user.ownerPlayer, value);
+                yield return target.ownerPlayer?.DiscardSpecificCard(user.ownerPlayer, value);
                 break;
             case EffectType.StealCards_Range:
                 user.ownerPlayer?.StealCardsFrom(target.ownerPlayer, value);
                 break;
             case EffectType.StealCards_Specific:
-                target.ownerPlayer?.StartBeStealCards(user.ownerPlayer, value);
+                yield return target.ownerPlayer?.StartBeStealCards(user.ownerPlayer, value);
                 break;
 
             // 技能相關

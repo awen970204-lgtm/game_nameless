@@ -202,20 +202,26 @@ public class Player : MonoBehaviour
     #endregion
 
     #region Discard/steal
-    public void DiscardSpecificCard(Player thief, int count) // 棄掉指定卡片(開始)
+
+    public IEnumerator DiscardSpecificCard(Player thief, int count) // 棄掉指定卡片(開始)
     {
         if (hand.Count <= count || thief.team == TeamID.Enemy)
         {
             DiscardRandomCards(count);
-            return;
+            yield break;
         }
 
         Thief = thief;
         needDis = count;
         IsDising = true;
-        TurnManager.Instance.checkButton.SetActive(false);
-        // TurnManager.Instance.endTurnButton.SetActive(false);
         discardButton.SetActive(true);
+
+        yield return new WaitUntil(()=> !IsDising);
+
+        needDis = 0;
+        Thief = null;
+        disCard.Clear();
+        discardButton.SetActive(false);
     }
     public bool DiscardPossible() // 是否能棄置
     {
@@ -244,10 +250,7 @@ public class Player : MonoBehaviour
                 Debug.Log($"P{Player_nunber} 棄掉了 {card.card_data.cardName}");
             }
         }
-        needDis = 0;
         IsDising = false;
-        Thief = null;
-        disCard.Clear();
     }
 
     public void DiscardRandomCards(int count) // 隨機棄置卡片
@@ -279,7 +282,7 @@ public class Player : MonoBehaviour
         }
     }
 
-    public void StealCardsFrom(Player targetPlayer, int count) // 偷手牌_隨機
+    public void StealCardsFrom(Player targetPlayer, int count) // 隨機偷手牌
     {
         if (targetPlayer == null || targetPlayer.hand.Count == 0)
         {
@@ -318,25 +321,32 @@ public class Player : MonoBehaviour
         }
     }
 
-    public void StartBeStealCards(Player thief, int count) // 開始被偷牌
+    public IEnumerator StartBeStealCards(Player thief, int count) // 開始被偷牌
     {
         if (thief == null || hand.Count == 0)
         {
             Debug.Log("目標沒有手牌，無法偷取");
-            return;
+            yield break;
         }
         if (hand.Count <= count || thief.team == TeamID.Enemy)
         {
             thief.StealCardsFrom(this, count);
-            return;
+            yield break;
         }
-
         Thief = thief;
         needSteal = Mathf.Min(count, hand.Count);
         IsStealing = true;
         stealCardBuffer.Clear();
+        Debug.Log($"P{thief.Player_nunber}準備偷P{Player_nunber}的{needSteal}張牌");
 
-        Debug.Log($"P{thief.Player_nunber} 準備偷 P{Player_nunber} 的 {needSteal} 張牌");
+        stealCardButton.SetActive(true);
+        yield return new WaitUntil(()=> !IsStealing);
+
+        needSteal = 0;
+        stealCardBuffer.Clear();
+        Thief = null;
+        stealCardButton.SetActive(false);
+
     }
     public void ConfirmStealCards()// 確認被偷牌
     {
@@ -370,13 +380,11 @@ public class Player : MonoBehaviour
 
         // 重置狀態
         IsStealing = false;
-        needSteal = 0;
-        stealCardBuffer.Clear();
-        Thief = null;
     }
     #endregion
 
     #region Showing
+
     public void ShowFloatingText(string text, Color color, CharacterHealth character)// 顯示血量變化
     {
         if (floatingTextPrefab == null) return;

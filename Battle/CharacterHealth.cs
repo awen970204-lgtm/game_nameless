@@ -31,6 +31,7 @@ public class CharacterHealth : MonoBehaviour
     [Header("UI")]
     public Image highlightRenderer;
     public Image character_Picture;
+    public Image character_illustration;
 
     public TMP_Text healthText;
     public Image healthImage;
@@ -114,6 +115,7 @@ public class CharacterHealth : MonoBehaviour
         // 綁定角色數值
         character_Picture.sprite = character_data.characterPicture;
         character_Picture.enabled = true;
+        character_illustration.sprite = character_data.characterIllustration;
 
         currentMaxHP = character_data.characterMaxHP;
         currentHealth = character_data.characterStartHP;
@@ -376,7 +378,7 @@ public class CharacterHealth : MonoBehaviour
     {
         if (currentSkills.Contains(skill)) return;
         CharacterSelectionManager.Instance.SelectSkill(skill, this);
-        CharacterSelectionManager.Instance.currentSelectingPlayer = null;
+        CharacterSelectionManager.currentSelectingPlayer = null;
         OnGetSkill?.Invoke(this, skill);
     }
     public void LoseSkill(Skill skill)
@@ -421,7 +423,7 @@ public class CharacterHealth : MonoBehaviour
     {
         if (currentPassiveSkills.Contains(passive)) return;
         CharacterSelectionManager.Instance.SelectPassiveSkill(passive, this);
-        CharacterSelectionManager.Instance.currentSelectingPlayer = null;
+        CharacterSelectionManager.currentSelectingPlayer = null;
         OnGetPassiveSkill?.Invoke(this, passive);
     }
     public void LosePassiveSkill(PassiveSkill passive)
