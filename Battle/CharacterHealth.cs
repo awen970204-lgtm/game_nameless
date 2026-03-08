@@ -43,7 +43,7 @@ public class CharacterHealth : MonoBehaviour
 
     [SerializeField] private float mainSpeed = 8f;
     [SerializeField] private float bufferSpeed = 3f;
-    [SerializeField] float whiteDelay = 0.2f;
+    [SerializeField] private float whiteDelay = 0.2f;
     private float whiteDelayTimer;
 
     public TMP_Text AttackPowerText;
@@ -103,6 +103,8 @@ public class CharacterHealth : MonoBehaviour
     {
         TurnManager.OnRealTurnEnd += RemakeAmount;
         TurnManager.OnRealTurnEnd += CheckAlive;
+        TurnManager.OnAnySkillBegin += handleSkillBegin;
+        TurnManager.OnAnyPassiveSkillBegin += handlePassiveSkillBegin;
     } 
     void Start()
     {
@@ -137,6 +139,8 @@ public class CharacterHealth : MonoBehaviour
     {
         TurnManager.OnRealTurnEnd -= RemakeAmount;
         TurnManager.OnRealTurnEnd -= CheckAlive;
+        TurnManager.OnAnySkillBegin -= handleSkillBegin;
+        TurnManager.OnAnyPassiveSkillBegin -= handlePassiveSkillBegin;
     }
     
     void Update()
@@ -246,6 +250,7 @@ public class CharacterHealth : MonoBehaviour
         pressTimer = 0f;
         TooltipUI.Instance.HideTooltip();
     }
+    
     #endregion
 
     private void RemakeAmount(Player player) // 刷新數值
@@ -444,6 +449,25 @@ public class CharacterHealth : MonoBehaviour
             invalidPassiveSkills.Remove(passive);
     }
     
+    private void handleSkillBegin(CharacterHealth character, Skill skill)
+    {
+        if (character != this || !currentSkills.Contains(skill)) return;
+
+        StartCoroutine(SkillDisplay());
+    }
+    private void handlePassiveSkillBegin(CharacterHealth character, PassiveSkill skill)
+    {
+        if (character != this || !currentPassiveSkills.Contains(skill)) return;
+
+        StartCoroutine(SkillDisplay());
+    }
+    private IEnumerator SkillDisplay()
+    {
+        character_illustration.gameObject.SetActive(true);
+        yield return new WaitUntil(()=> TurnManager.Instance.waitingForAction);
+        yield return new WaitForSeconds(0.5f);
+        character_illustration.gameObject.SetActive(false);
+    }
     private void SpecialDisplay(SpecialEffects special)// 顯示特效
     {
         switch (special)
@@ -492,6 +516,7 @@ public class CharacterHealth : MonoBehaviour
             targetFill = newFill;
         }
     }
+    
     #endregion
 
     #region Click
