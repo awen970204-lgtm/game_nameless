@@ -45,6 +45,7 @@ public class MenuManager : MonoBehaviour
     public Transform skillTransform;
     public TMP_Text skillIntro;
     public Button StartStoryModeButton;
+    public Button ContinueStoryButton;
 
     public GameObject characterButtonPrefab;
     public Transform characterButtonContent;
@@ -70,6 +71,9 @@ public class MenuManager : MonoBehaviour
         
         StartFreeModeButton.onClick.AddListener(()=> StartFreeMode());
         StartStoryModeButton.onClick.AddListener(()=> StartStoryMode());
+        ContinueStoryButton.onClick.AddListener(()=> GameModeManager.Instance.ContinueStory());
+        ContinueStoryButton.gameObject.SetActive(PlayerPrefs.GetInt("StroyBegin") == 1);
+        
         AISetToggle.SetIsOnWithoutNotify(useEnemyAI);
         AISetToggle.onValueChanged.AddListener(OnEnemyToggleChange);
         enemyLevelSlider?.onValueChanged.AddListener(ChangeEnemyLevel);

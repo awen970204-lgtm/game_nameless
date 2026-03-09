@@ -75,6 +75,10 @@ public class GameModeManager : MonoBehaviour
 
         gameMode = GameMode.story;
         GameStarted = true;
+        foreach(var character in characterDatas)
+        {
+            PlayerPrefs.SetInt($"PlayerHoldCharacter{GameModeManager.Instance.characterDatas.IndexOf(character)}InStory", 0);
+        }
         StartCoroutine(StoryModeBegin());
     }
     private IEnumerator StoryModeBegin()
@@ -99,6 +103,29 @@ public class GameModeManager : MonoBehaviour
         }
 
         GameCharacterManager.Instance.SetActing(GameCharacterManager.Instance.actingCharacter);
+    }
+
+    public void ContinueStory()
+    {
+        gameMode = GameMode.story;
+        GameStarted = true;
+        StartCoroutine(ContinueStoryBegin());
+    }
+    private IEnumerator ContinueStoryBegin()
+    {
+        yield return (LoadScene(BattleScene));
+        yield return null;
+        yield return null;
+
+        GameCharacters?.SetActive(true);
+        GameEventUI?.SetActive(true);
+
+        foreach(var character in characterDatas)
+        {
+            if (PlayerPrefs.GetInt($"PlayerHoldCharacter{GameModeManager.Instance.characterDatas.IndexOf(character)}InStory")
+                == 1)
+            StoryModeManager.Instance?.GetNewMenber(character);
+        }
     }
 
     public void StartStoryBattle(EventBattleData data)

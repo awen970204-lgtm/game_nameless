@@ -12,7 +12,7 @@ public class EventUI : MonoBehaviour
     public static EventUI Instance { get; private set; }
 
     [Header("UI Control")]
-    public static int NowScene = 0;
+    public static int NowScene = 1;
 
     public GameObject StoryUI;
     public GameObject SetPanel;
@@ -99,7 +99,11 @@ public class EventUI : MonoBehaviour
     }
     private void SaveStoryData()
     {
-        
+        PlayerPrefs.SetInt("StroyBegin", 1);
+        foreach(var character in StoryModeManager.Instance.characters)
+        {
+            PlayerPrefs.SetInt($"PlayerHoldCharacter{GameModeManager.Instance.characterDatas.IndexOf(character)}InStory", 1);
+        }
     }
 
     public void OnPlayerInEvent(EventData Data)

@@ -370,7 +370,7 @@ public class TurnManager : MonoBehaviour
     // 執行卡片效果
     private IEnumerator ApplyCardEntrys(List<EffectEntry> entries, CharacterHealth user, Player player)
     {
-        Player enemyPlayer = (player == player1)? player2 : player2;
+        Player enemyPlayer = (player == player1)? player2 : player1;
 
         foreach(var entry in entries)
         {

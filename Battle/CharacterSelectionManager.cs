@@ -171,7 +171,8 @@ public class CharacterSelectionManager : MonoBehaviour
             return;
         }
         if (GameModeManager.Instance?.gameMode == GameMode.story &&
-            currentSelectingPlayer.playerCharacters.Any(c => c.character_data == characterData))
+            currentSelectingPlayer.playerCharacters.Any(c => c.character_data == characterData) &&
+                !TurnManager.Instance.GameStart)
         {
             Debug.Log("已選擇過該角色");
             LogWarning.Instance.Warning("已選擇過該角色");
