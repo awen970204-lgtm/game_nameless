@@ -63,7 +63,8 @@ public class CharacterSelectionManager : MonoBehaviour
             player1.team = TeamID.Team1;
             player2.team = TeamID.Enemy;
         }
-
+        if (player2.team == TeamID.Enemy)
+            player2.AutoActivity = true;
     }
 
     private void StartChose() // 開始選擇

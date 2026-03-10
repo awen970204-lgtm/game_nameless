@@ -105,7 +105,7 @@ public class GameModeManager : MonoBehaviour
         GameCharacterManager.Instance.SetActing(GameCharacterManager.Instance.actingCharacter);
     }
 
-    public void ContinueStory()
+    public void ContinueStory() // 繼續遊戲
     {
         gameMode = GameMode.story;
         GameStarted = true;
@@ -149,6 +149,7 @@ public class GameModeManager : MonoBehaviour
 
     #endregion
     
+    #region Loading
     // 轉場
     private IEnumerator LoadScene(int index)
     {
@@ -157,9 +158,9 @@ public class GameModeManager : MonoBehaviour
             Time.timeScale = 1;
         }
 
-        yield return FadeIn();
         if (fadeTips.Count > 0)
             tip.text = fadeTips[Random.Range(0, fadeTips.Count)];
+        yield return FadeIn();
 
         // 等場景完全啟用
         AsyncOperation async = SceneManager.LoadSceneAsync(index, LoadSceneMode.Single);
@@ -168,6 +169,7 @@ public class GameModeManager : MonoBehaviour
 
         yield return new WaitForSeconds(0.3f);
         MenuManager.Instance.CheckGameMode();
+        EventUI.NowScene = index;
         StartCoroutine(FadeOut());
     }
     private IEnumerator FadeIn()
@@ -192,7 +194,9 @@ public class GameModeManager : MonoBehaviour
         }
         canvasGroup.alpha = 0f;
     }
+    #endregion
 
+    #region Over
     // 遊戲結束
     public void BattleOver()
     {
@@ -206,6 +210,7 @@ public class GameModeManager : MonoBehaviour
             GameStarted = false;
             BattleStarted = false;
             yield return (LoadScene(BattleScene));
+            yield return null;
 
             if(MenuManager.Instance != null)
             {
@@ -232,6 +237,15 @@ public class GameModeManager : MonoBehaviour
         EventUI.Instance?.BattleOverCheck();
     }
 
+    public IEnumerator StoryModeEnd()
+    {
+        PlayerPrefs.SetInt("StroyBegin", 0);
+        foreach(var character in characterDatas)
+        {
+            PlayerPrefs.SetInt($"PlayerHoldCharacter{GameModeManager.Instance.characterDatas.IndexOf(character)}InStory", 0);
+        }
+        yield return BackToMenu();
+    }
     public IEnumerator BackToMenu()
     {
         GameStarted = false;
@@ -249,4 +263,6 @@ public class GameModeManager : MonoBehaviour
         GameCharacters.SetActive(false);
         GameEventUI.SetActive(false);
     }
+
+    #endregion
 }

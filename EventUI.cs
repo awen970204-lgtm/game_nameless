@@ -95,7 +95,6 @@ public class EventUI : MonoBehaviour
         eventPanel.SetActive(false);
         DialoguePanel.SetActive(false);
         panel.SetActive(false);
-        
     }
     private void SaveStoryData()
     {

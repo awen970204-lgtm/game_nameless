@@ -44,8 +44,8 @@ public class MenuManager : MonoBehaviour
     public GameObject skillButtonPref;
     public Transform skillTransform;
     public TMP_Text skillIntro;
-    public Button StartStoryModeButton;
     public Button ContinueStoryButton;
+    public Button StartStoryModeButton;
 
     public GameObject characterButtonPrefab;
     public Transform characterButtonContent;

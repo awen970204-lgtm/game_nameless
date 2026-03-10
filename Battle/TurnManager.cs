@@ -148,6 +148,7 @@ public class TurnManager : MonoBehaviour
 
         Debug.Log("遊戲開始");
         GameStart = true;
+        waitingForAction = true;
         OnBattleBegin?.Invoke();
         StartCoroutine(StartTurnDelay());
     }
@@ -201,7 +202,7 @@ public class TurnManager : MonoBehaviour
         // 開AI
         if (actingPlayer.team == TeamID.Enemy)
         {
-            endTurnButton.SetActive(false);
+            StartCoroutine(actingPlayer.TakeTurnAction());
         }
     }
 
@@ -374,29 +375,7 @@ public class TurnManager : MonoBehaviour
 
         foreach(var entry in entries)
         {
-            List<CharacterHealth> targets = new List<CharacterHealth>();
-            switch(entry.targetType)
-            {
-                case TargetType.Self:
-                    targets.Add(user);
-                    break;
-                case TargetType.AllOther:
-                    targets.AddRange(turnOrder);
-                    targets.Remove(user);
-                    break;
-                case TargetType.All:
-                    targets.AddRange(turnOrder);
-                    break;
-                case TargetType.teammate:
-                    targets.AddRange(turnOrder.Where(c => c.team == user.team));
-                    break;
-                case TargetType.enemy:
-                    targets.AddRange(turnOrder.Where(c => c.team != user.team));
-                    break;
-                case TargetType.EventTrigger:
-                    targets.Add(WaitCardManager.Instance?.currentEvent?.actor);
-                    break;
-            }
+            List<CharacterHealth> targets = CardEffectTarget(entry, user, player);
             if (targets.Count == 0)
             {
                 yield break;
@@ -414,6 +393,33 @@ public class TurnManager : MonoBehaviour
             yield return EffectExecutor.ApplyEffects(user, targets, entry.effects);
         }
         yield return null;
+    }
+    private List<CharacterHealth> CardEffectTarget(EffectEntry effectEntry, CharacterHealth user, Player player)
+    {
+        List<CharacterHealth> targets = new List<CharacterHealth>();
+        switch(effectEntry.targetType)
+        {
+            case TargetType.Self:
+                targets.Add(user);
+                break;
+            case TargetType.AllOther:
+                targets.AddRange(turnOrder);
+                targets.Remove(user);
+                break;
+            case TargetType.All:
+                targets.AddRange(turnOrder);
+                break;
+            case TargetType.teammate:
+                targets.AddRange(turnOrder.Where(c => c.team == user.team));
+                break;
+            case TargetType.enemy:
+                targets.AddRange(turnOrder.Where(c => c.team != user.team));
+                break;
+            case TargetType.EventTrigger:
+                targets.Add(WaitCardManager.Instance?.currentEvent?.actor);
+                break;
+        }
+        return targets;
     }
     private void UseCardOver(CardCtrl cardCtrl, CharacterHealth user, Player player)
     {
@@ -932,8 +938,22 @@ public class TurnManager : MonoBehaviour
     }
 
     #region Tool
+    
+    public static float CalculateCardScore(Card card, CharacterHealth character)
+    {
+        float finalScore = 0;
+        foreach(var entry in card.effectEntrys)
+        {
+            List<CharacterHealth> targets = TurnManager.Instance.CardEffectTarget(entry, character, character.ownerPlayer);
+            foreach(var target in targets)
+            {
+                finalScore += CalculateEntryScore(entry, character, target);
+            }
+        }
+        return finalScore;
+    }
 
-    private List<CharacterHealth> GetBestTargets(EffectEntry entry, CharacterHealth self) // 取得最佳目標
+    private static List<CharacterHealth> GetBestTargets(EffectEntry entry, CharacterHealth self) // 取得最佳目標
     {
         var (isBeneficial, isHarmful) = AnalyzeEffectEntry(entry);
         var candidates = GetCandidateTargets(entry, self, isBeneficial, isHarmful);
@@ -952,22 +972,28 @@ public class TurnManager : MonoBehaviour
             .Select(kv => kv.Key)
             .ToList();
     }
-    private float CalculateEntryScore(EffectEntry entry, CharacterHealth self, CharacterHealth target) // 計算一對一分數
+    private static float CalculateEntryScore(EffectEntry entry, CharacterHealth self, CharacterHealth target) // 計算一對一分數
     {
         var (isBeneficial, isHarmful) = AnalyzeEffectEntry(entry);
 
         float total = 0f;
 
+        CharacterHealth finalTarget = target;
         foreach (var effect in entry.effects)
         {
-            float score = EffectTendency(effect, self, target, isBeneficial, isHarmful);
+            if (effect.effectTarget == EffectiveTarget.Initiator)
+                finalTarget = self;
+            else if (effect.effectTarget == EffectiveTarget.target)
+                finalTarget = target;
+            
+            float score = EffectTendency(effect, self, finalTarget, isBeneficial, isHarmful);
             total += score * Mathf.Abs(effect.multiplier);
         }
 
         return total;
     }
 
-    private (bool isBeneficial, bool isHarmful) AnalyzeEffectEntry(EffectEntry entry) // 分析益害
+    private static (bool isBeneficial, bool isHarmful) AnalyzeEffectEntry(EffectEntry entry) // 分析益害
     {
         bool isBeneficial = false;
         bool isHarmful = false;
@@ -1006,7 +1032,7 @@ public class TurnManager : MonoBehaviour
 
         return (isBeneficial, isHarmful);
     }
-    private List<CharacterHealth> GetCandidateTargets(EffectEntry entry, CharacterHealth self,
+    private static List<CharacterHealth> GetCandidateTargets(EffectEntry entry, CharacterHealth self,
          bool isBeneficial, bool isHarmful) // 取得候選目標
     {
         var allUnits = TurnManager.Instance.turnOrder
@@ -1039,7 +1065,7 @@ public class TurnManager : MonoBehaviour
         };
     }
 
-    private float EffectTendency(Effect effect, CharacterHealth self, CharacterHealth target,
+    private static float EffectTendency(Effect effect, CharacterHealth self, CharacterHealth target,
      bool isBeneficial, bool isHarmful) // 判斷效果數值
     {
         float effectScore = 0f;
@@ -1063,12 +1089,12 @@ public class TurnManager : MonoBehaviour
 
             case EffectType.Discard_Range:
                 var handCount = target.ownerPlayer != null ? target.ownerPlayer.hand.Count : 0;
-                effectScore = handCount > 0 ? Mathf.Min(handCount, value) * 0.3f : 0f;
+                effectScore = handCount > 0 ? Mathf.Min(handCount, value) * 1.2f : 0f;
                 break;
 
             case EffectType.DrawCard:
                 if (target.ownerPlayer != null)
-                    effectScore = value * 0.3f;
+                    effectScore = value * 1.5f;
                 break;
 
             case EffectType.ChangeMaxHP:

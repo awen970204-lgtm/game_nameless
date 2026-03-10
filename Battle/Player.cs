@@ -33,13 +33,13 @@ public class Player : MonoBehaviour
     [HideInInspector] public List<CharacterHealth> playerCharacters;       // 玩家操控的角色
     [HideInInspector] public List<Card> hand = new List<Card>();           // 手牌
     [HideInInspector] public List<CardCtrl> handUI = new List<CardCtrl>(); // 手牌
+    public bool AutoActivity = false;
+    private bool HasTakeAction = false;
 
     private List<Card> drawPile = new List<Card>();    // 當前可抽取
     private List<Card> discardPile = new List<Card>(); // 棄牌堆
-
-    // [HideInInspector] public bool IsUsingSkill = false;       // 是否在使用技能
     [HideInInspector] public int DrawCardsInTrun = 0;
-    // [HideInInspector] public int UseCardTimesInTrun = 0;
+
     [HideInInspector] public List<CardCtrl> disCard = new List<CardCtrl>();        // 要棄置的牌
     [HideInInspector] public List<CardCtrl> stealCardBuffer = new List<CardCtrl>();// 被選中要偷的牌
     [HideInInspector] public Player Thief = null;            // 偷人的玩家
@@ -157,7 +157,7 @@ public class Player : MonoBehaviour
         Debug.Log($"移除卡牌{card.cardName}");
     }
 
-    public void SetDesk(List<Card> list)
+    public void SetDesk(List<Card> list) // 設定牌堆
     {
         drawPile.Clear();
         discardPile.Clear();
@@ -199,6 +199,85 @@ public class Player : MonoBehaviour
         }
     }
 
+    public IEnumerator TakeTurnAction()
+    {
+        HasTakeAction = true;
+        yield return new WaitForSeconds(1f);
+        yield return new WaitUntil(()=> TurnManager.Instance.waitingForAction);
+
+        while(HasTakeAction && AutoActivity)
+        {
+            yield return TakeAction();
+            yield return new WaitUntil(()=> TurnManager.Instance.waitingForAction);
+            yield return new WaitForSeconds(0.6f);
+        }
+
+        yield return new WaitUntil(()=> TurnManager.Instance.waitingForAction);
+        if (AutoActivity)
+            TurnManager.Instance.EndTurn();
+    }
+    private IEnumerator TakeAction()
+    {
+        if (playerCharacters.Count == 0 || !AutoActivity)
+            yield break;
+        
+        HasTakeAction = false;
+        yield return new WaitForSeconds(1f);
+        // 用技能
+
+        // 使用牌
+        if (playerCharacters.Where(c => c.usingCard == null).ToList().Count == 0)
+            yield break;
+
+        if (hand.Where(c => c.cardType == Card.CARD_TYPE.NOW).ToList().Count > 0) // 立即牌
+        {
+            foreach(var card in hand.Where(c => c.cardType == Card.CARD_TYPE.NOW))
+            {
+                Dictionary<CharacterHealth, float> scores = new();
+                foreach(var character in playerCharacters.Where(c => c.usingCard == null))
+                {
+                    scores[character] = TurnManager.CalculateCardScore(card, character);
+                }
+                
+                CharacterHealth TopScoreCharacter = 
+                    scores.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToList()[0];
+                if (scores[TopScoreCharacter] > 0)
+                {
+                    CardCtrl cardCtrl = handUI.Find(c => c.card_data == card);
+                    if (cardCtrl != null)
+                    {
+                        HasTakeAction = true;
+                        cardCtrl.TryUseOnCharacter(TopScoreCharacter);
+                        yield break;
+                    }
+                }
+            }
+        }
+        if (hand.Where(c => c.cardType == Card.CARD_TYPE.DELAY || c.cardType == Card.CARD_TYPE.WAIT).ToList().Count > 0)
+        {
+            foreach(var card in hand.Where(c => c.cardType == Card.CARD_TYPE.DELAY || c.cardType == Card.CARD_TYPE.WAIT))
+            {
+                Dictionary<CharacterHealth, float> scores = new();
+                foreach(var character in playerCharacters.Where(c => c.usingCard == null))
+                {
+                    scores[character] = TurnManager.CalculateCardScore(card, character);
+                }
+                
+                CharacterHealth TopScoreCharacter = 
+                    scores.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToList()[0];
+                if (scores[TopScoreCharacter] > 0)
+                {
+                    CardCtrl cardCtrl = handUI.Find(c => c.card_data == card);
+                    if (cardCtrl != null)
+                    {
+                        HasTakeAction = true;
+                        cardCtrl.TryUseOnCharacter(TopScoreCharacter);
+                        yield break;
+                    }
+                }
+            }
+        }
+    }
     #endregion
 
     #region Discard/steal
