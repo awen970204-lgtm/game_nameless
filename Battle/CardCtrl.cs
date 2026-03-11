@@ -313,7 +313,6 @@ public class CardCtrl : MonoBehaviour,
 
     private bool CanUse(CharacterHealth target)
     {
-        if (ownerPlayer.team == TeamID.Enemy) return false;
         if (target.team != ownerPlayer.team) return false;
         if (TurnManager.Instance.actingPlayer != ownerPlayer) return false;
         if (!TurnManager.Instance.waitingForAction) return false;
