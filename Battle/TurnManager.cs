@@ -123,7 +123,7 @@ public class TurnManager : MonoBehaviour
         if (!skillUseCounter.ContainsKey(key))
             skillUseCounter[key] = 0;
 
-        return skillUseCounter[key] < skill.maxUsesPerTurn;
+        return (skillUseCounter[key] < skill.maxUsesPerTurn) && skill.LimitedTimes;
     }
     public bool CanProceed()// 是否可以行動
     {

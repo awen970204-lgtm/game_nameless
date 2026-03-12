@@ -224,6 +224,27 @@ public class Player : MonoBehaviour
         HasTakeAction = false;
         yield return new WaitForSeconds(1f);
         // 用技能
+        foreach(var character in playerCharacters)
+        {
+            foreach(var skill in character.currentSkills.Where(s => !character.invalidSkills.Contains(s)))
+            {
+                if (!TurnManager.Instance.CanUseSkill(character, skill))
+                    continue;
+                bool limited = false;
+                foreach(var limit in skill.skillNeed)
+                {
+                    if (!LimitChecker.CheckLimit(limit, character, TurnManager.Instance.actingPlayer.playerCharacters[0]))
+                    {
+                        limited = true;
+                        break;
+                    }
+                }
+                if (limited) continue;
+
+                TurnManager.Instance.OnSkillSelected(skill, character, this);
+                // 
+            }
+        }
 
         // 使用牌
         if (playerCharacters.Where(c => c.usingCard == null).ToList().Count == 0)
