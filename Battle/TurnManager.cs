@@ -276,7 +276,7 @@ public class TurnManager : MonoBehaviour
                 if (entry.canInputValue) inputValue.CanInput(entry.MaxInputValue);
 
                 // 自動選擇
-                if (entry.targetType == TargetType.Self) pendingUser.SkillClick();
+                yield return AutoChoseTarget(entry, user);
                 // 等待玩家完成選擇
                 yield return new WaitUntil(() => !waitingForTarget && canContinue());
                 if (actionCancelled)
@@ -729,8 +729,7 @@ public class TurnManager : MonoBehaviour
                             
                         if (entry.canInputValue) 
                             inputValue.CanInput(entry.MaxInputValue);
-                        if (entry.targetType == TargetType.Self) 
-                            user.SkillClick();
+                        yield return AutoChoseTarget(entry, user);
 
                         // 等待玩家完成選擇
                         yield return new WaitUntil(() => !waitingForTarget);
@@ -939,7 +938,7 @@ public class TurnManager : MonoBehaviour
 
     #region Tool
     
-    public static float CalculateCardScore(Card card, CharacterHealth character)
+    public float CalculateCardScore(Card card, CharacterHealth character)
     {
         float finalScore = 0;
         foreach(var entry in card.effectEntrys)
@@ -953,7 +952,31 @@ public class TurnManager : MonoBehaviour
         return finalScore;
     }
 
-    private static List<CharacterHealth> GetBestTargets(EffectEntry entry, CharacterHealth self) // 取得最佳目標
+    private IEnumerator AutoChoseTarget(EffectEntry entry, CharacterHealth user)
+    {
+        if (!entry.NeedChoose || !waitingForTarget)
+            yield break;
+        
+        foreach(var target in GetBestTargets(entry, user))
+        {
+            OnTargetToggled(target);
+            yield return new WaitForSeconds(0.2f);
+        }
+        if (entry.canInputValue)
+        {
+            inputValue.ChangeValueToFixed(entry.MaxInputValue);
+        }
+
+        if (user.ownerPlayer.AutoActivity)
+        {
+            if (selectedTargets.Count > 0)
+                ConfirmTargets();
+            else 
+                CancelSelection();
+        }
+    }
+
+    private List<CharacterHealth> GetBestTargets(EffectEntry entry, CharacterHealth self) // 取得最佳目標
     {
         var (isBeneficial, isHarmful) = AnalyzeEffectEntry(entry);
         var candidates = GetCandidateTargets(entry, self, isBeneficial, isHarmful);
@@ -972,7 +995,7 @@ public class TurnManager : MonoBehaviour
             .Select(kv => kv.Key)
             .ToList();
     }
-    private static float CalculateEntryScore(EffectEntry entry, CharacterHealth self, CharacterHealth target) // 計算一對一分數
+    private float CalculateEntryScore(EffectEntry entry, CharacterHealth self, CharacterHealth target) // 計算一對一分數
     {
         var (isBeneficial, isHarmful) = AnalyzeEffectEntry(entry);
 
@@ -993,7 +1016,7 @@ public class TurnManager : MonoBehaviour
         return total;
     }
 
-    private static (bool isBeneficial, bool isHarmful) AnalyzeEffectEntry(EffectEntry entry) // 分析益害
+    private (bool isBeneficial, bool isHarmful) AnalyzeEffectEntry(EffectEntry entry) // 分析益害
     {
         bool isBeneficial = false;
         bool isHarmful = false;
@@ -1032,7 +1055,7 @@ public class TurnManager : MonoBehaviour
 
         return (isBeneficial, isHarmful);
     }
-    private static List<CharacterHealth> GetCandidateTargets(EffectEntry entry, CharacterHealth self,
+    private List<CharacterHealth> GetCandidateTargets(EffectEntry entry, CharacterHealth self,
          bool isBeneficial, bool isHarmful) // 取得候選目標
     {
         var allUnits = TurnManager.Instance.turnOrder
@@ -1065,7 +1088,7 @@ public class TurnManager : MonoBehaviour
         };
     }
 
-    private static float EffectTendency(Effect effect, CharacterHealth self, CharacterHealth target,
+    private float EffectTendency(Effect effect, CharacterHealth self, CharacterHealth target,
      bool isBeneficial, bool isHarmful) // 判斷效果數值
     {
         float effectScore = 0f;
@@ -1080,11 +1103,13 @@ public class TurnManager : MonoBehaviour
                 break;
 
             case EffectType.Damage: // 越少血越值得打
-                effectScore = ((missingHP + 1) / target.currentMaxHP) * 2f + 
+                effectScore = target.currentMaxHP > 0 ? ((missingHP) / target.currentMaxHP) * 2f + 
+                (effect.value + self.currentAttackPower - target.currentDefense) * effect.multiplier * 0.3f : 
                 (effect.value + self.currentAttackPower - target.currentDefense) * effect.multiplier * 0.3f;
                 break;
             case EffectType.ConsumeHP: // 越少血越值得打
-                effectScore = ((missingHP + 1) / target.currentMaxHP) * 2f + value * 0.3f;
+                effectScore = target.currentMaxHP > 0 ? ((missingHP) / target.currentMaxHP) * 2f + 
+                value * 0.3f : value * 0.3f;
                 break;
 
             case EffectType.Discard_Range:
@@ -1102,7 +1127,7 @@ public class TurnManager : MonoBehaviour
             case EffectType.ChangeHealPower:
             case EffectType.ChangeDefense:
             case EffectType.ChangeDamageReduction:
-                effectScore = value > 0 ? value * 0.25f : value * 0.3f;
+                effectScore = value > 0 ? value * 0.3f : value * 0.3f;
                 break;
             case EffectType.ChangeDamageMultiplier:
                 effectScore = effect.multiplier > 0 ? effect.multiplier * 1f : effect.multiplier * 1.2f;

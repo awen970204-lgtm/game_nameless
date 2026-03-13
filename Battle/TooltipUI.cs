@@ -230,6 +230,8 @@ public class TooltipUI : MonoBehaviour
                 characterInformatuon.transform.GetChild(0).GetChild(2).GetComponent<TMP_Text>().text = "Enemy";
                 break;
         }
+        characterInformatuon.transform.GetChild(0).GetChild(3).GetComponent<TMP_Text>().text = 
+            $"LV{character.level}";
         characterInformatuon.transform.GetChild(1).GetChild(0).GetComponent<Image>().sprite = 
             character.character_data.characterPicture;
         // HP

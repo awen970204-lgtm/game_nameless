@@ -25,14 +25,13 @@ public class CardCtrl : MonoBehaviour,
     public GameObject cardDiscardDisplay;   // 棄置狀態顯示
     public GameObject snapDisplay;          // 吸附狀態顯示
     public GameObject LockedDisplay;
-    private CanvasGroup canvasGroup;
+    private Image backImage;
 
     [Header("Card")]
     public Image picture;         // 卡圖
     public Image cardTypePicture; // 類型圖
     public TMP_Text card_name;    // 卡名
-    public TMP_Text cardTip;      // 用來顯示提示
-    public TMP_Text delayTurns;   // 用來顯示提示
+    public TMP_Text delayTurns;   // 持續時間
     
     [HideInInspector] public bool IsMoving = false;
     [HideInInspector] public bool IsUseing = false;
@@ -47,7 +46,7 @@ public class CardCtrl : MonoBehaviour,
     {
         rectTransform = GetComponent<RectTransform>();
         mainCanvas = GetComponentInParent<Canvas>();
-        canvasGroup = GetComponent<CanvasGroup>();
+        backImage = GetComponent<Image>();
     }
     void OnEnable()// 訂閱事件
     {
@@ -57,7 +56,6 @@ public class CardCtrl : MonoBehaviour,
     }
     void Start()
     {
-        cardTip = TurnManager.Instance.UseTips;
         checkButton = TurnManager.Instance.checkButton;
         originalParent = ownerPlayer.handArea;
         originalPosition = rectTransform.anchoredPosition;
@@ -83,10 +81,6 @@ public class CardCtrl : MonoBehaviour,
         if (cardTypePicture != null) cardTypePicture.sprite = card_data.cardTypePicture;
         if (card_name != null) card_name.text = card_data.cardName;
 
-        // if (card_data.cardType == Card.CARD_TYPE.WAIT)
-        // { 
-        //     WaitCardManager.Instance.RegisterWaitCard(this); 
-        // } 
         LockedDisplay.SetActive(false);
 
         DisplayChange();
@@ -155,7 +149,7 @@ public class CardCtrl : MonoBehaviour,
 
         originalPosition = rectTransform.anchoredPosition;
         handLayout.CreatePlaceholder(rectTransform);
-        canvasGroup.blocksRaycasts = false;
+        // canvasGroup.blocksRaycasts = false;
 
         TooltipUI.Instance.IsDragging = true;
         TooltipUI.Instance.HideTooltip();
@@ -202,7 +196,7 @@ public class CardCtrl : MonoBehaviour,
             ReturnToHand();
         }
 
-        canvasGroup.blocksRaycasts = true;
+        backImage.raycastTarget = true;
         ClearSnap();
     }
 
@@ -266,10 +260,11 @@ public class CardCtrl : MonoBehaviour,
 
         handLayout.RemovePlaceholder();
         StartCoroutine(SnapToCharacter(target));
-        UseCard();
+        
     }
     private IEnumerator SnapToCharacter(CharacterHealth target)
     {
+        rectTransform.SetParent(mainCanvas.transform, true);
         Vector2 start = this.transform.position;
         Vector2 end = target.character_Picture.GetComponentInParent<Transform>().transform.position;
         int index = target.character_Picture.GetComponentInParent<Transform>().transform.GetSiblingIndex();
@@ -293,6 +288,9 @@ public class CardCtrl : MonoBehaviour,
         this.transform.position = target.character_Picture.GetComponentInParent<Transform>().transform.position;
         this.transform.SetSiblingIndex(index);
         rectTransform.SetParent(target.character_Picture.GetComponentInParent<Transform>().transform, true);
+
+        if (user != null)
+            UseCard();
     }
 
     private void UseCard()
@@ -340,7 +338,7 @@ public class CardCtrl : MonoBehaviour,
             Debug.Log($"{card_data.cardName}:Back to hand");
             StartCoroutine(handLayout.SmoothInsertToPlaceholder(rectTransform, 0.25f));
             WaitCardManager.Instance.UnregisterCard(this);
-            canvasGroup.blocksRaycasts = true;
+            backImage.raycastTarget = true;
         }
     }
 

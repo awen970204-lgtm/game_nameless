@@ -230,19 +230,12 @@ public class Player : MonoBehaviour
             {
                 if (!TurnManager.Instance.CanUseSkill(character, skill))
                     continue;
-                bool limited = false;
-                foreach(var limit in skill.skillNeed)
+                if (LimitChecker.Limited(skill.skillNeed, character, TurnManager.Instance.actingPlayer.playerCharacters[0]))
                 {
-                    if (!LimitChecker.CheckLimit(limit, character, TurnManager.Instance.actingPlayer.playerCharacters[0]))
-                    {
-                        limited = true;
-                        break;
-                    }
+                    continue;
                 }
-                if (limited) continue;
 
                 TurnManager.Instance.OnSkillSelected(skill, character, this);
-                // 
             }
         }
 
@@ -257,7 +250,7 @@ public class Player : MonoBehaviour
                 Dictionary<CharacterHealth, float> scores = new();
                 foreach(var character in playerCharacters.Where(c => c.usingCard == null))
                 {
-                    scores[character] = TurnManager.CalculateCardScore(card, character);
+                    scores[character] = TurnManager.Instance.CalculateCardScore(card, character);
                 }
                 
                 CharacterHealth TopScoreCharacter = 
@@ -281,7 +274,7 @@ public class Player : MonoBehaviour
                 Dictionary<CharacterHealth, float> scores = new();
                 foreach(var character in playerCharacters.Where(c => c.usingCard == null))
                 {
-                    scores[character] = TurnManager.CalculateCardScore(card, character);
+                    scores[character] = TurnManager.Instance.CalculateCardScore(card, character);
                 }
                 
                 CharacterHealth TopScoreCharacter = 

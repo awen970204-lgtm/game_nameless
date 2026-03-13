@@ -59,6 +59,19 @@ public enum Limit
 // 檢查限制
 public static class LimitChecker
 {
+    public static bool Limited(List<NeedState> needStates, CharacterHealth trigger, CharacterHealth acting)
+    {
+        bool limited = false;
+        foreach(var need in needStates)
+        {
+            if (!CheckLimit(need, trigger, acting))
+            {
+                limited = true;
+                break;
+            }
+        }
+        return limited;
+    }
     public static bool CheckLimit(NeedState need, CharacterHealth trigger, CharacterHealth acting)
     {
         CharacterHealth ch = null;
