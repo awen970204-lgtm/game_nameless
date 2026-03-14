@@ -184,6 +184,14 @@ public class CharacterSelectionManager : MonoBehaviour
         GameObject go = Instantiate(characterPrefab, currentSelectingPlayer.Player_characterTransform);
         CharacterHealth ch_H = go.GetComponent<CharacterHealth>();
         PassiveSkilCtrl ch_PS = go.GetComponent<PassiveSkilCtrl>();
+        CharacterHealth frondMate = 
+            currentSelectingPlayer.Player_characterTransform
+            .GetComponentsInChildren<CharacterHealth>(true)
+            .FirstOrDefault(c => c.character_data.tauntLevel < characterData.tauntLevel);
+        if (frondMate != null)
+        {
+            go.transform.SetSiblingIndex(frondMate.transform.GetSiblingIndex());
+        }
         // 設定屬性
         ch_H.character_data = characterData;
         if (currentSelectingPlayer.Player_nunber == 1)

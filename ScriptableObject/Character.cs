@@ -29,6 +29,7 @@ public class Character : ScriptableObject
     public float damageReduction = 0f;     // 傷害減免(定值)
 
     public int drawCount = 1;
+    public int tauntLevel = 0;
     [Header("skills")]
     public List<Skill> skills;                 // 主動技能
     public List<PassiveSkill> passiveSkills;   // 被動技能
