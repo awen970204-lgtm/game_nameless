@@ -30,7 +30,7 @@ public class EventEffectEntry
     public EventBattleData battleData;
     public QuestData questData;
     public Character characterData;
-
+    public StoryEnd storyEndData;
 }
 public enum EventEffect
 {
@@ -40,6 +40,7 @@ public enum EventEffect
     OpenNewBattle,
     ClosureEvent,
     GetQuest,
+    EndStory,
     // 遊戲資源
     GetMenber,
 

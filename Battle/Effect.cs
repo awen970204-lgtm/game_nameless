@@ -35,7 +35,9 @@ public enum EffectType
     ReplySkill,
     InvalidPassiveSkill,
     ReplyPassiveSkill,
-    // 之後繼續擴充
+    // 召喚
+    SummonTeammate,
+    SummonEnemy,
 }
 public enum TargetValue
 {

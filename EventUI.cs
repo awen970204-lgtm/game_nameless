@@ -36,7 +36,7 @@ public class EventUI : MonoBehaviour
     public GameObject triggerEventButton;
     private EventData pendingEventData;
     private EventData lastEventData;
-    private bool InEvent = false;
+    public static bool InEvent = false;
 
     [Header("Dialogue UI References")]
     public GameObject DialoguePanel;
@@ -55,6 +55,10 @@ public class EventUI : MonoBehaviour
     private Coroutine typingCoroutine;
     private string fullText = "";
     private bool typing = false;
+    [Header("End")]
+    public Image endPanel;
+    public Button endStoryButton;
+    public GameObject endOverPanel;
 
     void Awake()
     {
@@ -69,6 +73,7 @@ public class EventUI : MonoBehaviour
     {
         GameModeManager.Instance.GameEventUI = this.GetComponentInParent<Canvas>().gameObject;
         SaveButton.onClick.AddListener(()=> StartCoroutine(SaveStoryMode()));
+        endStoryButton.onClick.AddListener(()=> StartCoroutine(GameModeManager.Instance.StoryModeEnd()));
         triggerEventButton.GetComponent<Button>().onClick.AddListener(()=> TriggerPendingEvent());
 
         StoryUI.SetActive(true);
@@ -189,16 +194,31 @@ public class EventUI : MonoBehaviour
                         break;
                     case EventEffect.OpenNewBattle:
                         if (entry.battleData != null)
+                        {
                             btn.GetComponent<Button>().onClick.
                             AddListener(() => GameModeManager.Instance?.StartStoryBattle(entry.battleData));
+                        }
                         break;
                     case EventEffect.ClosureEvent:
                         btn.GetComponent<Button>().onClick.AddListener(() => ClosePanel());
                         break;
                     case EventEffect.GetQuest:
                         if (entry.questData != null)
+                        {
                             btn.GetComponent<Button>().onClick.AddListener(() => 
                                 QuestManager.Instance.GetQuest(entry.questData));
+                        }
+                        break;
+                    case EventEffect.EndStory:
+                        if (entry.storyEndData != null)
+                        {
+                            btn.GetComponent<Button>().onClick.AddListener(() => 
+                                StartCoroutine(ShowStoryEnd(entry.storyEndData)));
+                        }
+                        break;
+                    case EventEffect.GetMenber:
+                        if (entry.characterData != null)
+                            StoryModeManager.Instance.GetNewMenber(entry.characterData);
                         break;
                 }
                 if (choice.recordEvent)
@@ -354,6 +374,16 @@ public class EventUI : MonoBehaviour
                     if (entry.questData != null)
                         QuestManager.Instance.GetQuest(entry.questData);
                     break;
+                case EventEffect.EndStory:
+                    if (entry.storyEndData != null)
+                    {
+                        StartCoroutine(ShowStoryEnd(entry.storyEndData));
+                    }
+                    break;
+                case EventEffect.GetMenber:
+                    if (entry.characterData != null)
+                        StoryModeManager.Instance.GetNewMenber(entry.characterData);
+                    break;
             }
         }
         
@@ -411,6 +441,16 @@ public class EventUI : MonoBehaviour
                             if (entry.questData != null)
                                 QuestManager.Instance.GetQuest(entry.questData);
                             break;
+                        case EventEffect.EndStory:
+                            if (entry.storyEndData != null)
+                            {
+                                StartCoroutine(ShowStoryEnd(entry.storyEndData));
+                            }
+                            break;
+                        case EventEffect.GetMenber:
+                            if (entry.characterData != null)
+                                StoryModeManager.Instance.GetNewMenber(entry.characterData);
+                            break;
                     }
                 }
             }
@@ -427,5 +467,36 @@ public class EventUI : MonoBehaviour
         float volume = Mathf.Clamp01(backgroundMusicVoice / backgroundMusicVoiceSlider.maxValue);
         backgroundMusicSource.volume = volume;
         backgroundMusicVoiceText.text = $"{backgroundMusicVoice}";
+    }
+
+    // 結局
+    private IEnumerator ShowStoryEnd(StoryEnd storyEndData)
+    {
+        GamecharacterControl.CanMove = false;
+        panel.gameObject.SetActive(true);
+        eventPanel.SetActive(false);
+        DialoguePanel.SetActive(false);
+
+        endOverPanel.SetActive(false);
+        endOverPanel.transform.GetChild(0).GetComponent<Image>().sprite = storyEndData.endImage;
+        endOverPanel.transform.GetChild(1).GetComponent<TMP_Text>().text = $"達成結局:{storyEndData.endName}";
+        endOverPanel.transform.GetChild(2).GetComponent<TMP_Text>().text = storyEndData.endIntroduse;
+
+        endPanel.sprite = storyEndData.endImage;
+        endPanel.gameObject.SetActive(true);
+        endPanel.transform.GetComponent<Button>().enabled = false;
+
+        float duration = 2f;
+        float t = 0f;
+        Color c = endPanel.color;
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            c.a = Mathf.Clamp01(t / duration);
+            endPanel.color = c;
+            yield return null;
+        }
+        
+        endPanel.transform.GetComponent<Button>().enabled = true;
     }
 }

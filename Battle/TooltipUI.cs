@@ -14,6 +14,8 @@ public class TooltipUI : MonoBehaviour
     public TMP_Text cardNameText;
     public TMP_Text cardTooltipText;
     [HideInInspector] public bool IsDragging = false;
+    private AudioSource audioSource;
+    [SerializeField] private AudioClip hoverSound;
 
     [Header("ContinuedEffect")]
     public GameObject EffectTooltipPanel;
@@ -36,6 +38,10 @@ public class TooltipUI : MonoBehaviour
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
+
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+            audioSource = gameObject.AddComponent<AudioSource>();
     }
     void Start()
     {
@@ -133,6 +139,9 @@ public class TooltipUI : MonoBehaviour
         CardTooltipPanel.SetActive(true);
         EffectTooltipPanel.SetActive(false);
         CharacterTooltipPanel.SetActive(false);
+
+        if (hoverSound != null)
+            audioSource.PlayOneShot(hoverSound);
     }
 
     public void ShowEffectTooltip(EffectInstance Effect, ContinuedEffectCtrl EffectCtrl)

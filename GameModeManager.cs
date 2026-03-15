@@ -75,6 +75,7 @@ public class GameModeManager : MonoBehaviour
 
         gameMode = GameMode.story;
         GameStarted = true;
+        GamecharacterControl.CanMove = true;
         foreach(var character in characterDatas)
         {
             PlayerPrefs.SetInt($"PlayerHoldCharacter{GameModeManager.Instance.characterDatas.IndexOf(character)}InStory", 0);
@@ -103,22 +104,26 @@ public class GameModeManager : MonoBehaviour
         }
 
         GameCharacterManager.Instance.SetActing(GameCharacterManager.Instance.actingCharacter);
+        GameCharacterManager.Instance.StorySet();
     }
 
     public void ContinueStory() // 繼續遊戲
     {
         gameMode = GameMode.story;
         GameStarted = true;
+        GamecharacterControl.CanMove = true;
         StartCoroutine(ContinueStoryBegin());
     }
     private IEnumerator ContinueStoryBegin()
     {
+        // 加入事件
         yield return (LoadScene(BattleScene));
         yield return null;
         yield return null;
 
         GameCharacters?.SetActive(true);
         GameEventUI?.SetActive(true);
+        QuestManager.Instance?.SetStoryMode();
 
         foreach(var character in characterDatas)
         {
@@ -126,6 +131,9 @@ public class GameModeManager : MonoBehaviour
                 == 1)
             StoryModeManager.Instance?.GetNewMenber(character);
         }
+        
+        GameCharacterManager.Instance.SetActing(GameCharacterManager.Instance.actingCharacter);
+        GameCharacterManager.Instance.StorySet();
     }
 
     public void StartStoryBattle(EventBattleData data)
@@ -240,6 +248,7 @@ public class GameModeManager : MonoBehaviour
     public IEnumerator StoryModeEnd()
     {
         PlayerPrefs.SetInt("StroyBegin", 0);
+        GamecharacterControl.CanMove = false;
         foreach(var character in characterDatas)
         {
             PlayerPrefs.SetInt($"PlayerHoldCharacter{GameModeManager.Instance.characterDatas.IndexOf(character)}InStory", 0);
@@ -262,6 +271,7 @@ public class GameModeManager : MonoBehaviour
 
         GameCharacters.SetActive(false);
         GameEventUI.SetActive(false);
+        EventUI.InEvent = false;
     }
 
     #endregion

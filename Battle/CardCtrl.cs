@@ -41,12 +41,25 @@ public class CardCtrl : MonoBehaviour,
     // [SerializeField] private float snapSpeed = 18f;
     private CharacterCardSlotUI currentSlot;
     private bool isSnapping;
+    [Header("Hover Effect")]
+    [SerializeField] float hoverScale = 1.2f;
+    [SerializeField] float hoverHeight = 35f;
+    [SerializeField] float hoverSpeed = 12f;
+
+    private bool isHovering;
+
+    private Vector3 baseScale;
+    private Vector2 basePos;
 
     void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
         mainCanvas = GetComponentInParent<Canvas>();
         backImage = GetComponent<Image>();
+
+        baseScale = rectTransform.localScale;
+        basePos = rectTransform.anchoredPosition;
+
     }
     void OnEnable()// 訂閱事件
     {
@@ -66,6 +79,26 @@ public class CardCtrl : MonoBehaviour,
         TurnManager.OnTurnStart -= StateCheck;
         TurnManager.OnRealTurnEnd -= StateCheck;
         TurnManager.OnCancelCardChoose -= CancelUseCard;
+    }
+    void Update()
+    {
+        if (IsMoving || TooltipUI.Instance.IsDragging)
+            return;
+
+        Vector3 targetScale = baseScale;
+        Vector2 targetPos = basePos;
+
+        if (isHovering)
+        {
+            targetScale = baseScale * hoverScale;
+            targetPos = basePos + Vector2.up * hoverHeight;
+        }
+
+        rectTransform.localScale =
+            Vector3.Lerp(rectTransform.localScale, targetScale, Time.deltaTime * hoverSpeed);
+
+        rectTransform.anchoredPosition =
+            Vector2.Lerp(rectTransform.anchoredPosition, targetPos, Time.deltaTime * hoverSpeed);
     }
 
     private void StateCheck(Player player) => DisplayChange();
@@ -134,12 +167,18 @@ public class CardCtrl : MonoBehaviour,
     public void OnPointerEnter(PointerEventData eventData)
     {
         if (!TooltipUI.Instance.IsDragging)
+        {
             TooltipUI.Instance.ShowCardTooltip(card_data);
+            isHovering = true;
+
+            transform.SetAsLastSibling();
+        }
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
         TooltipUI.Instance.HideTooltip();
+        isHovering = false;
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -149,10 +188,10 @@ public class CardCtrl : MonoBehaviour,
 
         originalPosition = rectTransform.anchoredPosition;
         handLayout.CreatePlaceholder(rectTransform);
-        // canvasGroup.blocksRaycasts = false;
 
         TooltipUI.Instance.IsDragging = true;
         TooltipUI.Instance.HideTooltip();
+        isHovering = false;
 
         rectTransform.SetParent(mainCanvas.transform, true);
     }
@@ -197,6 +236,7 @@ public class CardCtrl : MonoBehaviour,
         }
 
         backImage.raycastTarget = true;
+        isHovering = false;
         ClearSnap();
     }
 
@@ -339,6 +379,9 @@ public class CardCtrl : MonoBehaviour,
             StartCoroutine(handLayout.SmoothInsertToPlaceholder(rectTransform, 0.25f));
             WaitCardManager.Instance.UnregisterCard(this);
             backImage.raycastTarget = true;
+            isHovering = false;
+            rectTransform.localScale = baseScale;
+            rectTransform.anchoredPosition = basePos;
         }
     }
 

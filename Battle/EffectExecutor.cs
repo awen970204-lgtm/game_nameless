@@ -142,6 +142,18 @@ public static class EffectExecutor
                     }
                 }
                 break;
+            // 角色召喚
+            case EffectType.SummonTeammate:
+                CharacterSelectionManager.currentSelectingPlayer = target.ownerPlayer;
+                CharacterSelectionManager.Instance.SelectCharacter(effect.character);
+                break;
+            case EffectType.SummonEnemy:
+                CharacterSelectionManager.currentSelectingPlayer = 
+                    (target.ownerPlayer == CharacterSelectionManager.Instance.player1) ? 
+                    CharacterSelectionManager.Instance.player2 : 
+                    CharacterSelectionManager.Instance.player1 ;
+                CharacterSelectionManager.Instance.SelectCharacter(effect.character);
+                break;
         }
     }
     

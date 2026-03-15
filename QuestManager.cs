@@ -91,6 +91,7 @@ public class QuestManager : MonoBehaviour
     private void ClearRecords() // 清空紀錄
     {
         MainQuests.Clear();
+        MainQuestShedules.Clear();
 
         OverQuests.Clear();
         OverEvents.Clear();

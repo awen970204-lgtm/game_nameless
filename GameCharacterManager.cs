@@ -30,4 +30,12 @@ public class GameCharacterManager : MonoBehaviour
         act.SetActive(true);
         SetCharacter?.Invoke(act);
     }
+    public void StorySet()
+    {
+        if (actingCharacter != null)
+        {
+            Vector2 origin = new Vector2(0, 0);
+            actingCharacter.transform.position = origin;
+        }
+    }
 }
