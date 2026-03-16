@@ -29,8 +29,8 @@ public class StoryModeManager : MonoBehaviour
     public GameObject activityPrefab;
     public Transform activityContainer;
 
-    [HideInInspector] public List<Character> characters = new List<Character>();
-    [HideInInspector] public List<Card> cards = new List<Card>();
+    public static List<Character> characters = new List<Character>();
+    public static List<Card> cards = new List<Card>();
 
     void Awake()
     {

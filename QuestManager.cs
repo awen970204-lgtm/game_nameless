@@ -29,7 +29,7 @@ public class QuestManager : MonoBehaviour
     public QuestData defaultQuest;
 
     public static List<QuestData> MainQuests = new List<QuestData>();
-    private Dictionary<QuestData, int> MainQuestShedules = new Dictionary<QuestData, int>();
+    public static Dictionary<QuestData, int> MainQuestShedules = new Dictionary<QuestData, int>();
 
     public static List<QuestData> OverQuests = new List<QuestData>();
     public static List<EventData> OverEvents = new List<EventData>();
@@ -50,6 +50,7 @@ public class QuestManager : MonoBehaviour
         openQuestButton.gameObject.SetActive(true);
         closeQuestButton.gameObject.SetActive(false);
 
+        // 自動接任務
         if (!PlayerPrefs.HasKey("AutoAcceptQuest"))
         {
             PlayerPrefs.SetInt("AutoAcceptQuest", 1);
@@ -57,6 +58,15 @@ public class QuestManager : MonoBehaviour
         bool auto = PlayerPrefs.GetInt("AutoAcceptQuest") == 1;
         AutoAcceptQuest_Toggle.SetIsOnWithoutNotify(auto);
         AutoAcceptQuest = auto;
+
+        // 任務預設值
+        foreach(var quest in GameModeManager.Instance.questDatas)
+        {
+            if (!PlayerPrefs.HasKey($"StoryModeHasQuest:{quest.questName}"))
+            {
+                PlayerPrefs.SetInt($"StoryModeHasQuest:{quest.questName}", -1);
+            }
+        }
 
         AutoAcceptQuest_Toggle.onValueChanged.AddListener(ChangeAutoAccept);
         openQuestButton.onClick.AddListener(()=> OnClickQuestButton());
@@ -106,6 +116,20 @@ public class QuestManager : MonoBehaviour
 
         foreach(Transform child in questsTransform)
             Destroy(child.gameObject);
+    }
+
+    public void SetQuest(QuestData quest, int step)
+    {
+        if (quest == null || step < 0 || MainQuests.Contains(quest)) return;
+
+        MainQuests.Add(quest);
+        MainQuestShedules.Add(quest, step);
+
+        GameObject questGO = Instantiate(questPrefabs, questsTransform);
+        questGO.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(()=> SetCurrentQuest(quest));
+        questGO.transform.GetChild(1).GetComponent<TMP_Text>().text = quest.questName;
+        questGO.transform.GetChild(2).GetComponent<TMP_Text>().text = quest.steps[step].stepDescription;
+        questGO.SetActive(true);
     }
 
     #endregion

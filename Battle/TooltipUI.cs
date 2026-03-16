@@ -242,7 +242,7 @@ public class TooltipUI : MonoBehaviour
         characterInformatuon.transform.GetChild(0).GetChild(3).GetComponent<TMP_Text>().text = 
             $"LV{character.level}";
         characterInformatuon.transform.GetChild(1).GetChild(0).GetComponent<Image>().sprite = 
-            character.character_data.characterPicture;
+            character.character_data.characterIllustration;
         // HP
         characterInformatuon.transform.GetChild(2).GetChild(0).GetChild(0).GetComponent<Image>().fillAmount = 
             Mathf.Clamp01((float)character.currentHealth / character.currentMaxHP);

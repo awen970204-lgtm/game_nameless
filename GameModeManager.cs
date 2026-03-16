@@ -131,6 +131,12 @@ public class GameModeManager : MonoBehaviour
                 == 1)
             StoryModeManager.Instance?.GetNewMenber(character);
         }
+        foreach(var quest in questDatas)
+        {
+            if (PlayerPrefs.GetInt($"StoryModeHasQuest:{quest.questName}") == -1) continue;
+
+            QuestManager.Instance?.SetQuest(quest, PlayerPrefs.GetInt($"StoryModeHasQuest:{quest.questName}"));
+        }
         
         GameCharacterManager.Instance.SetActing(GameCharacterManager.Instance.actingCharacter);
         GameCharacterManager.Instance.StorySet();

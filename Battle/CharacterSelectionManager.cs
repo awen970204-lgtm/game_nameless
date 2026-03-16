@@ -59,7 +59,7 @@ public class CharacterSelectionManager : MonoBehaviour
         }
         else if (GameModeManager.Instance.gameMode == GameMode.story)
         {
-            OptionalCharacters.AddRange(StoryModeManager.Instance.characters);
+            OptionalCharacters.AddRange(StoryModeManager.characters);
             player1.team = TeamID.Team1;
             player2.team = TeamID.Enemy;
         }
@@ -113,7 +113,7 @@ public class CharacterSelectionManager : MonoBehaviour
 
                 GO.SetActive(true);
             }
-            player1.SetDesk(StoryModeManager.Instance.cards);
+            player1.SetDesk(StoryModeManager.cards);
             player2.SetDesk(currentBattleData?.enemyCards.ToList());
         }
         player1.team = TeamID.Team1;
@@ -155,42 +155,57 @@ public class CharacterSelectionManager : MonoBehaviour
     
     public void SelectCharacter(Character characterData)// 當選擇角色按鈕被點擊時，生成角色
     {
-        if (currentSelectingPlayer == null)
+        if (currentSelectingPlayer == null || currentSelectingPlayer.Player_characterTransform == null)
         {
-            Debug.LogWarning("沒有指定玩家就嘗試選角");
+            Debug.LogWarning("No current player");
             return;
         }
         if (characterPrefab == null)
         {
-            Debug.LogError("沒有設定 Character Prefab");
+            Debug.LogError("No Character Prefab");
             return;
         }
-
+        if (characterData == null)
+        {
+            Debug.LogError("characterData is null");
+            return;
+        }
         if (currentSelectingPlayer.playerCharacters.Count >= currentSelectingPlayer.MaxMenber)
         {
             Debug.LogWarning($"P{currentSelectingPlayer.Player_nunber}已達上限, Max:{currentSelectingPlayer.MaxMenber}");
             return;
         }
-        if (GameModeManager.Instance?.gameMode == GameMode.story &&
-            currentSelectingPlayer.playerCharacters.Any(c => c.character_data == characterData) &&
-                !TurnManager.Instance.GameStart)
+        if (GameModeManager.Instance?.gameMode == GameMode.story)
         {
-            Debug.Log("已選擇過該角色");
-            LogWarning.Instance.Warning("已選擇過該角色");
-            return;
+            if (currentSelectingPlayer.playerCharacters.Any(c => c.character_data == characterData) &&
+                !TurnManager.Instance.GameStart)
+            {
+                Debug.Log("已選擇過該角色");
+                LogWarning.Instance.Warning("已選擇過該角色");
+                return;
+            }
         }
         
         // 生成角色
         GameObject go = Instantiate(characterPrefab, currentSelectingPlayer.Player_characterTransform);
         CharacterHealth ch_H = go.GetComponent<CharacterHealth>();
         PassiveSkilCtrl ch_PS = go.GetComponent<PassiveSkilCtrl>();
-        CharacterHealth frondMate = 
-            currentSelectingPlayer.Player_characterTransform
-            .GetComponentsInChildren<CharacterHealth>(true)
-            .FirstOrDefault(c => c.character_data.tauntLevel < characterData.tauntLevel);
-        if (frondMate != null)
+        if (currentSelectingPlayer.Player_characterTransform.childCount > 0)
         {
-            go.transform.SetSiblingIndex(frondMate.transform.GetSiblingIndex());
+            var characterHealths = currentSelectingPlayer.Player_characterTransform
+                .GetComponentsInChildren<CharacterHealth>(true);
+            if (characterHealths.Any(c => 
+                c.character_data != null && c.character_data.tauntLevel < characterData.tauntLevel))
+            {
+                CharacterHealth frondMate = 
+                    characterHealths.OrderBy(c => c.character_data.tauntLevel)
+                    .FirstOrDefault(c => 
+                        c.character_data != null && c.character_data.tauntLevel < characterData.tauntLevel);
+                if (frondMate != null)
+                {
+                    go.transform.SetSiblingIndex(frondMate.transform.GetSiblingIndex());
+                }
+            }
         }
         // 設定屬性
         ch_H.character_data = characterData;

@@ -24,14 +24,13 @@ public class CardCtrl : MonoBehaviour,
     public GameObject cardAvailableDisplay; // 可用狀態顯示
     public GameObject cardDiscardDisplay;   // 棄置狀態顯示
     public GameObject snapDisplay;          // 吸附狀態顯示
-    public GameObject LockedDisplay;
-    private Image backImage;
 
     [Header("Card")]
     public Image picture;         // 卡圖
     public Image cardTypePicture; // 類型圖
     public TMP_Text card_name;    // 卡名
     public TMP_Text delayTurns;   // 持續時間
+    private Image background;
     
     [HideInInspector] public bool IsMoving = false;
     [HideInInspector] public bool IsUseing = false;
@@ -49,17 +48,15 @@ public class CardCtrl : MonoBehaviour,
     private bool isHovering;
 
     private Vector3 baseScale;
-    private Vector2 basePos;
+    // private Vector2 basePos;
 
     void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
         mainCanvas = GetComponentInParent<Canvas>();
-        backImage = GetComponent<Image>();
+        background = GetComponentInParent<Image>();
 
         baseScale = rectTransform.localScale;
-        basePos = rectTransform.anchoredPosition;
-
     }
     void OnEnable()// 訂閱事件
     {
@@ -73,6 +70,10 @@ public class CardCtrl : MonoBehaviour,
         originalParent = ownerPlayer.handArea;
         originalPosition = rectTransform.anchoredPosition;
         handLayout = ownerPlayer.handArea.GetComponent<HandLayoutController>();
+        if (ownerPlayer.team == TeamID.Enemy || ownerPlayer.team == TeamID.Team2)
+        {
+            hoverHeight *= -1;
+        }
     }
     void OnDisable()// 解除訂閱事件
     {
@@ -84,21 +85,24 @@ public class CardCtrl : MonoBehaviour,
     {
         if (IsMoving || TooltipUI.Instance.IsDragging)
             return;
+        if (handLayout != null && handLayout.HasPlaceholder)
+            return;
 
         Vector3 targetScale = baseScale;
-        Vector2 targetPos = basePos;
+        float targetY = 0f;
 
         if (isHovering)
         {
             targetScale = baseScale * hoverScale;
-            targetPos = basePos + Vector2.up * hoverHeight;
+            targetY = hoverHeight;
         }
 
         rectTransform.localScale =
             Vector3.Lerp(rectTransform.localScale, targetScale, Time.deltaTime * hoverSpeed);
 
-        rectTransform.anchoredPosition =
-            Vector2.Lerp(rectTransform.anchoredPosition, targetPos, Time.deltaTime * hoverSpeed);
+        Vector3 pos = rectTransform.localPosition;
+        pos.y = Mathf.Lerp(pos.y, targetY, Time.deltaTime * hoverSpeed);
+        rectTransform.localPosition = pos;
     }
 
     private void StateCheck(Player player) => DisplayChange();
@@ -114,13 +118,11 @@ public class CardCtrl : MonoBehaviour,
         if (cardTypePicture != null) cardTypePicture.sprite = card_data.cardTypePicture;
         if (card_name != null) card_name.text = card_data.cardName;
 
-        LockedDisplay.SetActive(false);
-
         DisplayChange();
     }
     public void DisplayChange()
     {
-        if (IsUseing)
+        if (user != null)
         {
             cardAvailableDisplay.SetActive(false);
         }
@@ -171,7 +173,7 @@ public class CardCtrl : MonoBehaviour,
             TooltipUI.Instance.ShowCardTooltip(card_data);
             isHovering = true;
 
-            transform.SetAsLastSibling();
+            // transform.SetAsLastSibling();
         }
     }
 
@@ -192,6 +194,7 @@ public class CardCtrl : MonoBehaviour,
         TooltipUI.Instance.IsDragging = true;
         TooltipUI.Instance.HideTooltip();
         isHovering = false;
+        background.raycastTarget = false;
 
         rectTransform.SetParent(mainCanvas.transform, true);
     }
@@ -199,15 +202,6 @@ public class CardCtrl : MonoBehaviour,
     public void OnDrag(PointerEventData eventData)
     {
         if (!CanStartDrag()) return;
-
-        // if (isSnapping && currentSlot != null)
-        // {
-        //     rectTransform.position = Vector2.Lerp(
-        //         rectTransform.position,
-        //         currentSlot.snapPoint.position,
-        //         Time.deltaTime * 1f);
-        //     return;
-        // }
 
         Vector2 mousePos = Mouse.current.position.ReadValue();
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
@@ -217,6 +211,7 @@ public class CardCtrl : MonoBehaviour,
         rectTransform.localPosition = pos;
         handLayout?.UpdateDuringDrag(rectTransform);
 
+
         if (user != null)
             user.usingCard = null;
     }
@@ -225,6 +220,7 @@ public class CardCtrl : MonoBehaviour,
     {
         TooltipUI.Instance.IsDragging = false;
         Debug.Log($"{card_data.cardName}:Over Draging");
+        background.raycastTarget = true;
 
         if (isSnapping && currentSlot != null)
         {
@@ -235,7 +231,6 @@ public class CardCtrl : MonoBehaviour,
             ReturnToHand();
         }
 
-        backImage.raycastTarget = true;
         isHovering = false;
         ClearSnap();
     }
@@ -297,6 +292,7 @@ public class CardCtrl : MonoBehaviour,
 
         user = target;
         target.usingCard = this;
+        snapDisplay.SetActive(true);
 
         handLayout.RemovePlaceholder();
         StartCoroutine(SnapToCharacter(target));
@@ -378,10 +374,8 @@ public class CardCtrl : MonoBehaviour,
             Debug.Log($"{card_data.cardName}:Back to hand");
             StartCoroutine(handLayout.SmoothInsertToPlaceholder(rectTransform, 0.25f));
             WaitCardManager.Instance.UnregisterCard(this);
-            backImage.raycastTarget = true;
             isHovering = false;
             rectTransform.localScale = baseScale;
-            rectTransform.anchoredPosition = basePos;
         }
     }
 

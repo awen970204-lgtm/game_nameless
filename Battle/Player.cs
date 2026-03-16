@@ -353,7 +353,7 @@ public class Player : MonoBehaviour
             if (hand.Count > 0)
             {
                 List<Card> discardable = new List<Card>();
-                List<CardCtrl> discardableUI = handUI.Where(c => !c.IsUseing).ToList();
+                List<CardCtrl> discardableUI = handUI.Where(c => c.user == null).ToList();
                 
                 foreach (var c in discardableUI)
                 {
@@ -377,7 +377,7 @@ public class Player : MonoBehaviour
 
     public void StealCardsFrom(Player targetPlayer, int count) // 隨機偷手牌
     {
-        if (targetPlayer == null || targetPlayer.hand.Count == 0)
+        if (targetPlayer == null || targetPlayer.handUI.Where(c => c.user == null).ToList().Count == 0)
         {
             Debug.Log($"P{Player_nunber} 嘗試偷牌，但對方沒有手牌！");
             return;
@@ -388,10 +388,11 @@ public class Player : MonoBehaviour
 
         // 隨機選取 count 張牌
         List<Card> stolenCards = new List<Card>();
+        List<Card> stolenableCards = new List<Card>(targetPlayer.handUI.Where(c => c.user == null).Select(c => c.card_data));
         for (int i = 0; i < count; i++)
         {
-            int randomIndex = UnityEngine.Random.Range(0, targetPlayer.hand.Count);
-            Card selected = targetPlayer.hand[randomIndex];
+            int randomIndex = UnityEngine.Random.Range(0, stolenableCards.Count);
+            Card selected = stolenableCards[randomIndex];
             stolenCards.Add(selected);
             targetPlayer.RemoveCard(selected); // 先移除目標玩家的牌
         }

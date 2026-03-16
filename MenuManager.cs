@@ -74,8 +74,8 @@ public class MenuManager : MonoBehaviour
         ContinueStoryButton.onClick.AddListener(()=> GameModeManager.Instance.ContinueStory());
         ContinueStoryButton.gameObject.SetActive(PlayerPrefs.GetInt("StroyBegin") == 1);
         
-        AISetToggle.isOn = (PlayerPrefs.GetInt("FreeModeSet:EnemyAI") == 1);
         AISetToggle.onValueChanged.AddListener(OnEnemyToggleChange);
+        AISetToggle.isOn = (PlayerPrefs.GetInt("FreeModeSet:EnemyAI") == 1);
         enemyLevelSlider?.onValueChanged.AddListener(ChangeEnemyLevel);
         enemyLevelSlider?.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(() => PlusEnemyLevel(1));
         enemyLevelSlider?.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(() => PlusEnemyLevel(-1));

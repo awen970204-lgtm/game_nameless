@@ -104,9 +104,13 @@ public class EventUI : MonoBehaviour
     private void SaveStoryData()
     {
         PlayerPrefs.SetInt("StroyBegin", 1);
-        foreach(var character in StoryModeManager.Instance.characters)
+        foreach(var character in StoryModeManager.characters)
         {
             PlayerPrefs.SetInt($"PlayerHoldCharacter{GameModeManager.Instance.characterDatas.IndexOf(character)}InStory", 1);
+        }
+        foreach(var quest in QuestManager.MainQuests)
+        {
+            PlayerPrefs.SetInt($"StoryModeHasQuest:{quest.questName}", QuestManager.MainQuestShedules[quest]);
         }
     }
 
