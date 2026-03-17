@@ -193,6 +193,12 @@ public static class EffectExecutor
                 targetValue = ch.effectCtrl.activeEffects
                     .Where(e => e.effectData.EffectName == targetEntry.continuedEffect.EffectName).ToList().Count;
                 break;
+            case TargetValue.Attact:
+                targetValue = ch.currentAttackPower;
+                break;
+            case TargetValue.Defense:
+                targetValue = ch.currentDefense;
+                break;
         }
         return Mathf.FloorToInt(targetValue * targetEntry.multiplier);
     }

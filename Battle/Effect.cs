@@ -48,6 +48,8 @@ public enum TargetValue
     LossesHealth,
     HoldCards,
     HoldContinuedEffect,
+    Attact,
+    Defense,
 }
 public enum EffectiveTarget{target, Initiator,}
 [System.Serializable]
