@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-[CreateAssetMenu(menuName = "Event/New Battle Data")]
+[CreateAssetMenu(menuName = "Event/Battle")]
 public class EventBattleData : ScriptableObject
 {
     public bool FixedLevel = false;

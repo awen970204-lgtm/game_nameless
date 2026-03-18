@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Event/New Quest Data")]
+[CreateAssetMenu(menuName = "Event/Quest")]
 public class QuestData : ScriptableObject
 {
     public string questName;

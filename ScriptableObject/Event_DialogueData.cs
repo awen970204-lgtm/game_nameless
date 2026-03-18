@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Event/New Dialogue Data")]
+[CreateAssetMenu(menuName = "Event/Dialogue")]
 public class DialogueData : ScriptableObject
 {
     [System.Serializable]

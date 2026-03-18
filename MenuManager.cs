@@ -76,10 +76,18 @@ public class MenuManager : MonoBehaviour
         
         AISetToggle.onValueChanged.AddListener(OnEnemyToggleChange);
         AISetToggle.isOn = (PlayerPrefs.GetInt("FreeModeSet:EnemyAI") == 1);
+
         enemyLevelSlider?.onValueChanged.AddListener(ChangeEnemyLevel);
+        if (PlayerPrefs.GetInt("FreeModeEnemyLevel") != 0)
+            enemyLevelSlider.value = PlayerPrefs.GetInt("FreeModeEnemyLevel");
+
         enemyLevelSlider?.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(() => PlusEnemyLevel(1));
         enemyLevelSlider?.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(() => PlusEnemyLevel(-1));
+
         playerLevelSlider?.onValueChanged.AddListener(ChangePlayerLevel);
+        if (PlayerPrefs.GetInt("FreeModePlayerLevel") != 0)
+            playerLevelSlider.value = PlayerPrefs.GetInt("FreeModePlayerLevel");
+
         playerLevelSlider?.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(() => PlusPlayerLevel(1));
         playerLevelSlider?.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(() => PlusPlayerLevel(-1));
 
@@ -330,11 +338,13 @@ public class MenuManager : MonoBehaviour
     {
         playerLevel = Mathf.FloorToInt(value);
         playerLevelText.text = $"Player_Level:{playerLevel}";
+        PlayerPrefs.SetInt("FreeModePlayerLevel", playerLevel);
     }
     void ChangeEnemyLevel(float value)
     {
         enemyLevel = Mathf.FloorToInt(value);
         enemyLevelText.text = $"Enemy_Level:{enemyLevel}";
+        PlayerPrefs.SetInt("FreeModeEnemyLevel", enemyLevel);
     }
 
     void PlusPlayerLevel(int value)
@@ -346,7 +356,8 @@ public class MenuManager : MonoBehaviour
             playerLevel = Mathf.Max(1 ,Mathf.FloorToInt(playerLevelSlider.minValue));
 
         playerLevelSlider.value = playerLevel;
-        playerLevelText.text = $"Enemy_Level:{playerLevel}"; 
+        playerLevelText.text = $"Enemy_Level:{playerLevel}";
+        PlayerPrefs.SetInt("FreeModePlayerLevel", playerLevel);
     }
     void PlusEnemyLevel(int value)
     {
@@ -357,7 +368,8 @@ public class MenuManager : MonoBehaviour
             enemyLevel = Mathf.Max(1 ,Mathf.FloorToInt(enemyLevelSlider.minValue));
 
         enemyLevelSlider.value = enemyLevel;
-        enemyLevelText.text = $"Enemy_Level:{enemyLevel}"; 
+        enemyLevelText.text = $"Enemy_Level:{enemyLevel}";
+        PlayerPrefs.SetInt("FreeModeEnemyLevel", enemyLevel);
     }
 
     #endregion

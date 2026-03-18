@@ -61,6 +61,9 @@ public static class LimitChecker
 {
     public static bool Limited(List<NeedState> needStates, CharacterHealth trigger, CharacterHealth acting)
     {
+        if (needStates == null || needStates.Count == 0)
+            return false;
+        
         bool limited = false;
         foreach(var need in needStates)
         {
@@ -84,13 +87,19 @@ public static class LimitChecker
                 ch = trigger;
                 break;
         }
-        if (ch = null) return false;
+        if (ch == null) return false;
 
         int MinLimit = EffectExecutor.GetValue(need.min_targetValue, trigger, acting) + need.minLimit;
         int MaxLimit = EffectExecutor.GetValue(need.max_targetValue, trigger, acting) + need.maxLimit;
-        var effects = ch.effectCtrl.activeEffects
-            .Where(e => e.effectData == need.continuedEffect);
-        int totalStack = effects.Sum(e => e.stack);
+        int totalStack = 0;
+        if (need.continuedEffect != null)
+        {
+            foreach(var e in ch.effectCtrl.activeEffects.Where(e => e.effectData == need.continuedEffect))
+            {
+                totalStack += e.stack;
+            }
+        }
+
         switch (need.limit)
         {
             // 狀態類
@@ -185,37 +194,24 @@ public static class LimitChecker
             
             // 卡牌
             case Limit.holdCards_Max:
-                if (ch.ownerPlayer.hand.Count <= MaxLimit)return(true);
+                if (ch.ownerPlayer.hand.Count <= MaxLimit)
+                    return(true);
                 break;
             case Limit.holdCards_Min:
-                if (ch.ownerPlayer.hand.Count >= MinLimit)return(true);
+                if (ch.ownerPlayer.hand.Count >= MinLimit)
+                    return(true);
                 break;
             case Limit.holdCards_Now:
-                foreach (var card in ch.ownerPlayer.hand)
-                {
-                    if (card.cardType == Card.CARD_TYPE.NOW)
-                    {
-                        return(true);
-                    }
-                }
+                if(ch.ownerPlayer.hand.Any(c => c.cardType == Card.CARD_TYPE.NOW))
+                    return(true);
                 break;
             case Limit.holdCards_Delay:
-                foreach (var card in ch.ownerPlayer.hand)
-                {
-                    if (card.cardType == Card.CARD_TYPE.DELAY)
-                    {
-                        return(true);
-                    }
-                }
+                if(ch.ownerPlayer.hand.Any(c => c.cardType == Card.CARD_TYPE.DELAY))
+                    return(true);
                 break;
             case Limit.holdCards_Wait:
-                foreach (var card in ch.ownerPlayer.hand)
-                {
-                    if (card.cardType == Card.CARD_TYPE.WAIT)
-                    {
-                        return(true);
-                    }
-                }
+                if(ch.ownerPlayer.hand.Any(c => c.cardType == Card.CARD_TYPE.WAIT))
+                    return(true);
                 break;
         }
         return false;   

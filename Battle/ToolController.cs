@@ -152,8 +152,7 @@ public class ToolController : MonoBehaviour
     private void HandleCharacterDead(CharacterHealth act)
     {
         string acting = $"<color=#0080FF>{act.character_data.characterName}(P{act.ownerPlayer.Player_nunber})</color>";
-        string killer = $"<color=#0080FF>{act.killer.character_data.characterName}(P{act.killer.ownerPlayer.Player_nunber}</color>";
-        WriteReport($" {acting}被{killer}殺死");
+        WriteReport($" {acting}死亡");
     }
 
     private void HandlePlayerDrawCard(Player act, int number)

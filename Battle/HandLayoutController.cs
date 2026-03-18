@@ -16,7 +16,7 @@ public class HandLayoutController : MonoBehaviour
     // private bool isVerticalDrag;
 
     [Header("Drag Detect")]
-    [SerializeField] float swapThreshold = 40f;
+    // [SerializeField] float swapThreshold = 40f;
 
     [Header("Scroll")]
     public ScrollRect scrollRect;
@@ -96,7 +96,7 @@ public class HandLayoutController : MonoBehaviour
             RectTransform childRect = child as RectTransform;
 
             float childX = childRect.anchoredPosition.x;
-            if (draggedX < (childX - swapThreshold))
+            if (draggedX < (childX))
             {
                 newIndex = i;
                 

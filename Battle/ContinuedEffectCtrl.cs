@@ -18,13 +18,7 @@ public class ContinuedEffectCtrl : MonoBehaviour
     public GameObject effectPrefab;
 
     // 角色當前持有的 Buff/Debuff
-    [HideInInspector] public List<EffectInstance> activeEffects = new();
-
-    // // 每個效果的剩餘回合數
-    // [HideInInspector] public Dictionary<ContinuedEffect, int> effectDurations = new();
-
-    // // 每個效果當前回合已觸發次數
-    // [HideInInspector] public Dictionary<ContinuedEffect, int> effectTriggerCounts = new();
+    [HideInInspector] public List<EffectInstance> activeEffects = new List<EffectInstance>();
 
     // 事件
     public static event System.Action<EffectInstance, CharacterHealth> OnEffectGot;
@@ -366,7 +360,7 @@ public class ContinuedEffectCtrl : MonoBehaviour
     // 結束
     private void HandleRealTurnEnd(Player player)
     {
-        // 回合結束 -> 重置每個效果的觸發次數
+        // 回合結束 重置每個效果的觸發次數
         List<EffectInstance> effectsCopy = new(activeEffects);
         foreach (var e in effectsCopy)
         {
