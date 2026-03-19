@@ -119,7 +119,7 @@ public static class EffectExecutor
                 target.DefenseText.text = $"{target.currentDefense}";
                 break;
             case EffectType.ChangeDamageMultiplier:
-                target.currentDamageMultiplier += value;
+                target.currentDamageMultiplier = Mathf.Max(target.currentDamageMultiplier + value, 0);
                 break;
             case EffectType.ChangeDamageReduction:
                 target.currentDamageReduction += value;

@@ -1146,6 +1146,15 @@ public class TurnManager : MonoBehaviour
                 }
                 effectScore = TotalContinuedEffectScore * (1 / effect.continuedEffect.continuedEffectEntrys.Count) *1.6f;
                 break;
+            case EffectType.StealCards_Range:
+            case EffectType.StealCards_Specific:
+                var stealhandCount = target.ownerPlayer != null ? target.ownerPlayer.hand.Count : 0;
+                effectScore = stealhandCount > 0 ? Mathf.Min(stealhandCount, value) * 2f : 0f;
+                break;
+            case EffectType.SummonTeammate:
+            case EffectType.SummonEnemy:
+                effectScore = 5f;
+                break;
         }
         // 敵人加分 or 隊友加分方向
         if (isBeneficial)
