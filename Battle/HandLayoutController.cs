@@ -84,7 +84,7 @@ public class HandLayoutController : MonoBehaviour
     {
         if (placeholder == null) return;
 
-        float draggedX = draggedCard.anchoredPosition.x;
+        float draggedX = draggedCard.position.x;
         // 默認最後
         int newIndex = transform.childCount - 1;
 
@@ -95,7 +95,7 @@ public class HandLayoutController : MonoBehaviour
             if (child == placeholder.transform) continue;
             RectTransform childRect = child as RectTransform;
 
-            float childX = childRect.anchoredPosition.x;
+            float childX = childRect.position.x;
             if (draggedX < (childX))
             {
                 newIndex = i;

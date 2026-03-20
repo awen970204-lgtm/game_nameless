@@ -61,72 +61,64 @@ public class ContinuedEffectCtrl : MonoBehaviour
 
     public void AddContinueEffect(ContinuedEffect effect) // 套用持續效果
     {
-        EffectInstance existed = null;
+        if (effect == null) return;
+        if (effect.MaxOverlay <= 0) return;
+        if (effect.Duration <= 0) return;
 
-        // 先找是否已有同名的最大持續時間的效果
-        if (activeEffects.Where(e => e.effectData == effect).Sum(e => e.stack) < effect.MaxOverlay)
+        // 取得同類效果
+        var sameEffects = activeEffects
+            .Where(e => e.effectData == effect)
+            .ToList();
+        int totalStack = sameEffects.Sum(e => e.stack);
+
+        // 超過上限
+        if (totalStack >= effect.MaxOverlay)
         {
-            existed = activeEffects.Where(e => e.effectData == effect).ToList().Find(e => e.duration == existed.duration);
-            if (existed != null)
-            {
-                // 增加堆疊
-                existed.stack++;
-                OnEffectRemake?.Invoke(existed, self); // UI更新
-                OnEffectGot?.Invoke(existed, self);
-            }
-            else
-            {
-                EffectInstance newInstance = new EffectInstance
-                {
-                    effectData = effect,
-                    stack = 1,
-                    duration = effect.Duration,
-                    triggerCount = 0
-                };
+            var smallest = sameEffects
+                .OrderBy(e => e.duration)
+                .FirstOrDefault();
 
-                activeEffects.Add(newInstance);
-                createEffect(newInstance);
-                OnEffectGot?.Invoke(newInstance, self);
-            }
-        }
-        else
-        {
-            // 找最小
-            foreach (var e in activeEffects.Where(e => e.effectData == effect))
+            if (smallest != null)
             {
-                if (existed == null || e.duration <= existed.duration)
-                {
-                    existed = e;
-                }
-            }
-            if (existed != null)
-            {
-                existed.stack --;
-                OnEffectRemake?.Invoke(existed, self); // UI更新
-                OnEffectExpired?.Invoke(existed, self);
+                smallest.stack--;
 
-                if (activeEffects.Where(e => e.effectData == effect).Any(e => e.duration == effect.Duration))
+                OnEffectExpired?.Invoke(smallest, self);
+
+                if (smallest.stack <= 0)
                 {
-                    existed = existed = activeEffects
-                        .Where(e => e.effectData == effect).ToList().Find(e => e.duration == existed.duration);
-                    existed.stack ++;
-                    OnEffectGot?.Invoke(existed, self);
+                    activeEffects.Remove(smallest);
+                    RemoveEffect(smallest);
                 }
                 else
                 {
-                    EffectInstance newInstance = new EffectInstance
-                    {
-                        effectData = effect,
-                        stack = 1,
-                        duration = effect.Duration,
-                        triggerCount = 0
-                    };
-
-                    activeEffects.Add(newInstance);
-                    createEffect(newInstance);
-                    OnEffectGot?.Invoke(newInstance, self);
+                    OnEffectRemake?.Invoke(smallest, self);
                 }
             }
+        }
+
+        // 統一新增
+        var existed = activeEffects
+            .FirstOrDefault(e => e.effectData == effect && e.duration == effect.Duration);
+
+        if (existed != null)
+        {
+            existed.stack++;
+            OnEffectRemake?.Invoke(existed, self);
+            OnEffectGot?.Invoke(existed, self);
+        }
+        else
+        {
+            EffectInstance newInstance = new EffectInstance
+            {
+                effectData = effect,
+                stack = 1,
+                duration = effect.Duration,
+                triggerCount = 0
+            };
+
+            activeEffects.Add(newInstance);
+            createEffect(newInstance);
+            OnEffectGot?.Invoke(newInstance, self);
         }
     }
     private void createEffect(EffectInstance effect) // 產生圖標
@@ -139,14 +131,12 @@ public class ContinuedEffectCtrl : MonoBehaviour
     }
     private void RemoveEffect(EffectInstance effect) // 移除圖標
     {
-        foreach (Transform child in self.stateArea)
+        ContinuedEffect_display CE = 
+            self.stateArea.GetComponentsInChildren<ContinuedEffect_display>(true)
+            .FirstOrDefault(e => e.effectDataInstance == effect);
+        if (CE != null)
         {
-            ContinuedEffect_display CED = child.GetComponent<ContinuedEffect_display>();
-            if (CED != null && CED.effectDataInstance == effect) // 直接比實例
-            {
-                Destroy(child.gameObject);
-                break;
-            }
+            Destroy(CE.gameObject);
         }
     }
 
@@ -362,10 +352,10 @@ public class ContinuedEffectCtrl : MonoBehaviour
     {
         // 回合結束 重置每個效果的觸發次數
         List<EffectInstance> effectsCopy = new(activeEffects);
+        TryTrigger(TriggerTime.OnRealTurnEnd, null);
         foreach (var e in effectsCopy)
         {
             e.triggerCount = 0;
         }
-        TryTrigger(TriggerTime.OnRealTurnEnd, null);
     }
 }

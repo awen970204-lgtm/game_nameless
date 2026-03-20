@@ -733,7 +733,11 @@ public class TurnManager : MonoBehaviour
 
                         // 等待玩家完成選擇
                         yield return new WaitUntil(() => !waitingForTarget);
-                        if (actionCancelled) break;
+                        if (actionCancelled) 
+                        {
+                            actionCancelled = false;
+                            break;
+                        }
                     }
                     else
                     {

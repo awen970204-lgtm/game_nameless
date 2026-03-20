@@ -234,7 +234,11 @@ public class CharacterSelectionManager : MonoBehaviour
             SelectPassiveSkill(passiveSkill, ch_H);
         }
 
-        Debug.Log($"Player{currentSelectingPlayer.Player_nunber} 選擇了 {characterData.characterName}");
+        if (!TurnManager.Instance.GameStart)
+            Debug.Log($"Player{currentSelectingPlayer.Player_nunber} 選擇了 {characterData.characterName}");
+        else
+            Debug.Log($"Player{currentSelectingPlayer.Player_nunber} 召喚了 {characterData.characterName}");
+
         go.SetActive(true);
 
         // 選完就清空，避免誤選
