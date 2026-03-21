@@ -819,39 +819,39 @@ public class TurnManager : MonoBehaviour
         (WaitCardManager.Instance == null || WaitCardManager.Instance.IsIdle)
         );
         currentEndTurn = null;
-        ContinueTurnEnd();
+        if (TurnEnded)
+            yield return ContinueTurnEnd();
     }
-    private void ContinueTurnEnd()// 徹底回合結算結束
+    private IEnumerator ContinueTurnEnd()// 徹底回合結算結束
     {
-        if(TurnEnded)
+        Debug.Log("回合徹底結算結束");
+        OnRealTurnEnd?.Invoke(actingPlayer);
+        yield return new WaitForSeconds(0.5f);
+        yield return new WaitUntil(()=> passiveQueue.Count == 0);
+        // 重置狀態
+        TurnEnded = false;
+        actingPlayer.ISActive = false;
+        waitingForTarget = false;
+        waitingForAction = true;
+        Remake();
+
+        // 重置技能使用次數
+        skillUseCounter.Clear();
+        foreach (var ch in turnOrder)
         {
-            Debug.Log("回合徹底結算<color=red>結束</color>");
-            OnRealTurnEnd?.Invoke(actingPlayer);
-
-            // 重置狀態
-            TurnEnded = false;
-            actingPlayer.ISActive = false;
-            waitingForTarget = false;
-            waitingForAction = true;
-            Remake();
-
-            // 重置技能使用次數
-            skillUseCounter.Clear();
-            foreach (var ch in turnOrder)
+            var passiveCtrl = ch.GetComponent<PassiveSkilCtrl>();
+            if (passiveCtrl != null)
             {
-                var passiveCtrl = ch.GetComponent<PassiveSkilCtrl>();
-                if (passiveCtrl != null)
-                {
-                    passiveCtrl.ResetPassives();
-                }
+                passiveCtrl.ResetPassives();
             }
-            pendingPassives = 0;
-            pendingEffectEntrys = 0;
-            CheckBattleEnd();
-            if (IsBattleOver) return;
-
-            StartCoroutine(StartTurnDelay());
         }
+        pendingPassives = 0;
+        pendingEffectEntrys = 0;
+        CheckBattleEnd();
+        if (IsBattleOver) yield break;
+
+        StartCoroutine(StartTurnDelay());
+        
     }
     #endregion
 
@@ -1095,6 +1095,9 @@ public class TurnManager : MonoBehaviour
     private float EffectTendency(Effect effect, CharacterHealth self, CharacterHealth target,
      bool isBeneficial, bool isHarmful) // 判斷效果數值
     {
+        if (effect == null || self == null || target == null)
+            return 0;
+        
         float effectScore = 0f;
 
         float missingHP = target.currentMaxHP - target.currentHealth;

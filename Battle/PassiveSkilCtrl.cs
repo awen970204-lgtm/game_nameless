@@ -72,12 +72,16 @@ public class PassiveSkilCtrl : MonoBehaviour
     private void HandleConsumeHP(CharacterHealth acting) => TryTrigger(TriggerTime.OnConsumeHP, acting);
 
     // 嘗試執行
-    private void TryTrigger(TriggerTime time, CharacterHealth acting)
+    private void TryTrigger(TriggerTime time, CharacterHealth trigger)
     {
         if (TurnManager.Instance == null || !TurnManager.Instance.GameStart) return;
-        if (acting == null) 
-            acting = TurnManager.Instance.actingPlayer.playerCharacters[0];
-        if (acting == null) return;
+        if (trigger == null) 
+            trigger = TurnManager.Instance.actingPlayer.playerCharacters[0];
+        if (trigger == null)
+        {
+            Debug.LogWarning("no acting character");
+            return;
+        } 
 
         // 會觸發的技能
         List<PassiveSkill> toTrigger = new List<PassiveSkill>();
@@ -92,34 +96,47 @@ public class PassiveSkilCtrl : MonoBehaviour
                 {
                     if (skillTime.triggerTime != time) continue;
                     // 檢查技能前提
-                    bool restricted = false;
                     if (skillTime.passiveNeed != null)
                     {
-                        foreach (var need in skillTime.passiveNeed)
+                        if (LimitChecker.Limited(skillTime.passiveNeed, trigger, self))
                         {
-                            if (!LimitChecker.CheckLimit(need, acting, self)) restricted = true;
+                            Debug.Log($"{skill.skillName}不符合要求");
+                            continue;
                         }
                     }
-                    if (restricted) continue;
 
                     switch (skillTime.trigger)
                     {
                         case Trigger_Character.Self:
-                            if (acting == self)
+                            if (trigger == self)
                             {
                                 Executable_PassiveEntry.Add(passive_entry);
                                 toTrigger.Add(skill);
                             }
                             break;
                         case Trigger_Character.Other:
-                            if (acting != self)
+                            if (trigger != self)
                             {
                                 Executable_PassiveEntry.Add(passive_entry);
                                 toTrigger.Add(skill);
                             }
                             break;
                         case Trigger_Character.All:
-                            if (acting != null)
+                            if (trigger != null)
+                            {
+                                Executable_PassiveEntry.Add(passive_entry);
+                                toTrigger.Add(skill);
+                            }
+                            break;
+                        case Trigger_Character.teammate:
+                            if (trigger.team == self.team)
+                            {
+                                Executable_PassiveEntry.Add(passive_entry);
+                                toTrigger.Add(skill);
+                            }
+                            break;
+                        case Trigger_Character.enemy:
+                            if (trigger.team != self.team)
                             {
                                 Executable_PassiveEntry.Add(passive_entry);
                                 toTrigger.Add(skill);

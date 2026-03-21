@@ -171,7 +171,11 @@ public static class LimitChecker
                 if (ch.currentPassiveSkills.Contains(need.passiveSkill))return(true);
                 break;
             case Limit.NotHoldPassiveSkill_self:
-                if (!ch.currentPassiveSkills.Contains(need.passiveSkill))return(true);
+                if (!ch.currentPassiveSkills.Contains(need.passiveSkill))
+                {
+                    Debug.Log($"LimitChecker/{ch.character_data.characterName}未持有被動:{need.passiveSkill.skillName}");
+                    return(true);
+                }
                 break;
 
             case Limit.holdContinueEffect:

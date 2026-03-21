@@ -276,14 +276,14 @@ public class CharacterHealth : MonoBehaviour
                 
                 Destroy(usingCard);
             }
-            foreach(var skill in new List<Skill>(currentSkills))
-            {
-                LoseSkill(skill);
-            }
-            foreach(var passiveSkill in new List<PassiveSkill>(currentPassiveSkills))
-            {
-                LosePassiveSkill(passiveSkill);
-            }
+            // foreach(var skill in new List<Skill>(currentSkills))
+            // {
+            //     LoseSkill(skill);
+            // }
+            // foreach(var passiveSkill in new List<PassiveSkill>(currentPassiveSkills))
+            // {
+            //     LosePassiveSkill(passiveSkill);
+            // }
 
             TurnManager.Instance.RaiseAnyCharacterDead(this);
             TurnManager.Instance?.Unregister(this);
