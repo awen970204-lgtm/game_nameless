@@ -128,7 +128,8 @@ public class CardCtrl : MonoBehaviour,
         }
         else
         {
-            cardAvailableDisplay.SetActive(TurnManager.Instance.actingPlayer != ownerPlayer);
+            cardAvailableDisplay.SetActive(TurnManager.Instance.actingPlayer == null || 
+                TurnManager.Instance.actingPlayer != ownerPlayer);
             if (isTriggered)
             {
                 delayTurns.gameObject.SetActive(true);

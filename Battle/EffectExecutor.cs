@@ -129,7 +129,7 @@ public static class EffectExecutor
                 {
                     for(int i = 0 ; i < value; i++)
                     {
-                        target.effectCtrl.AddContinueEffect(effect.continuedEffect);
+                        yield return target.effectCtrl.AddContinueEffect(effect.continuedEffect);
                     }
                 }
                 break;
@@ -138,21 +138,19 @@ public static class EffectExecutor
                 {
                     for(int i = 0 ; i < value; i++)
                     {
-                        target.effectCtrl.LoseContinueEffect(effect.continuedEffect);
+                        yield return target.effectCtrl.LoseContinueEffect(effect.continuedEffect);
                     }
                 }
                 break;
             // 角色召喚
             case EffectType.SummonTeammate:
-                CharacterSelectionManager.currentSelectingPlayer = target.ownerPlayer;
-                CharacterSelectionManager.Instance.SelectCharacter(effect.character);
+                yield return CharacterSelectionManager.Instance.CreateCharacter(effect.character, target.ownerPlayer);
                 break;
             case EffectType.SummonEnemy:
-                CharacterSelectionManager.currentSelectingPlayer = 
-                    (target.ownerPlayer == CharacterSelectionManager.Instance.player1) ? 
+                yield return CharacterSelectionManager.Instance.CreateCharacter(effect.character, 
+                (target.ownerPlayer == CharacterSelectionManager.Instance.player1) ? 
                     CharacterSelectionManager.Instance.player2 : 
-                    CharacterSelectionManager.Instance.player1 ;
-                CharacterSelectionManager.Instance.SelectCharacter(effect.character);
+                    CharacterSelectionManager.Instance.player1);
                 break;
         }
     }

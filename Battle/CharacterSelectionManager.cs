@@ -34,6 +34,8 @@ public class CharacterSelectionManager : MonoBehaviour
     public static bool canChoseCharacter = false;
     private EventBattleData currentBattleData;
 
+    public static Action<Player, Character> SummonCharacter;
+
     void Awake()
     {
         if (Instance == null) Instance = this;
@@ -133,20 +135,26 @@ public class CharacterSelectionManager : MonoBehaviour
         currentBattleData = data;
         PVP_Mode = false;
         canChoseCharacter = !data.Fixedteammate;
-
-        foreach(var c in data.teammates)
-        {
-            currentSelectingPlayer = player1;
-            SelectCharacter(c);
-        }
-        foreach(var c in data.enemys)
-        {
-            currentSelectingPlayer = player2;
-            SelectCharacter(c);
-        }
-
         player1.SetPlayerLevel(data.FixedLevel? data.teammateLevel : StoryModeManager.playerLevel);
         player2.SetPlayerLevel(data.enemyLevel);
+        StartCoroutine(SetStoryCharacters(data));
+    }
+    private IEnumerator SetStoryCharacters(EventBattleData data)
+    {
+        player1.SelectButton.gameObject.SetActive(!data.Fixedteammate);
+        player2.SelectButton.gameObject.SetActive(false);
+
+        if (data.Fixedteammate && player1.MaxMenber < data.teammates.Length)
+            player1.MaxMenber = data.teammates.Length;
+        foreach(var c in data.teammates)
+        {
+            yield return CreateCharacter(c, player1);
+        }
+        player2.MaxMenber = data.enemys.Length;
+        foreach(var c in data.enemys)
+        {
+            yield return CreateCharacter(c, player2);
+        }
 
         StartChose();
     }
@@ -170,11 +178,6 @@ public class CharacterSelectionManager : MonoBehaviour
             Debug.LogError("characterData is null");
             return;
         }
-        if (currentSelectingPlayer.playerCharacters.Count >= currentSelectingPlayer.MaxMenber)
-        {
-            Debug.LogWarning($"P{currentSelectingPlayer.Player_nunber}已達上限, Max:{currentSelectingPlayer.MaxMenber}");
-            return;
-        }
         if (GameModeManager.Instance?.gameMode == GameMode.story)
         {
             if (currentSelectingPlayer.playerCharacters.Any(c => c.character_data == characterData) &&
@@ -185,44 +188,49 @@ public class CharacterSelectionManager : MonoBehaviour
                 return;
             }
         }
-        
+
+        StartCoroutine(CreateCharacter(characterData, currentSelectingPlayer));
+        currentSelectingPlayer = null;
+    }
+    public IEnumerator CreateCharacter(Character characterData, Player player) // 生成角色
+    {
+        if (player.playerCharacters.Count >= player.MaxMenber)
+        {
+            Debug.LogWarning($"P{player.Player_nunber}已達上限, Max:{player.MaxMenber}");
+            yield break;
+        }
         // 生成角色
-        GameObject go = Instantiate(characterPrefab, currentSelectingPlayer.Player_characterTransform);
+        GameObject go = Instantiate(characterPrefab, player.Player_characterTransform);
         CharacterHealth ch_H = go.GetComponent<CharacterHealth>();
         PassiveSkilCtrl ch_PS = go.GetComponent<PassiveSkilCtrl>();
-        if (currentSelectingPlayer.Player_characterTransform.childCount > 0)
-        {
-            var characterHealths = currentSelectingPlayer.Player_characterTransform
-                .GetComponentsInChildren<CharacterHealth>(true);
-            if (characterHealths.Any(c => 
-                c.character_data != null && c.character_data.tauntLevel < characterData.tauntLevel))
-            {
-                CharacterHealth frondMate = 
-                    characterHealths.OrderBy(c => c.character_data.tauntLevel)
-                    .FirstOrDefault(c => 
-                        c.character_data != null && c.character_data.tauntLevel < characterData.tauntLevel);
-                if (frondMate != null)
-                {
-                    go.transform.SetSiblingIndex(frondMate.transform.GetSiblingIndex());
-                }
-            }
-        }
+        int insertIndex = player.playerCharacters
+            .FindIndex(c => c.character_data.tauntLevel < characterData.tauntLevel);
+
+        if (insertIndex < 0)
+            insertIndex = player.playerCharacters.Count;
+
+        player.playerCharacters.Insert(insertIndex, ch_H);
+        go.transform.SetSiblingIndex(insertIndex);
         // 設定屬性
         ch_H.character_data = characterData;
-        if (currentSelectingPlayer.Player_nunber == 1)
+        if (player.Player_nunber == 1)
             ch_H.team = TeamID.Team1;
         else if (PVP_Mode)
             ch_H.team = TeamID.Team2;
         else
             ch_H.team = TeamID.Enemy;
 
-        ch_H.ownerPlayer = currentSelectingPlayer;
+        ch_H.ownerPlayer = player;
 
-        ch_H.level = currentSelectingPlayer.playerLevel;
+        ch_H.level = player.playerLevel;
 
-        currentSelectingPlayer.playerCharacters.Add(ch_H);
-        StartCoroutine(ShowTeamMenbers(currentSelectingPlayer));
+        StartCoroutine(ShowTeamMenbers(player));
         
+        if (!TurnManager.Instance.GameStart)
+            Debug.Log($"Player{player.Player_nunber} 選擇了 {characterData.characterName}");
+        else
+            Debug.Log($"Player{player.Player_nunber} 召喚了 {characterData.characterName}");
+
         // 生成技能按鈕
         foreach (var skill in characterData.skills)
         {
@@ -234,20 +242,27 @@ public class CharacterSelectionManager : MonoBehaviour
             SelectPassiveSkill(passiveSkill, ch_H);
         }
 
-        if (!TurnManager.Instance.GameStart)
-            Debug.Log($"Player{currentSelectingPlayer.Player_nunber} 選擇了 {characterData.characterName}");
-        else
-            Debug.Log($"Player{currentSelectingPlayer.Player_nunber} 召喚了 {characterData.characterName}");
-
         go.SetActive(true);
-
-        // 選完就清空，避免誤選
-        currentSelectingPlayer = null;
 
         if (!TurnManager.Instance.GameStart && player1.playerCharacters.Count > 0 && player2.playerCharacters.Count > 0)
         {
             stratButton.SetActive(true);
         }
+        if (TurnManager.Instance.GameStart)
+        {
+            SummonCharacter?.Invoke(player, characterData);
+        }
+
+        // 排序
+        player.playerCharacters = player.playerCharacters
+            .OrderByDescending(c => c.character_data.tauntLevel)
+            .ToList();
+
+        for (int i = 0; i < player.playerCharacters.Count; i++)
+        {
+            player.playerCharacters[i].transform.SetSiblingIndex(i);
+        }
+
     }
     public IEnumerator ShowTeamMenbers(Player player) // 顯示隊伍人數
     {

@@ -219,7 +219,6 @@ public class WaitCardManager : MonoBehaviour
         string tip = GetTipText(currentEvent.trigger);
         eventTips.text = $"執行事件: {currentEvent.actor.character_data.characterName}(P{currentEvent.actor.ownerPlayer.Player_nunber}) {tip}";
 
-        TurnManager.Instance.endTurnButton.SetActive(false);
         // 啟用所有相關卡
         foreach (var card in currentEvent.relatedCards)
         {

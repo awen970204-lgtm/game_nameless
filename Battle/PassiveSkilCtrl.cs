@@ -175,7 +175,8 @@ public class PassiveSkilCtrl : MonoBehaviour
             }
             // 紀錄被動
             toEffective.Add(skill);
-            TurnManager.Instance.EnqueuePassive(toEffective, this, self);
+            TurnManager.Instance.EnqueuePassive(toEffective, Executable_PassiveEntry, this, self);
+            Executable_PassiveEntry.Clear();
         }
     }
 

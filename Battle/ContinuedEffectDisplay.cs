@@ -77,7 +77,7 @@ public class ContinuedEffect_display : MonoBehaviour, IPointerEnterHandler, IPoi
             {
                 stack = effectCtrl.activeEffects.Find(EI => EI == effectDataInstance).stack;
             }
-            stack_text.text = stack > 1 ? stack.ToString() : "";
+            stack_text.text = effectDataInstance.effectData.MaxOverlay > 1 ? stack.ToString() : "";
         }
     }
     

@@ -59,11 +59,11 @@ public class ContinuedEffectCtrl : MonoBehaviour
         ContinuedEffectCtrl.OnEffectExpired -= HandleEffectLosed;
     }
 
-    public void AddContinueEffect(ContinuedEffect effect) // 套用持續效果
+    public IEnumerator AddContinueEffect(ContinuedEffect effect) // 套用持續效果
     {
-        if (effect == null) return;
-        if (effect.MaxOverlay <= 0) return;
-        if (effect.Duration <= 0) return;
+        if (effect == null) yield break;
+        if (effect.MaxOverlay <= 0) yield break;
+        if (effect.Duration <= 0) yield break;
 
         // 取得同類效果
         var sameEffects = activeEffects
@@ -98,7 +98,7 @@ public class ContinuedEffectCtrl : MonoBehaviour
 
         // 統一新增
         var existed = activeEffects
-            .FirstOrDefault(e => e.effectData == effect && e.duration == effect.Duration);
+            .FirstOrDefault(e => e.effectData == effect && (e.duration == effect.Duration || !e.effectData.endable));
 
         if (existed != null)
         {
@@ -140,17 +140,17 @@ public class ContinuedEffectCtrl : MonoBehaviour
         }
     }
 
-    public void LoseContinueEffect(ContinuedEffect continuedEffect) // 解除效果
+    public IEnumerator LoseContinueEffect(ContinuedEffect continuedEffect) // 解除效果
     {
         if (!continuedEffect.Removable)
         {
             Debug.Log($"效果:{continuedEffect.EffectName}無法解除");
-            return;
+            yield break;
         }
         if (!activeEffects.Any(e => e.effectData == continuedEffect))
         {
             Debug.Log($"未持有效果:{continuedEffect.EffectName}");
-            return;
+            yield break;
         }
 
         EffectInstance effectInstance = activeEffects.Find(e => e.effectData == continuedEffect);

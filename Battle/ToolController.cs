@@ -43,6 +43,7 @@ public class ToolController : MonoBehaviour
         // 互動播報
         TurnManager.OnAttackEvent += HandleAttactEvent;
         TurnManager.OnAnyBeHealed += HandleBeHealed;
+        CharacterSelectionManager.SummonCharacter += HandleCharacterSummon;
         TurnManager.OnAnyCharacterDead += HandleCharacterDead;
         TurnManager.OnAnyCardPlayBegin += HandleCardPlayBegin;
         TurnManager.OnAnyCardPlayed += HandleCardPlayed;
@@ -67,6 +68,7 @@ public class ToolController : MonoBehaviour
         TurnManager.OnTurnEnd -= HandleTurnEnd;
         TurnManager.OnAttackEvent -= HandleAttactEvent;
         TurnManager.OnAnyBeHealed -= HandleBeHealed;
+        CharacterSelectionManager.SummonCharacter -= HandleCharacterSummon;
         TurnManager.OnAnyCharacterDead -= HandleCharacterDead;
         TurnManager.OnAnyCardPlayBegin -= HandleCardPlayBegin;
         TurnManager.OnAnyCardPlayed -= HandleCardPlayed;
@@ -148,6 +150,11 @@ public class ToolController : MonoBehaviour
     {
         string acting = $"{act.character_data.characterName}(P{act.ownerPlayer.Player_nunber})";
         WriteReport($" <color=#0080FF>{acting}</color>回復了{act.lastHealAmount}點血量");
+    }
+    private void HandleCharacterSummon(Player player, Character character)
+    {
+        string acting = $"<color=#0080FF>(P{player.Player_nunber})</color>";
+        WriteReport($"{acting} 召喚了角色 {character.characterName}");
     }
     private void HandleCharacterDead(CharacterHealth act)
     {

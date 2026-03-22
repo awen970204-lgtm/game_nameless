@@ -2,10 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Collections;
-using UnityEngine.EventSystems;
 using TMPro;
-using UnityEditor.SceneManagement;
-using Unity.Mathematics;
 
 public enum TeamID { Team1, Team2, Enemy }
 public enum ActionType
@@ -294,11 +291,6 @@ public class CharacterHealth : MonoBehaviour
     #region Character Acting
     public IEnumerator ReadyToAttact(int damage, CharacterHealth injured, SpecialEffects special) // 受傷前
     {
-        int nowPassives = TurnManager.Instance.pendingPassives;
-        int nowEffectEntrys = TurnManager.Instance.pendingEffectEntrys;
-        // 插入防止傷害
-        yield return new WaitUntil(() => TurnManager.Instance == null ||
-         TurnManager.Instance.pendingPassives == nowPassives && TurnManager.Instance.pendingEffectEntrys == nowEffectEntrys);
         yield return injured.TakeDamage(damage, this, special);
     }
     public IEnumerator TakeDamage(int damage, CharacterHealth attacker, SpecialEffects special)// 受到傷害
@@ -341,7 +333,7 @@ public class CharacterHealth : MonoBehaviour
     {
         int nowCurrentHealth = currentHealth;
         currentMaxHP += amount;
-        currentHealth = Mathf.Clamp(currentHealth, -currentMaxHP, currentMaxHP);
+        currentHealth = Mathf.Clamp(currentHealth, -999, currentMaxHP);
         // 顯示變化
         int change = nowCurrentHealth - currentHealth;
         if (nowCurrentHealth > currentHealth) ownerPlayer.ShowFloatingText($"-{change}", Color.purple, this);
@@ -499,7 +491,7 @@ public class CharacterHealth : MonoBehaviour
                 greenBufferImage.fillAmount = newFill;
                 whiteMoving = true;
             }
-            Debug.Log("血量降低");
+            Debug.Log($"{character_data.characterName}血量降低");
             
             whiteDelayTimer = 0;
             targetFill = newFill;
@@ -513,8 +505,8 @@ public class CharacterHealth : MonoBehaviour
                 greenMoving = true;
             }
 
-            targetFill = newFill;
         }
+        targetFill = newFill;
     }
     
     #endregion

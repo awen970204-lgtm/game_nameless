@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 using Unity.VisualScripting;
+using System.Linq;
 
 public enum GameMode{ story, free}
 public class GameModeManager : MonoBehaviour
@@ -98,6 +99,8 @@ public class GameModeManager : MonoBehaviour
 
         QuestManager.Instance?.SetStoryMode();
 
+        StoryModeManager.cards.AddRange(cardDatas.Where(c => c.holderCharacter == null));
+
         if (pendingInitialCharacter != null)
         {
             StoryModeManager.Instance?.GetNewMenber(pendingInitialCharacter);
@@ -136,6 +139,11 @@ public class GameModeManager : MonoBehaviour
             if (PlayerPrefs.GetInt($"StoryModeHasQuest:{quest.questName}") == -1) continue;
 
             QuestManager.Instance?.SetQuest(quest, PlayerPrefs.GetInt($"StoryModeHasQuest:{quest.questName}"));
+        }
+        foreach(var card in cardDatas)
+        {
+            if (PlayerPrefs.GetInt($"StoryModeHoldCard:{GameModeManager.Instance.cardDatas.IndexOf(card)}") == 1)
+                StoryModeManager.cards.Add(card);
         }
         
         GameCharacterManager.Instance.SetActing(GameCharacterManager.Instance.actingCharacter);
@@ -259,6 +267,16 @@ public class GameModeManager : MonoBehaviour
         {
             PlayerPrefs.SetInt($"PlayerHoldCharacter{GameModeManager.Instance.characterDatas.IndexOf(character)}InStory", 0);
         }
+        foreach(var card in cardDatas)
+        {
+            PlayerPrefs.SetInt($"StoryModeHoldCard:{GameModeManager.Instance.cardDatas.IndexOf(card)}", 0);
+        }
+        foreach(var quest in QuestManager.MainQuests)
+        {
+            PlayerPrefs.SetInt($"StoryModeHasQuest:{quest.questName}", -1);
+        }
+        StoryModeManager.cards.Clear();
+        
         yield return BackToMenu();
     }
     public IEnumerator BackToMenu()

@@ -44,6 +44,7 @@ public class EventUI : MonoBehaviour
     public TMP_Text speakerText;
     public TMP_Text contentText;
     public TMP_Text recordText;
+    public GameObject skipPanel;
     public TMP_Text skipText;
     private int currentIndex = 0;
     private DialogueData lastDialogueData;
@@ -111,6 +112,10 @@ public class EventUI : MonoBehaviour
         foreach(var quest in QuestManager.MainQuests)
         {
             PlayerPrefs.SetInt($"StoryModeHasQuest:{quest.questName}", QuestManager.MainQuestShedules[quest]);
+        }
+        foreach(var card in StoryModeManager.cards)
+        {
+            PlayerPrefs.SetInt($"StoryModeHoldCard:{GameModeManager.Instance.cardDatas.IndexOf(card)}", 1);
         }
     }
 
@@ -301,6 +306,7 @@ public class EventUI : MonoBehaviour
     {
         lastDialogueData = data;
         currentIndex = 0;
+        skipPanel.SetActive(false);
 
         if (InEvent)
         {
