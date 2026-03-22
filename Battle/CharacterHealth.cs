@@ -152,6 +152,7 @@ public class CharacterHealth : MonoBehaviour
                 Open_SkillBar.Invoke(this);
             }
         }
+        targetFill = Mathf.Clamp01((float)currentHealth / currentMaxHP);
 
         UpdateHPBars();
     }
