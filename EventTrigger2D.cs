@@ -36,7 +36,7 @@ public class EventTrigger2D : MonoBehaviour
     {
         if (playerInside && Keyboard.current.fKey.isPressed)
         {
-            if (GameModeManager.GameStarted)
+            if (GameModeManager.GameStarted && GamecharacterControl.CanMove)
             {
                 Debug.Log($"事件:{eventData.eventName}觸發");
                 playerInside = false;
