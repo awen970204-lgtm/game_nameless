@@ -12,7 +12,6 @@ public class TurnManager : MonoBehaviour
     // 回合系統
     public Player player1;
     public Player player2;
-    [HideInInspector] public List<CharacterHealth> turnOrder = new List<CharacterHealth>();        // 行動清單
     [HideInInspector] public List<CharacterHealth> selectedTargets = new List<CharacterHealth>();  // 目標清單
 
     // 角色狀態
@@ -100,9 +99,7 @@ public class TurnManager : MonoBehaviour
     
     public void Register(CharacterHealth character)// 註冊角色進行動清單
     {
-        if (IsBattleOver) return;
-        if (!turnOrder.Contains(character))
-            turnOrder.Add(character);
+
     }
     public void Unregister(CharacterHealth character)// 當角色死亡時移除
     {
@@ -110,7 +107,6 @@ public class TurnManager : MonoBehaviour
 
         character.ownerPlayer.playerCharacters.Remove(character);
         StartCoroutine(CharacterSelectionManager.Instance.ShowTeamMenbers(character.ownerPlayer));
-        turnOrder.Remove(character);
 
         Destroy(character.gameObject);
         CheckBattleEnd();
@@ -166,7 +162,7 @@ public class TurnManager : MonoBehaviour
     }
     public void StartTurn()
     {
-        if (turnOrder.Count == 0) return;
+        if (player1.playerCharacters.Count == 0 || player2.playerCharacters.Count == 0) return;
 
         if (actingPlayer == player1)
             actingPlayer = player2;
@@ -333,10 +329,9 @@ public class TurnManager : MonoBehaviour
     }
     private bool canContinue()
     {
-        foreach (var ch in turnOrder)
-        {
-            if (ch.ownerPlayer.IsDising || ch.ownerPlayer.IsStealing) return false;
-        }
+        if (player1.IsDising || player2.IsDising) return false;
+        if (player1.IsStealing || player2.IsStealing) return false;
+
         return true;
     }
     
@@ -396,6 +391,10 @@ public class TurnManager : MonoBehaviour
     private List<CharacterHealth> CardEffectTarget(EffectEntry effectEntry, CharacterHealth user, Player player)
     {
         List<CharacterHealth> targets = new List<CharacterHealth>();
+        List<CharacterHealth> turnOrder = new List<CharacterHealth>();
+        turnOrder.AddRange(player1.playerCharacters);
+        turnOrder.AddRange(player2.playerCharacters);
+
         switch(effectEntry.targetType)
         {
             case TargetType.Self:
@@ -455,6 +454,10 @@ public class TurnManager : MonoBehaviour
             Debug.LogWarning("未設定角色");
             yield break;
         }
+        List<CharacterHealth> turnOrder = new List<CharacterHealth>();
+        turnOrder.AddRange(player1.playerCharacters);
+        turnOrder.AddRange(player2.playerCharacters);
+
         switch (entry.targetType)
         {
             case TargetType.Self:
@@ -845,7 +848,15 @@ public class TurnManager : MonoBehaviour
 
         // 重置技能使用次數
         skillUseCounter.Clear();
-        foreach (var ch in turnOrder)
+        foreach (var ch in player1.playerCharacters)
+        {
+            var passiveCtrl = ch.GetComponent<PassiveSkilCtrl>();
+            if (passiveCtrl != null)
+            {
+                passiveCtrl.ResetPassives();
+            }
+        }
+        foreach (var ch in player2.playerCharacters)
         {
             var passiveCtrl = ch.GetComponent<PassiveSkilCtrl>();
             if (passiveCtrl != null)
@@ -870,6 +881,10 @@ public class TurnManager : MonoBehaviour
     private void CheckBattleEnd()
     {
         if (IsBattleOver) return;
+
+        List<CharacterHealth> turnOrder = new List<CharacterHealth>();
+        turnOrder.AddRange(player1.playerCharacters);
+        turnOrder.AddRange(player2.playerCharacters);
 
         if (turnOrder.All(c => c.team == TeamID.Team1))
         {
@@ -1070,8 +1085,12 @@ public class TurnManager : MonoBehaviour
     private List<CharacterHealth> GetCandidateTargets(EffectEntry entry, CharacterHealth self,
          bool isBeneficial, bool isHarmful) // 取得候選目標
     {
-        var allUnits = TurnManager.Instance.turnOrder
-            .Where(c => c != null && c.IsAlive).ToList();
+        List<CharacterHealth> turnOrder = new List<CharacterHealth>();
+        turnOrder.AddRange(player1.playerCharacters);
+        turnOrder.AddRange(player2.playerCharacters);
+
+        var allUnits = turnOrder
+            .Where(c => c.character_data != null && c.IsAlive).ToList();
 
         var teammates = allUnits.Where(c => c.team == self.team).ToList();
         var enemies = allUnits.Where(c => c.team != self.team).ToList();

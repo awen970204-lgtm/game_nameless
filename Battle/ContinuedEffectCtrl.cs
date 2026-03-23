@@ -218,11 +218,15 @@ public class ContinuedEffectCtrl : MonoBehaviour
                         targets.Add(self);
                         break;
                     case TargetType.AllOther:
-                        targets = new List<CharacterHealth>(TurnManager.Instance.turnOrder);
+                        targets = new List<CharacterHealth>();
+                        targets.AddRange(TurnManager.Instance.player1.playerCharacters);
+                        targets.AddRange(TurnManager.Instance.player2.playerCharacters);
                         targets.Remove(self);
                         break;
                     case TargetType.All:
-                        targets = new List<CharacterHealth>(TurnManager.Instance.turnOrder);
+                        targets = new List<CharacterHealth>();
+                        targets.AddRange(TurnManager.Instance.player1.playerCharacters);
+                        targets.AddRange(TurnManager.Instance.player2.playerCharacters);
                         break;
                 }
                 Debug.Log($"持續效果:{effect.effectData.EffectName}觸發");
@@ -303,11 +307,15 @@ public class ContinuedEffectCtrl : MonoBehaviour
                     targets.Add(self);
                     break;
                 case TargetType.AllOther:
-                    targets = new List<CharacterHealth>(TurnManager.Instance.turnOrder);
+                    targets = new List<CharacterHealth>();
+                    targets.AddRange(TurnManager.Instance.player1.playerCharacters);
+                    targets.AddRange(TurnManager.Instance.player2.playerCharacters);
                     targets.Remove(self);
                     break;
                 case TargetType.All:
-                    targets = new List<CharacterHealth>(TurnManager.Instance.turnOrder);
+                    targets = new List<CharacterHealth>();
+                    targets.AddRange(TurnManager.Instance.player1.playerCharacters);
+                    targets.AddRange(TurnManager.Instance.player2.playerCharacters);
                     break;
             }
             Debug.Log($"持續效果:{effect.effectData.EffectName}觸發");

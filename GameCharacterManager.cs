@@ -5,6 +5,7 @@ public class GameCharacterManager : MonoBehaviour
 {
     public static GameCharacterManager Instance { get; private set; }
     public static event Action<GameObject> SetCharacter;
+    public static event Action OpenMap;
     public GameObject actingCharacter;
 
     void Awake()
@@ -36,6 +37,7 @@ public class GameCharacterManager : MonoBehaviour
         {
             Vector2 origin = new Vector2(0, 0);
             actingCharacter.transform.position = origin;
+            OpenMap?.Invoke();
         }
     }
 }
