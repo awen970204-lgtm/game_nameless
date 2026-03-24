@@ -24,7 +24,6 @@ public class TurnManager : MonoBehaviour
     [HideInInspector] public EffectEntry pendingEffectEntry;        // 暫存效果組合
     [HideInInspector] public Card pendingCard;                      // 暫存卡片
     [HideInInspector] public CardCtrl pendingCardUI;                // 暫存卡片UI
-    [HideInInspector] public Player pendingPlayer;                  // 暫存玩家
     [HideInInspector] public CharacterHealth pendingUser;           // 技能/卡片的實際使用者
     // 執行狀態
     [HideInInspector] public bool GameStart = false;        // 遊戲開始狀態
@@ -240,7 +239,6 @@ public class TurnManager : MonoBehaviour
             var entry = skill.effectEntries[i];
             pendingSkill = skill;
             pendingUser = user;
-            pendingPlayer = player;
 
             pendingEffectEntry = entry;
 
@@ -296,13 +294,12 @@ public class TurnManager : MonoBehaviour
         // 所有效果跑完
         pendingSkill = skill;
         pendingUser = user;
-        pendingPlayer = player;
         Debug.Log($"{user.character_data.characterName}的技能:{skill.skillName}結算完畢");
         FinishSkillUse();
     }
     private void FinishSkillUse() // 結尾清理
     {
-        if (pendingSkill != null && pendingPlayer != null && pendingUser != null)
+        if (pendingSkill != null && pendingUser != null)
         {
             RegisterSkillUse(pendingUser, pendingSkill);
             OnAnySkillEnd?.Invoke(pendingUser, pendingSkill);
@@ -574,15 +571,23 @@ public class TurnManager : MonoBehaviour
     {
         if (pendingUser != null && pendingUser.team != TeamID.Enemy)
             ConfirmTargets();
+        else
+            Debug.Log("現在無法確認");
     }
     public void ConfirmTargets()// 技能或卡牌確定好目標
     {
-        if (!waitingForTarget || pendingPlayer == null) return;
+        if (!waitingForTarget || pendingUser == null)
+        {
+            Debug.LogWarning("沒有執行角色");
+            return;
+        }
         if (selectedTargets.Count == 0)
         {
             LogWarning.Instance.Warning("至少需選擇一個目標");
+            Debug.LogWarning("至少需選擇一個目標");
             return;
         }
+        Debug.Log("確定好目標");
 
         // 執行目標效果
         // 技能
@@ -607,6 +612,8 @@ public class TurnManager : MonoBehaviour
             // 執行效果
             StartCoroutine(EffectExecutor.ApplyEffects(pendingUser, selectedTargets, pendingEffectEntry.effects));
             Debug.Log($"技能 {pendingSkill.skillName} 已施放");
+            waitingForAction = true;
+            waitingForTarget = false;
         }
         // 被動技能
         else if (pendingPassiveCtrl != null && pendingPassive != null && pendingEffectEntry != null)
@@ -623,13 +630,8 @@ public class TurnManager : MonoBehaviour
                 inputValue.ChangeEnterValue();
                 Debug.Log("數值輸入成功");
             }
-            // 執行效果
-            foreach (var target in selectedTargets)
-            {
-                target.ToggleHighlight(false);
-            }
-            StartCoroutine(EffectExecutor.ApplyEffects(pendingUser, selectedTargets, pendingEffectEntry.effects));
-            Debug.Log($"技能 {pendingPassive.skillName} 已施放");
+            waitingForAction = true;
+            waitingForTarget = false;
         }
         // 卡片
         else if (pendingCard != null && pendingUser != null && pendingEffectEntry != null)
@@ -654,9 +656,9 @@ public class TurnManager : MonoBehaviour
             // 執行
             StartCoroutine(EffectExecutor.ApplyEffects(pendingUser, selectedTargets, pendingEffectEntry.effects));
             Debug.Log($"卡牌 {pendingCard.cardName} 已使用");
+            waitingForAction = true;
+            waitingForTarget = false;
         }
-        waitingForAction = true;
-        waitingForTarget = false;
     }
     #endregion
 
@@ -752,6 +754,15 @@ public class TurnManager : MonoBehaviour
                             actionCancelled = false;
                             break;
                         }
+                        else
+                        {
+                            foreach (var target in selectedTargets)
+                            {
+                                target.ToggleHighlight(false);
+                            }
+                            yield return null;
+                            yield return EffectExecutor.ApplyEffects(user, selectedTargets, entry.effects);
+                        }
                     }
                     else
                     {
@@ -765,17 +776,13 @@ public class TurnManager : MonoBehaviour
             pendingPassiveCtrl = ctrl;
             pendingUser = user;
             ctrl.PassiveFinish(passiveSkill);
-            OnAnyPassiveSkillEnd?.Invoke(pendingUser, pendingPassive);
+            OnAnyPassiveSkillEnd?.Invoke(pendingUser, passiveSkill);
             Debug.Log($"{user.character_data.characterName}的被動:{passiveSkill.skillName}結算完成");
         }
         FinishPassive();
     }
     private void FinishPassive() // 結尾清理
     {
-        if (pendingPassive != null && pendingPassiveCtrl != null && pendingUser != null)
-        {
-            pendingPassiveCtrl.Executable_PassiveEntry.Clear();
-        }
         selectedTargets.Clear();
         checkButton.SetActive(false);
         UseTips.text = "";
@@ -791,9 +798,9 @@ public class TurnManager : MonoBehaviour
         }
         isProcessingPassive = false;
 
+        // 回合結束後沒有剩餘被動，回合結束
         if (TurnEnded && passiveQueue.Count == 0)
         {
-            // 回合結束後沒有剩餘被動，回合結束
             if (currentEndTurn != null)
                 StopCoroutine(currentEndTurn);
                 
@@ -822,8 +829,8 @@ public class TurnManager : MonoBehaviour
     }
     private IEnumerator EndTurnDelay()
     {
-        yield return new WaitForSeconds(0.1f);   // 等待0.1秒
         Debug.Log($"<color=#FFDD55>等待結算結束</color>");
+        yield return new WaitForSeconds(0.1f);   // 等待0.1秒
         yield return new WaitUntil(() =>
         !isProcessingPassive && pendingEffectEntrys == 0 &&
         (WaitCardManager.Instance == null || WaitCardManager.Instance.IsIdle)
@@ -986,8 +993,13 @@ public class TurnManager : MonoBehaviour
         
         foreach(var target in GetBestTargets(entry, user))
         {
-            OnTargetToggled(target);
-            yield return new WaitForSeconds(0.2f);
+            float score = CalculateEntryScore(entry, user, target);
+            if (score > 0)
+            {
+                Debug.Log($"自動選擇目標:{target.character_data.characterName};{score:2f}分");
+                OnTargetToggled(target);
+            }
+            yield return new WaitForSeconds(0.1f);
         }
         if (entry.canInputValue)
         {
@@ -1128,16 +1140,18 @@ public class TurnManager : MonoBehaviour
         float effectScore = 0f;
 
         float missingHP = target.currentMaxHP - target.currentHealth;
-        float value = effect.value * effect.multiplier;
+        float changeValue = effect.value * effect.multiplier;
+        float targetvalue = EffectExecutor.GetValue(effect.targetValueEntry, self, target);
+        int value = Mathf.RoundToInt(changeValue + targetvalue);
         switch (effect.effectType)
         {
             case EffectType.Heal: // 滿血 = 0分
-                effectScore = missingHP > 0 ? (missingHP / target.currentMaxHP)*2f +
+                effectScore = missingHP > 0 ? (missingHP / target.currentMaxHP)*0.5f +
                 Mathf.Min(missingHP , value + self.currentHealPower)*0.3f : 0f;
                 break;
 
             case EffectType.Damage: // 越少血越值得打
-                effectScore = target.currentMaxHP > 0 ? ((missingHP) / target.currentMaxHP) * 2f + 
+                effectScore = target.currentMaxHP > 0 ? ((missingHP) / target.currentMaxHP) * 0.5f + 
                 (effect.value + self.currentAttackPower - target.currentDefense) * effect.multiplier * 0.3f : 
                 (effect.value + self.currentAttackPower - target.currentDefense) * effect.multiplier * 0.3f;
                 break;
@@ -1157,11 +1171,13 @@ public class TurnManager : MonoBehaviour
                 break;
 
             case EffectType.ChangeMaxHP:
+                effectScore = value > 0 ? value * 0.3f : value * 0.3f;
+                break;
             case EffectType.ChangeAttackPower:
             case EffectType.ChangeHealPower:
             case EffectType.ChangeDefense:
             case EffectType.ChangeDamageReduction:
-                effectScore = value > 0 ? value * 0.3f : value * 0.3f;
+                effectScore = value > 0 ? value * 1.5f : value * 1.5f;
                 break;
             case EffectType.ChangeDamageMultiplier:
                 effectScore = effect.multiplier > 0 ? effect.multiplier * 1f : effect.multiplier * 1.2f;

@@ -40,6 +40,7 @@ public class ToolController : MonoBehaviour
         TurnManager.OnBattleBegin += HandleBattleBegin;
         TurnManager.OnTurnStart += HandleTurnStart;
         TurnManager.OnTurnEnd += HandleTurnEnd;
+        TurnManager.OnRealTurnEnd += HandleRealTurnEnd;
         // 互動播報
         TurnManager.OnAttackEvent += HandleAttactEvent;
         TurnManager.OnAnyBeHealed += HandleBeHealed;
@@ -66,6 +67,8 @@ public class ToolController : MonoBehaviour
         TurnManager.OnBattleBegin -= HandleBattleBegin;
         TurnManager.OnTurnStart -= HandleTurnStart;
         TurnManager.OnTurnEnd -= HandleTurnEnd;
+        TurnManager.OnRealTurnEnd -= HandleRealTurnEnd;
+
         TurnManager.OnAttackEvent -= HandleAttactEvent;
         TurnManager.OnAnyBeHealed -= HandleBeHealed;
         CharacterSelectionManager.SummonCharacter -= HandleCharacterSummon;
@@ -140,6 +143,11 @@ public class ToolController : MonoBehaviour
     {
         WriteReport($"<color=#0080FF>(P{acting.Player_nunber})</color>的<color=#d420bf>回合結束</color>");
     }
+    private void HandleRealTurnEnd(Player actting)
+    {
+        WriteReport("------------------------------------");
+    }
+
     private void HandleAttactEvent(CharacterHealth attacker, CharacterHealth injured)
     {
         string att = $"{attacker.character_data.characterName}(P{attacker.ownerPlayer.Player_nunber})";
@@ -149,7 +157,7 @@ public class ToolController : MonoBehaviour
     private void HandleBeHealed(CharacterHealth act)
     {
         string acting = $"{act.character_data.characterName}(P{act.ownerPlayer.Player_nunber})";
-        WriteReport($" <color=#0080FF>{acting}</color>回復了{act.lastHealAmount}點血量");
+        WriteReport($" <color=#0080FF>{acting}</color> 回復了{act.lastHealAmount}點血量");
     }
     private void HandleCharacterSummon(Player player, Character character)
     {
@@ -161,6 +169,8 @@ public class ToolController : MonoBehaviour
         string acting = $"<color=#0080FF>{act.character_data.characterName}(P{act.ownerPlayer.Player_nunber})</color>";
         WriteReport($" {acting}死亡");
     }
+
+    #region card
 
     private void HandlePlayerDrawCard(Player act, int number)
     {
@@ -177,6 +187,10 @@ public class ToolController : MonoBehaviour
         string acting = $"<color=#0080FF>(P{act.Player_nunber})</color>";
         WriteReport($" {acting}使用完卡片<color=#FFDD55>{card.cardName}</color>");
     }
+
+    #endregion
+
+    #region skill
 
     private void HandleGetSkill(CharacterHealth act, Skill skill)
     {
@@ -219,6 +233,8 @@ public class ToolController : MonoBehaviour
         string acting = $"<color=#0080FF>{act.character_data.characterName}(P{act.ownerPlayer.Player_nunber})</color>";
         WriteReport($" {acting} 發動完被動<color=#FFDD55>{skill.skillName}</color>");
     }
+
+    #endregion
 
     private void HandleEffectGot(EffectInstance effect, CharacterHealth act)
     {

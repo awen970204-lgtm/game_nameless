@@ -213,7 +213,7 @@ public class CharacterHealth : MonoBehaviour
     {
         if (TurnManager.Instance.waitingForTarget && TurnManager.Instance.pendingUser?.team != TeamID.Enemy)
         {
-            Debug.Log("選擇角色");
+            Debug.Log($"選擇角色:{character_data.characterName}({ownerPlayer.Player_nunber})");
             SkillClick();
         }
         if (TooltipUI.Instance.characterInformatuon.activeInHierarchy &&
