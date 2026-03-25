@@ -152,13 +152,14 @@ public class CharacterHealth : MonoBehaviour
                 Open_SkillBar.Invoke(this);
             }
         }
-        targetFill = Mathf.Clamp01((float)currentHealth / currentMaxHP);
 
         UpdateHPBars();
     }
     private void UpdateHPBars()
     {
         if (healthImage == null) return;
+        targetFill = Mathf.Clamp01((float)currentHealth / currentMaxHP);
+        greenBufferImage.fillAmount = targetFill;
 
         // 主血條
         healthImage.fillAmount = Mathf.Lerp(
@@ -290,11 +291,11 @@ public class CharacterHealth : MonoBehaviour
     }
 
     #region Character Acting
-    public IEnumerator ReadyToAttact(int damage, CharacterHealth injured, SpecialEffects special) // 受傷前
+    public IEnumerator ReadyToAttact(int damage, CharacterHealth injured) // 受傷前
     {
-        yield return injured.TakeDamage(damage, this, special);
+        yield return injured.TakeDamage(damage, this);
     }
-    public IEnumerator TakeDamage(int damage, CharacterHealth attacker, SpecialEffects special)// 受到傷害
+    public IEnumerator TakeDamage(int damage, CharacterHealth attacker)// 受到傷害
     {
         attacker.lastAttackDamage = damage;
         attacker.AttackValueInTrun += damage;
@@ -313,10 +314,9 @@ public class CharacterHealth : MonoBehaviour
         // 是否擊殺
         if (currentHealth <= 0) killer = attacker;
 
-        SpecialDisplay(special);
         yield return new WaitForSeconds(0.1f);
     }
-    public void Heal(int amount, SpecialEffects special)// 回血
+    public void Heal(int amount)// 回血
     {
         currentHealth += amount;
         currentHealth = Mathf.Clamp(currentHealth, -currentMaxHP, currentMaxHP);
@@ -325,12 +325,11 @@ public class CharacterHealth : MonoBehaviour
         // 顯示回血
         ownerPlayer.ShowFloatingText($"+{amount}", Color.green, this);
         UpdateHealthUI();
-        SpecialDisplay(special);
         TurnManager.Instance.RaiseAnyBeHealed(this);
         // 是否擊殺
         if (currentHealth > 0) killer = null;
     }
-    public void ChangeMaxHP(int amount, SpecialEffects special)// 變換血量最大值
+    public void ChangeMaxHP(int amount)// 變換血量最大值
     {
         int nowCurrentHealth = currentHealth;
         currentMaxHP += amount;
@@ -340,16 +339,14 @@ public class CharacterHealth : MonoBehaviour
         if (nowCurrentHealth > currentHealth) ownerPlayer.ShowFloatingText($"-{change}", Color.purple, this);
         UpdateHealthUI();
 
-        SpecialDisplay(special);
     }
-    public void ConsumeHP(int amount, SpecialEffects special)// 消耗血量
+    public void ConsumeHP(int amount)// 消耗血量
     {
         currentHealth -= amount;
         currentHealth = Mathf.Clamp(currentHealth, -currentMaxHP, currentMaxHP);
         // 顯示變化
         ownerPlayer.ShowFloatingText($"-{amount}", Color.purple, this);
         UpdateHealthUI();
-        SpecialDisplay(special);
 
         TurnManager.Instance.RaiseAnyConsumeHP(this);
     }
@@ -461,8 +458,10 @@ public class CharacterHealth : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         character_illustration.gameObject.SetActive(false);
     }
-    private void SpecialDisplay(SpecialEffects special)// 顯示特效
+    public IEnumerator SpecialDisplay(SpecialEffects special, List<CharacterHealth> allTarget)// 顯示特效
     {
+        if (special == SpecialEffects.None)
+            yield break;
         switch (special)
         {
             case SpecialEffects.OnDamage_Normal:

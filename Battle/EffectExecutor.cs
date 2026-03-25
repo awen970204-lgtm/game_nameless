@@ -16,6 +16,7 @@ public static class EffectExecutor
             foreach (var effect in effectsCopy)
             {
                 yield return ExecuteEffectCoroutine(user, target, effect);
+                yield return target.SpecialDisplay(effect.special, targetsCopy);
             }
         }
     }
@@ -39,21 +40,21 @@ public static class EffectExecutor
         {
             // 血量相關
             case EffectType.ChangeMaxHP:
-                target.ChangeMaxHP(value, effect.special);
+                target.ChangeMaxHP(value);
                 break;
             case EffectType.ConsumeHP:
-                target.ConsumeHP(value, effect.special);
+                target.ConsumeHP(value);
                 break;
             case EffectType.Damage:
                 float finalDamage = value + user.currentAttackPower - target.currentDefense;
                     finalDamage *= user.currentDamageMultiplier;
                     finalDamage -= target.currentDamageReduction;
                 int damage = Mathf.Max(0, Mathf.RoundToInt(finalDamage));
-                yield return user.ReadyToAttact(damage, target, effect.special);
+                yield return user.ReadyToAttact(damage, target);
                 break;
             case EffectType.Heal:
                 int heal = Mathf.Max(0, Mathf.RoundToInt(value + user.currentHealPower));
-                target.Heal(heal, effect.special);
+                target.Heal(heal);
                 break;
             
             // 手牌相關
