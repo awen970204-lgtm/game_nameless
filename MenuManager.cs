@@ -7,6 +7,22 @@ using UnityEngine.SceneManagement;
 using TMPro;
 using Unity.VisualScripting;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
+/// <summary>
+/// playerPrefs:
+/// PlayerUnlockedCharacter0
+/// StroyBegin
+/// FreeModeSet:EnemyAI
+/// FreeModeEnemyLevel
+/// FreeModePlayerLevel
+/// FreeModeSet:EnemyAI
+/// FreeModeCard_Player1Hold0
+/// FreeModeCard_Player2Hold0
+/// </summary>
+
 public class MenuManager : MonoBehaviour
 {
     public static MenuManager Instance { get; private set; }
@@ -14,7 +30,10 @@ public class MenuManager : MonoBehaviour
     public GameObject battleCanvas;
     public GameObject freeModeSets;
 
-    [Header("FreeBattleSets")]
+    [Header("Menu Sets")]
+    public Button ExitGameButton;
+
+    [Header("Free Battle Sets")]
     public static bool useEnemyAI = false;
     public Toggle AISetToggle;
     public Button StartFreeModeButton;
@@ -69,27 +88,41 @@ public class MenuManager : MonoBehaviour
         CreateCharacterButtons();
         enemyLevelText.text = $"Enemy_Level:{enemyLevel}";
         
-        StartFreeModeButton.onClick.AddListener(()=> StartFreeMode());
-        StartStoryModeButton.onClick.AddListener(()=> StartStoryMode());
-        ContinueStoryButton.onClick.AddListener(()=> GameModeManager.Instance.ContinueStory());
-        ContinueStoryButton.gameObject.SetActive(PlayerPrefs.GetInt("StroyBegin") == 1);
+        if (StartFreeModeButton != null && StartStoryModeButton != null && ContinueStoryButton != null)
+        {
+            StartFreeModeButton.onClick.AddListener(()=> StartFreeMode());
+            StartStoryModeButton.onClick.AddListener(()=> StartStoryMode());
+            ContinueStoryButton.onClick.AddListener(()=> GameModeManager.Instance.ContinueStory());
+            ContinueStoryButton.gameObject.SetActive(PlayerPrefs.GetInt("StroyBegin") == 1);
+        }
+
+        if (AISetToggle != null)
+        {
+            AISetToggle.onValueChanged.AddListener(OnEnemyToggleChange);
+            AISetToggle.isOn = (PlayerPrefs.GetInt("FreeModeSet:EnemyAI") == 1);
+        }
         
-        AISetToggle.onValueChanged.AddListener(OnEnemyToggleChange);
-        AISetToggle.isOn = (PlayerPrefs.GetInt("FreeModeSet:EnemyAI") == 1);
+        if (enemyLevelSlider != null && playerLevelSlider != null)
+        {
+            enemyLevelSlider?.onValueChanged.AddListener(ChangeEnemyLevel);
+            if (PlayerPrefs.GetInt("FreeModeEnemyLevel") != 0)
+                enemyLevelSlider.value = PlayerPrefs.GetInt("FreeModeEnemyLevel");
 
-        enemyLevelSlider?.onValueChanged.AddListener(ChangeEnemyLevel);
-        if (PlayerPrefs.GetInt("FreeModeEnemyLevel") != 0)
-            enemyLevelSlider.value = PlayerPrefs.GetInt("FreeModeEnemyLevel");
+            enemyLevelSlider?.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(() => PlusEnemyLevel(1));
+            enemyLevelSlider?.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(() => PlusEnemyLevel(-1));
 
-        enemyLevelSlider?.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(() => PlusEnemyLevel(1));
-        enemyLevelSlider?.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(() => PlusEnemyLevel(-1));
+            playerLevelSlider?.onValueChanged.AddListener(ChangePlayerLevel);
+            if (PlayerPrefs.GetInt("FreeModePlayerLevel") != 0)
+                playerLevelSlider.value = PlayerPrefs.GetInt("FreeModePlayerLevel");
 
-        playerLevelSlider?.onValueChanged.AddListener(ChangePlayerLevel);
-        if (PlayerPrefs.GetInt("FreeModePlayerLevel") != 0)
-            playerLevelSlider.value = PlayerPrefs.GetInt("FreeModePlayerLevel");
+            playerLevelSlider?.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(() => PlusPlayerLevel(1));
+            playerLevelSlider?.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(() => PlusPlayerLevel(-1));
+        }
 
-        playerLevelSlider?.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(() => PlusPlayerLevel(1));
-        playerLevelSlider?.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(() => PlusPlayerLevel(-1));
+        if (ExitGameButton != null)
+        {
+            ExitGameButton.onClick.AddListener(()=> ExitGame());
+        }
 
         StartCoroutine(SetInitialCharacter(0));
     }
@@ -113,6 +146,17 @@ public class MenuManager : MonoBehaviour
             gameObject.SetActive(true);
             battleCanvas.SetActive(false);
         }
+    }
+    private void ExitGame() // 關閉遊戲
+    {
+        // 檢查是否在編輯器中運行
+        #if UNITY_EDITOR
+            EditorApplication.isPlaying = false;
+        #else
+            Application.Quit(); // 實際遊戲發佈後使用
+        #endif
+        
+        Debug.Log("Game is exiting..."); // 測試用，確認函數有被呼叫
     }
 
     void StartStoryMode()
@@ -177,9 +221,9 @@ public class MenuManager : MonoBehaviour
             CardToggle CT = cardset.GetComponentInChildren<CardToggle>();
             CT.card = card;
             CT.player = 1;
-            if (!PlayerPrefs.HasKey($"FreeMode_Player1Hold{card.cardName}"))
+            if (!PlayerPrefs.HasKey($"FreeModeCard_Player1Hold{GameModeManager.Instance.cardDatas.IndexOf(card)}"))
             {
-                PlayerPrefs.SetInt($"FreeMode_Player1Hold{card.cardName}", 1);
+                PlayerPrefs.SetInt($"FreeModeCard_Player1Hold{GameModeManager.Instance.cardDatas.IndexOf(card)}", 1);
             }
             cardset.SetActive(true);
         }
@@ -189,9 +233,9 @@ public class MenuManager : MonoBehaviour
             CardToggle CT = cardset.GetComponentInChildren<CardToggle>();
             CT.card = card;
             CT.player = 2;
-            if (!PlayerPrefs.HasKey($"FreeMode_Player2Hold{card.cardName}"))
+            if (!PlayerPrefs.HasKey($"FreeModeCard_Player2Hold{GameModeManager.Instance.cardDatas.IndexOf(card)}"))
             {
-                PlayerPrefs.SetInt($"FreeMode_Player2Hold{card.cardName}", 1);
+                PlayerPrefs.SetInt($"FreeModeCard_Player2Hold{GameModeManager.Instance.cardDatas.IndexOf(card)}", 1);
             }
             cardset.SetActive(true);
         }
@@ -203,12 +247,12 @@ public class MenuManager : MonoBehaviour
         {
             if (addIn && !player1Cards.Contains(card))
             {
-                PlayerPrefs.SetInt($"FreeMode_Player1Hold{card.cardName}", 1);
+                PlayerPrefs.SetInt($"FreeModeCard_Player1Hold{GameModeManager.Instance.cardDatas.IndexOf(card)}", 1);
                 player1Cards.Add(card);
             }
             else
             {
-                PlayerPrefs.SetInt($"FreeMode_Player1Hold{card.cardName}", 0);
+                PlayerPrefs.SetInt($"FreeModeCard_Player1Hold{GameModeManager.Instance.cardDatas.IndexOf(card)}", 0);
                 player1Cards.Remove(card);
             } 
         }
@@ -216,12 +260,12 @@ public class MenuManager : MonoBehaviour
         {
             if (addIn && !player2Cards.Contains(card))
             {
-                PlayerPrefs.SetInt($"FreeMode_Player2Hold{card.cardName}", 1);
+                PlayerPrefs.SetInt($"FreeModeCard_Player2Hold{GameModeManager.Instance.cardDatas.IndexOf(card)}", 1);
                 player2Cards.Add(card);
             }
             else 
             {
-                PlayerPrefs.SetInt($"FreeMode_Player2Hold{card.cardName}", 0);
+                PlayerPrefs.SetInt($"FreeModeCard_Player2Hold{GameModeManager.Instance.cardDatas.IndexOf(card)}", 0);
                 player2Cards.Remove(card);
             }
         }
