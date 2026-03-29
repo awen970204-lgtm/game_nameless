@@ -16,7 +16,8 @@ public static class EffectExecutor
             foreach (var effect in effectsCopy)
             {
                 yield return ExecuteEffectCoroutine(user, target, effect);
-                yield return target.SpecialDisplay(effect.special, targetsCopy);
+                if (!LimitChecker.Limited(effect.targetNeeds, target, user))
+                    yield return target.SpecialDisplay(effect.special, targetsCopy);
             }
         }
     }
