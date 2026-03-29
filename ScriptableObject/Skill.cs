@@ -13,4 +13,5 @@ public class Skill : ScriptableObject
     public List<NeedState> skillNeed;
     [Header("effectEntries")]
     public List<EffectEntry> effectEntries = new List<EffectEntry>();
+    public List<Character> relatedChracters;
 }

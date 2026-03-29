@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 using Unity.VisualScripting;
+using UnityEngine.Rendering;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -32,6 +33,22 @@ public class MenuManager : MonoBehaviour
 
     [Header("Menu Sets")]
     public Button ExitGameButton;
+    public GameObject illuatratedGuidePanel;
+    public Button illuatratedGuideButton;
+    public Transform panelTransform;
+    public GameObject relatedButton;
+
+    public Transform characterIconsTransform;
+    public GameObject characterIcon;
+    public GameObject characterPanelPrefab;
+
+    public Transform cardIconsTransform;
+    public GameObject cardIcon;
+    public GameObject cardPanelPrefab;
+
+    public Transform storyEndIconsTransform;
+    public GameObject storyEndIcon;
+    public GameObject storyEndPanelPrefab;
 
     [Header("Free Battle Sets")]
     public static bool useEnemyAI = false;
@@ -119,9 +136,44 @@ public class MenuManager : MonoBehaviour
             playerLevelSlider?.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(() => PlusPlayerLevel(-1));
         }
 
-        if (ExitGameButton != null)
+        if (ExitGameButton != null && illuatratedGuideButton != null)
         {
             ExitGameButton.onClick.AddListener(()=> ExitGame());
+            illuatratedGuideButton.onClick.AddListener(()=> SetIlluatratedGuidePanel());
+        }
+
+        if (characterIcon != null && characterIconsTransform != null)
+        {
+            foreach(var character in GameModeManager.Instance?.characterDatas)
+            {
+                GameObject go = Instantiate(characterIcon, characterIconsTransform);
+                go.transform.GetChild(0).GetComponent<Image>().sprite = character.characterAvatar;
+                go.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(()=> CheckCharacterInMenu(character));
+                go.transform.GetChild(1).GetComponent<TMP_Text>().text = character.characterName;
+                go.SetActive(true);
+            }
+        }
+        if (cardIcon != null && cardIconsTransform != null)
+        {
+            foreach(var card in GameModeManager.Instance?.cardDatas)
+            {
+                GameObject go = Instantiate(cardIcon, cardIconsTransform);
+                go.transform.GetChild(0).GetComponent<Image>().sprite = card.cardPicture;
+                go.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(()=> CheckCardInMenu(card));
+                go.transform.GetChild(1).GetComponent<TMP_Text>().text = card.cardName;
+                go.SetActive(true);
+            }
+        }
+        if (storyEndIcon != null && storyEndIconsTransform != null)
+        {
+            foreach(var end in GameModeManager.Instance?.StoryEndDatas)
+            {
+                GameObject go = Instantiate(storyEndIcon, storyEndIconsTransform);
+                go.transform.GetChild(0).GetComponent<Image>().sprite = end.endImage;
+                go.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(()=> CheckStoryEndInMenu(end));
+                go.transform.GetChild(1).GetComponent<TMP_Text>().text = end.endName;
+                go.SetActive(true);
+            }
         }
 
         StartCoroutine(SetInitialCharacter(0));
@@ -157,6 +209,10 @@ public class MenuManager : MonoBehaviour
         #endif
         
         Debug.Log("Game is exiting..."); // 測試用，確認函數有被呼叫
+    }
+    private void SetIlluatratedGuidePanel() // 開關圖鑑
+    {
+        illuatratedGuidePanel.SetActive(!illuatratedGuidePanel.activeInHierarchy);
     }
 
     void StartStoryMode()
@@ -204,6 +260,111 @@ public class MenuManager : MonoBehaviour
             StartStoryModeButton.gameObject.SetActive(true);
             getCharacterButton.onClick.RemoveAllListeners();
         }
+    }
+
+    private void CheckCharacterInMenu(Character character)
+    {
+        if (characterPanelPrefab == null || panelTransform == null) return;
+        if (character == null) return;
+
+        GameObject cpGo = Instantiate(characterPanelPrefab, panelTransform);
+        cpGo.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(()=> Destroy(cpGo));
+        cpGo.transform.GetChild(1).GetComponent<TMP_Text>().text = character.characterName;
+        cpGo.transform.GetChild(2).GetComponent<Image>().sprite = character.characterPicture;
+        cpGo.transform.GetChild(3).GetChild(0).GetComponent<TMP_Text>().text = character.backgroundStory;
+
+        Transform skillTransform = cpGo.transform.GetChild(4).GetChild(0).GetChild(0).GetChild(0);
+        GameObject skillButton = cpGo.transform.GetChild(4).GetChild(0).GetChild(0).GetChild(0).GetChild(0).gameObject;
+        Transform relatedTransform = cpGo.transform.GetChild(4).GetChild(2).GetChild(0).GetChild(0);
+        foreach(var skill in character.skills)
+        {
+            GameObject sGo = Instantiate(skillButton, skillTransform);
+            sGo.GetComponent<Button>().onClick.AddListener(()=> 
+                cpGo.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = skill.skillEffect);
+            sGo.transform.GetChild(0).GetComponent<TMP_Text>().text = skill.skillName;
+            sGo.SetActive(true);
+
+            foreach(var related in skill.relatedChracters)
+            {
+                GameObject cGo = Instantiate(relatedButton, relatedTransform);
+                cGo.GetComponent<Button>().onClick.AddListener(()=> CheckCharacterInMenu(related));
+                cGo.transform.GetChild(0).GetComponent<TMP_Text>().text = related.characterName;
+                cGo.transform.GetChild(1).GetComponent<Image>().sprite = related.characterAvatar;
+                cGo.SetActive(true);
+            }
+        }
+        foreach(var passiveSkill in character.passiveSkills)
+        {
+            GameObject sGo = Instantiate(skillButton, skillTransform);
+            sGo.GetComponent<Button>().onClick.AddListener(()=> 
+                cpGo.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = passiveSkill.skillEffect);
+            sGo.transform.GetChild(0).GetComponent<TMP_Text>().text = passiveSkill.skillName;
+            sGo.SetActive(true);
+
+            foreach(var related in passiveSkill.relatedChracters)
+            {
+                GameObject cGo = Instantiate(relatedButton, relatedTransform);
+                cGo.GetComponent<Button>().onClick.AddListener(()=> CheckCharacterInMenu(related));
+                cGo.transform.GetChild(0).GetComponent<TMP_Text>().text = related.characterName;
+                cGo.transform.GetChild(1).GetComponent<Image>().sprite = related.characterAvatar;
+                cGo.SetActive(true);
+            }
+        }
+        if (character.skills.Count > 0)
+        {
+            cpGo.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = $"{character.skills[0].skillEffect}";
+        }
+        else if (character.passiveSkills.Count > 0)
+        {
+            cpGo.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = $"{character.passiveSkills[0].skillEffect}";
+        }
+        else
+        {
+            cpGo.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text = "沒有技能";
+        }
+        
+        cpGo.transform.GetChild(5).GetChild(0).GetComponent<TMP_Text>().text = 
+            $"生命值:{character.characterStartHP}/{character.characterMaxHP}\n" +
+            $"攻擊:{character.attackPower}\n"+
+            $"回復力:{character.healPower}\n"+
+            $"防禦:{character.defense}\n"+
+            $"傷害倍率:{character.damageMultiplier*100}%\n"+
+            $"受傷減免:{character.damageReduction}";
+
+        cpGo.SetActive(true);
+    }
+    private void CheckCardInMenu(Card card)
+    {
+        if (cardPanelPrefab == null || panelTransform == null) return;
+
+        GameObject cardGo = Instantiate(cardPanelPrefab, panelTransform);
+        cardGo.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(()=> Destroy(cardGo));
+        cardGo.transform.GetChild(1).GetComponent<TMP_Text>().text = card.cardName;
+        cardGo.transform.GetChild(2).GetComponent<Image>().sprite = card.cardPicture;
+        cardGo.transform.GetChild(3).GetChild(0).GetComponent<TMP_Text>().text = card.cardToolTip;
+
+        Transform relatedTransform = cardGo.transform.GetChild(3).GetChild(1).GetChild(0).GetChild(0);
+        if (card.holderCharacter != null)
+        {
+            GameObject cGo = Instantiate(relatedButton, relatedTransform);
+            cGo.GetComponent<Button>().onClick.AddListener(()=> CheckCharacterInMenu(card.holderCharacter));
+            cGo.transform.GetChild(0).GetComponent<TMP_Text>().text = card.holderCharacter.characterName;
+            cGo.transform.GetChild(1).GetComponent<Image>().sprite = card.holderCharacter.characterAvatar;
+            cGo.SetActive(true);
+        }
+
+        cardGo.SetActive(true);
+    }
+    private void CheckStoryEndInMenu(StoryEnd storyEnd)
+    {
+        if (storyEndPanelPrefab == null || panelTransform == null) return;
+
+        GameObject endGo = Instantiate(storyEndPanelPrefab, panelTransform);
+        endGo.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(()=> Destroy(endGo));
+        endGo.transform.GetChild(1).GetComponent<TMP_Text>().text = storyEnd.endName;
+        endGo.transform.GetChild(2).GetComponent<Image>().sprite = storyEnd.endImage;
+        endGo.transform.GetChild(3).GetChild(0).GetComponent<TMP_Text>().text = storyEnd.endIntroduse;
+        endGo.SetActive(true);
     }
 
     #region Card

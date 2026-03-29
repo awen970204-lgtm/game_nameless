@@ -33,6 +33,8 @@ public class Character : ScriptableObject
     [Header("skills")]
     public List<Skill> skills;                 // 主動技能
     public List<PassiveSkill> passiveSkills;   // 被動技能
+    [TextArea]
+    public string backgroundStory;
 }
 public enum CharacterType
 {

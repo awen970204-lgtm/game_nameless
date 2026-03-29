@@ -71,4 +71,5 @@ public class PassiveSkill : ScriptableObject
     public bool LimitedTimes = true;         // 是否限制次數
     public int maxTriggersPerTurn = 1;       // 總次數
     public List<PassiveEntry> passiveEntry;  // 被動總組合
+    public List<Character> relatedChracters;
 }

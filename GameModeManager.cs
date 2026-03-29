@@ -7,6 +7,12 @@ using TMPro;
 using Unity.VisualScripting;
 using System.Linq;
 
+/// <summary>
+/// PlayerUnlockedCharacter0
+/// PlayerHoldCharacter0InStory
+/// StoryModeHasQuest0
+/// StoryModeHoldCard0
+/// </summary>
 public enum GameMode{ story, free}
 public class GameModeManager : MonoBehaviour
 {
@@ -31,9 +37,11 @@ public class GameModeManager : MonoBehaviour
     [SerializeField] private float fadeDuration = 1f;
     [Header("Data")]
     public List<string> fadeTips = new List<string>();
+    public List<Card> defaultCards = new List<Card>();
     public List<Card> cardDatas = new List<Card>();
     public List<Character> characterDatas = new List<Character>();
     public List<QuestData> questDatas = new List<QuestData>();
+    public List<StoryEnd> StoryEndDatas = new List<StoryEnd>();
 
     void Awake()
     {
@@ -99,7 +107,7 @@ public class GameModeManager : MonoBehaviour
 
         QuestManager.Instance?.SetStoryMode();
 
-        StoryModeManager.cards.AddRange(cardDatas.Where(c => c.holderCharacter == null));
+        StoryModeManager.cards.AddRange(defaultCards);
 
         if (pendingInitialCharacter != null)
         {
@@ -130,19 +138,18 @@ public class GameModeManager : MonoBehaviour
 
         foreach(var character in characterDatas)
         {
-            if (PlayerPrefs.GetInt($"PlayerHoldCharacter{GameModeManager.Instance.characterDatas.IndexOf(character)}InStory")
-                == 1)
-            StoryModeManager.Instance?.GetNewMenber(character);
+            if (PlayerPrefs.GetInt($"PlayerHoldCharacter{characterDatas.IndexOf(character)}InStory")== 1)
+                StoryModeManager.Instance?.GetNewMenber(character);
         }
         foreach(var quest in questDatas)
         {
-            if (PlayerPrefs.GetInt($"StoryModeHasQuest:{quest.questName}") == -1) continue;
+            if (PlayerPrefs.GetInt($"StoryModeHasQuest{questDatas.IndexOf(quest)}") == -1) continue;
 
-            QuestManager.Instance?.SetQuest(quest, PlayerPrefs.GetInt($"StoryModeHasQuest:{quest.questName}"));
+            QuestManager.Instance?.SetQuest(quest, PlayerPrefs.GetInt($"StoryModeHasQuest{questDatas.IndexOf(quest)}"));
         }
         foreach(var card in cardDatas)
         {
-            if (PlayerPrefs.GetInt($"StoryModeHoldCard:{GameModeManager.Instance.cardDatas.IndexOf(card)}") == 1)
+            if (PlayerPrefs.GetInt($"StoryModeHoldCard{GameModeManager.Instance.cardDatas.IndexOf(card)}") == 1)
                 StoryModeManager.cards.Add(card);
         }
         
@@ -269,11 +276,11 @@ public class GameModeManager : MonoBehaviour
         }
         foreach(var card in cardDatas)
         {
-            PlayerPrefs.SetInt($"StoryModeHoldCard:{GameModeManager.Instance.cardDatas.IndexOf(card)}", 0);
+            PlayerPrefs.SetInt($"StoryModeHoldCard{GameModeManager.Instance.cardDatas.IndexOf(card)}", 0);
         }
         foreach(var quest in QuestManager.MainQuests)
         {
-            PlayerPrefs.SetInt($"StoryModeHasQuest:{quest.questName}", -1);
+            PlayerPrefs.SetInt($"StoryModeHasQuest{questDatas.IndexOf(quest)}", -1);
         }
         StoryModeManager.cards.Clear();
         
