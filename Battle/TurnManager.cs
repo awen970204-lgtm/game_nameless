@@ -996,9 +996,12 @@ public class TurnManager : MonoBehaviour
             float score = CalculateEntryScore(entry, user, target);
             if (score > 0)
             {
-                Debug.Log($"自動選擇目標:{target.character_data.characterName};{score:2f}分");
+                Debug.Log($"自動選擇目標:{target.character_data.characterName};{score}分");
                 OnTargetToggled(target);
             }
+            else
+                Debug.Log($"取消自動選擇目標:{target.character_data.characterName};{score}分");
+
             yield return new WaitForSeconds(0.1f);
         }
         if (entry.canInputValue)
@@ -1049,7 +1052,7 @@ public class TurnManager : MonoBehaviour
                 finalTarget = target;
             
             float score = EffectTendency(effect, self, finalTarget, isBeneficial, isHarmful);
-            total += score * Mathf.Abs(effect.multiplier);
+            total += score;
         }
 
         return total;
@@ -1089,6 +1092,7 @@ public class TurnManager : MonoBehaviour
                 case EffectType.Discard_Specific:
                     isHarmful = true;
                     break;
+
             }
         }
 

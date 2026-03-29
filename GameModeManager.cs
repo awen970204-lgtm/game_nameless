@@ -108,6 +108,7 @@ public class GameModeManager : MonoBehaviour
         QuestManager.Instance?.SetStoryMode();
 
         StoryModeManager.cards.AddRange(defaultCards);
+        StoryModeManager.Instance?.RemakeLevel();
 
         if (pendingInitialCharacter != null)
         {
@@ -199,6 +200,12 @@ public class GameModeManager : MonoBehaviour
         yield return new WaitForSeconds(0.3f);
         MenuManager.Instance.CheckGameMode();
         EventUI.NowScene = index;
+
+        if (gameMode == GameMode.story && GameStarted)
+        {
+            GameCharacterManager.Instance.StorySet();
+        }
+
         StartCoroutine(FadeOut());
     }
     private IEnumerator FadeIn()

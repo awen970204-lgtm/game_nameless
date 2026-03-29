@@ -45,6 +45,13 @@ public class StoryModeManager : MonoBehaviour
 
     #region level
     
+    public void RemakeLevel()
+    {
+        playerLevel = 1;
+        nowExperience = 0;
+        levelupExperience = 2;
+        CheckLevel();
+    }
     public void GetExperience(int EX)
     {
         nowExperience += EX;

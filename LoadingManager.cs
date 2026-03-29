@@ -30,7 +30,7 @@ public class LoadingManager : MonoBehaviour
         {
             float progress = Mathf.Clamp01(operation.progress / 0.9f);
             progressBar.fillAmount = progress;
-            progressText.text = $"{progress * 100}%";
+            progressText.text = $"{progress * 100 :2f}%";
 
             if (operation.progress >= 0.9f)
             {
