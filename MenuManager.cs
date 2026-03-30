@@ -49,10 +49,15 @@ public class MenuManager : MonoBehaviour
     public Transform storyEndIconsTransform;
     public GameObject storyEndIcon;
     public GameObject storyEndPanelPrefab;
+    [Header("Panel Active")]
+    public GameObject basePanel;
+    public Button characterCheckButton;
+    public Button cardCheckButton;
+    public Button storyEndCheckButton;
 
     [Header("Free Battle Sets")]
-    public static bool useEnemyAI = false;
     public Toggle AISetToggle;
+    public static bool useEnemyAI = false;
     public Button StartFreeModeButton;
 
     [Header("Level")]
@@ -176,6 +181,13 @@ public class MenuManager : MonoBehaviour
             }
         }
 
+        if (characterCheckButton != null && cardCheckButton != null && storyEndCheckButton != null)
+        {
+            characterCheckButton.onClick.AddListener(()=> ClickCharacetrCheckButton());
+            cardCheckButton.onClick.AddListener(()=> ClickCardCheckButton());
+            storyEndCheckButton.onClick.AddListener(()=> ClickStoryEndCheckButton());
+        }
+
         StartCoroutine(SetInitialCharacter(0));
     }
     public void CheckGameMode()
@@ -213,6 +225,36 @@ public class MenuManager : MonoBehaviour
     private void SetIlluatratedGuidePanel() // 開關圖鑑
     {
         illuatratedGuidePanel.SetActive(!illuatratedGuidePanel.activeInHierarchy);
+    }
+    private void ClickCharacetrCheckButton() // 點擊查看角色
+    {
+        if (basePanel == null) return;
+
+        bool active = basePanel.transform.GetChild(0).gameObject.activeInHierarchy;
+        basePanel.SetActive(!active);
+        basePanel.transform.GetChild(0).gameObject.SetActive(!active);
+        basePanel.transform.GetChild(1).gameObject.SetActive(false);
+        basePanel.transform.GetChild(2).gameObject.SetActive(false);
+    }
+    private void ClickCardCheckButton() // 點擊查看卡片
+    {
+        if (basePanel == null) return;
+
+        bool active = basePanel.transform.GetChild(1).gameObject.activeInHierarchy;
+        basePanel.SetActive(!active);
+        basePanel.transform.GetChild(0).gameObject.SetActive(false);
+        basePanel.transform.GetChild(1).gameObject.SetActive(!active);
+        basePanel.transform.GetChild(2).gameObject.SetActive(false);
+    }
+    private void ClickStoryEndCheckButton() // 點擊查看結局
+    {
+        if (basePanel == null) return;
+
+        bool active = basePanel.transform.GetChild(2).gameObject.activeInHierarchy;
+        basePanel.SetActive(!active);
+        basePanel.transform.GetChild(0).gameObject.SetActive(false);
+        basePanel.transform.GetChild(1).gameObject.SetActive(false);
+        basePanel.transform.GetChild(2).gameObject.SetActive(!active);
     }
 
     void StartStoryMode()

@@ -4,6 +4,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Collections;
 using TMPro;
+using Unity.Mathematics;
 
 public class LoadingManager : MonoBehaviour
 {
@@ -30,7 +31,7 @@ public class LoadingManager : MonoBehaviour
         {
             float progress = Mathf.Clamp01(operation.progress / 0.9f);
             progressBar.fillAmount = progress;
-            progressText.text = $"{progress * 100 :2f}%";
+            progressText.text = $"{math.ceil(progress * 10000) / 100f}%";
 
             if (operation.progress >= 0.9f)
             {

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Linq;
+using Unity.Mathematics;
 
 public class TurnManager : MonoBehaviour
 {
@@ -996,11 +997,13 @@ public class TurnManager : MonoBehaviour
             float score = CalculateEntryScore(entry, user, target);
             if (score > 0)
             {
-                Debug.Log($"自動選擇目標:{target.character_data.characterName};{score}分");
+                Debug.Log($"自動選擇目標:{target.character_data.characterName};{math.ceil(score * 100) / 100f}分");
                 OnTargetToggled(target);
             }
             else
-                Debug.Log($"取消自動選擇目標:{target.character_data.characterName};{score}分");
+            {
+                Debug.Log($"取消自動選擇目標:{target.character_data.characterName};{math.ceil(score * 100) / 100f}分");
+            }
 
             yield return new WaitForSeconds(0.1f);
         }
