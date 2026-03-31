@@ -19,26 +19,73 @@ public class TurnManager : MonoBehaviour
     [HideInInspector] public bool waitingForAction = false;         // 等待行動狀態
     [HideInInspector] public bool waitingForTarget = false;         // 等待選擇狀態
     [HideInInspector] public Player actingPlayer;                   // 回合進行中角色
-    [HideInInspector] public Skill pendingSkill;                    // 暫存技能
-    [HideInInspector] public PassiveSkilCtrl pendingPassiveCtrl;    // 暫存被動執行者
-    [HideInInspector] public PassiveSkill pendingPassive;           // 暫存被動技能
+    // [HideInInspector] public PassiveSkilCtrl pendingPassiveCtrl;    // 暫存被動執行者
     [HideInInspector] public EffectEntry pendingEffectEntry;        // 暫存效果組合
-    [HideInInspector] public Card pendingCard;                      // 暫存卡片
-    [HideInInspector] public CardCtrl pendingCardUI;                // 暫存卡片UI
     [HideInInspector] public CharacterHealth pendingUser;           // 技能/卡片的實際使用者
+    [HideInInspector] public Skill pendingSkill;                    // 暫存技能
+    [HideInInspector] public PassiveSkill pendingPassive;           // 暫存被動技能
+    private PassiveEntry pendingPassiveEntry;      // 暫存被動組合
+    private ContinuedEffect pendingContinuedEffect; // 暫存持續效果
+
+    // [HideInInspector] public Card pendingCard;                      // 暫存卡片
+    // [HideInInspector] public CardCtrl pendingCardUI;                // 暫存卡片UI
     // 執行狀態
     [HideInInspector] public bool GameStart = false;        // 遊戲開始狀態
     [HideInInspector] public bool TurnEnded = false;        // 回合結束狀態
     [HideInInspector] public bool actionCancelled = false;  // 取消了
-    [HideInInspector] public int pendingEffectEntrys = 0;   // 尚未結算的效果數量
+    // [HideInInspector] public int pendingEffectEntrys = 0;   // 尚未結算的效果數量
 
     // 技能使用次數
     [HideInInspector] public Dictionary<(CharacterHealth, Skill), int> skillUseCounter
      = new Dictionary<(CharacterHealth, Skill), int>();
     // 被動技能序列
-    private bool isProcessingPassive = false;
+    // private bool isProcessingPassive = false;
     [HideInInspector] public Queue<(List<PassiveSkill>, List<PassiveEntry>, PassiveSkilCtrl,  CharacterHealth)> passiveQueue 
      = new Queue<(List<PassiveSkill>, List<PassiveEntry>, PassiveSkilCtrl, CharacterHealth)>();
+    // 效果序列
+    private bool isProcessingEntry = false;
+    private Queue<ExecutionEffectEntry> effectEntryQueue  = new Queue<ExecutionEffectEntry>();
+    private class ExecutionEffectEntry
+    {
+        public EffectEntry Entry { get; }
+        public CharacterHealth User { get; }
+        public ActionType ActionType { get; }
+        public Skill Skill { get; }
+        public PassiveSkill PassiveSkill { get; }
+        public PassiveEntry PassiveEntry { get; }
+
+        public ExecutionEffectEntry(
+            EffectEntry entry,
+            CharacterHealth user,
+            ActionType actionType,
+            Skill skill,
+            PassiveSkill passiveSkill,
+            PassiveEntry passiveEntry)
+        {
+            Entry = entry;
+            User = user;
+            ActionType = actionType;
+            Skill = skill;
+            PassiveSkill = passiveSkill;
+            PassiveEntry = passiveEntry;
+        }
+
+        public void Deconstruct(
+            out EffectEntry entry,
+            out CharacterHealth user,
+            out ActionType actionType,
+            out Skill skill,
+            out PassiveSkill passiveSkill,
+            out PassiveEntry passiveEntry)
+        {
+            entry = Entry;
+            user = User;
+            actionType = ActionType;
+            skill = Skill;
+            passiveSkill = PassiveSkill;
+            passiveEntry = PassiveEntry;
+        }
+    }
 
     [Header("UI 綁定")]
     public TMP_Text turnText;
@@ -55,7 +102,7 @@ public class TurnManager : MonoBehaviour
     public static event System.Action<Player> OnTurnStart;
     public static event System.Action<Player> OnTurnEnd;
     public static event System.Action<Player> OnRealTurnEnd;
-    public static event System.Action<CardCtrl> OnCancelCardChoose;
+    // public static event System.Action<CardCtrl> OnCancelCardChoose;
 
     public static event System.Action<Card> OnCardRemove;
     public static event System.Action<Player, Card> OnAnyCardPlayBegin;
@@ -208,7 +255,7 @@ public class TurnManager : MonoBehaviour
 
     public void OnSkillSelected(Skill skill, CharacterHealth user, Player player)
     {
-        if (!waitingForAction || isProcessingPassive || !CanProceed())
+        if (!waitingForAction || isProcessingEntry || !CanProceed() || !canContinue())
         {
             if (user.team != TeamID.Enemy)
                 LogWarning.Instance.Warning("當前狀態不可使用技能");
@@ -232,99 +279,16 @@ public class TurnManager : MonoBehaviour
     }
     private IEnumerator HandleSkillUseRoutine(Skill skill, CharacterHealth user, Player player)// 執行技能效果
     {
+        if (skill == null || user == null || player == null) yield break;
+
         Debug.Log($"{user.character_data.characterName}使用了技能:{skill.skillName}");
         OnAnySkillBegin?.Invoke(user, skill);
-        pendingEffectEntrys += skill.effectEntries.Count;
-        for (int i = 0; i < skill.effectEntries.Count; i++)
+        foreach(var entry in skill.effectEntries)
         {
-            var entry = skill.effectEntries[i];
-            pendingSkill = skill;
-            pendingUser = user;
-
-            pendingEffectEntry = entry;
-
-            if (entry.NeedChoose)
-            {
-                inputValue?.CloseInput();
-                selectedTargets.Clear();
-                actionCancelled = false;
-                waitingForAction = false;
-                waitingForTarget = true;
-                if (user.team != TeamID.Enemy)
-                    checkButton.SetActive(true);
-
-                string TargetTip = "";
-                switch(entry.targetType)
-                {
-                    case TargetType.Self:
-                        TargetTip = "自己";
-                        break;
-                    case TargetType.Other:
-                        TargetTip = "其他角色";
-                        break;
-                    case TargetType.Any:
-                        TargetTip = "任何角色";
-                        break;
-                }
-                UseTips.text = $"請選擇技能:{skill.skillName}的目標:{TargetTip}";
-                if (entry.canInputValue) inputValue.CanInput(entry.MaxInputValue);
-
-                // 自動選擇
-                yield return AutoChoseTarget(entry, user);
-                // 等待玩家完成選擇
-                yield return new WaitUntil(() => !waitingForTarget && canContinue());
-                if (actionCancelled)
-                {
-                    pendingEffectEntrys -= skill.effectEntries.Count - i;
-                    yield break;
-                } 
-            }
-            else
-            {
-                // 直接套用效果
-                yield return ApplyEffectImmediate(entry, user);
-            }
-
-            // 等待效果結束（包含WaitCard、特效、被動）
-            yield return null;
-            yield return new WaitUntil(() => !isProcessingPassive &&
-                (WaitCardManager.Instance == null || WaitCardManager.Instance.IsIdle));
-
-            pendingEffectEntrys--;
+            yield return EnqueueEffectEntry(entry, user, ActionType.Skill, skill, null, null);
         }
-        // 所有效果跑完
-        pendingSkill = skill;
-        pendingUser = user;
-        Debug.Log($"{user.character_data.characterName}的技能:{skill.skillName}結算完畢");
-        FinishSkillUse();
     }
-    private void FinishSkillUse() // 結尾清理
-    {
-        if (pendingSkill != null && pendingUser != null)
-        {
-            RegisterSkillUse(pendingUser, pendingSkill);
-            OnAnySkillEnd?.Invoke(pendingUser, pendingSkill);
-        }
-        selectedTargets.Clear();
-        inputValue?.CloseInput();
-        checkButton.SetActive(false);
-        UseTips.text = "";
 
-        endTurnButton.SetActive(pendingUser.team != TeamID.Enemy);
-        
-        Remake();
-        waitingForAction = true;
-        waitingForTarget = false;
-    }
-    private void RegisterSkillUse(CharacterHealth user, Skill skill) // 紀錄技能使用次數
-    {
-        var key = (user, skill);
-
-        if (!skillUseCounter.ContainsKey(key))
-            skillUseCounter[key] = 0;
-
-        skillUseCounter[key]++;
-    }
     private bool canContinue()
     {
         if (player1.IsDising || player2.IsDising) return false;
@@ -348,41 +312,23 @@ public class TurnManager : MonoBehaviour
     private IEnumerator handleUseCard(CardCtrl cardCtrl, CharacterHealth user, Player player)
     {
         waitingForAction = false;
-        yield return ApplyCardEntrys(cardCtrl.card_data.effectEntrys, user, player);
+        yield return ApplyCardEntrys(cardCtrl.card_data.effectEntrys, cardCtrl, user, player);
         UseCardOver(cardCtrl, user, player);
-        waitingForAction = true;
     }
 
     public void BeginTriggerCard(CardCtrl cardCtrl, CharacterHealth user, Player player) // 觸發
     {
         if (cardCtrl == null || user == null || player == null ) return;
 
-        StartCoroutine(ApplyCardEntrys(cardCtrl.card_data.initiativeTiggerEffect, user, player));
+        StartCoroutine(ApplyCardEntrys(cardCtrl.card_data.initiativeTiggerEffect, cardCtrl, user, player));
     }
 
     // 執行卡片效果
-    private IEnumerator ApplyCardEntrys(List<EffectEntry> entries, CharacterHealth user, Player player)
+    private IEnumerator ApplyCardEntrys(List<EffectEntry> entries, CardCtrl cardCtrl, CharacterHealth user, Player player)
     {
-        Player enemyPlayer = (player == player1)? player2 : player1;
-
         foreach(var entry in entries)
         {
-            List<CharacterHealth> targets = CardEffectTarget(entry, user, player);
-            if (targets.Count == 0)
-            {
-                yield break;
-            }
-
-            List<CharacterHealth> aliveTargets = targets.Where(c => c.currentHealth > 0).ToList();
-            
-            if (aliveTargets.Count == targets.Count || aliveTargets.Count >= entry.maxTargets)
-            {
-                targets = aliveTargets;
-            }
-
-            targets = targets.Take(entry.maxTargets).ToList();
-            
-            yield return EffectExecutor.ApplyEffects(user, targets, entry.effects);
+            yield return EnqueueEffectEntry(entry, user, ActionType.Card, null, null, null);
         }
         yield return null;
     }
@@ -445,6 +391,8 @@ public class TurnManager : MonoBehaviour
     }
     #endregion
 
+    #region Effect Apply
+
     private IEnumerator ApplyEffectImmediate(EffectEntry entry, CharacterHealth user) // 立即生效的效果
     {
         if (user == null)
@@ -482,6 +430,212 @@ public class TurnManager : MonoBehaviour
         yield return EffectExecutor.ApplyEffects(user, selectedTargets, entry.effects);
     }
 
+    public IEnumerator EnqueueEffectEntry(EffectEntry entry, CharacterHealth user, ActionType actionType,
+        Skill skill, PassiveSkill passiveSkill, PassiveEntry passiveEntry)
+    {
+        if (entry == null || user == null || actionType == ActionType.None) yield break;
+
+        var effectEntry = new ExecutionEffectEntry(
+            entry,
+            user,
+            actionType,
+            skill,
+            passiveSkill,
+            passiveEntry
+        );
+
+        effectEntryQueue.Enqueue(effectEntry);
+        if (!isProcessingEntry)
+        {
+            StartCoroutine(ApplyEffectEntry());
+        }
+    }
+    private IEnumerator ApplyEffectEntry()
+    {
+        if (isProcessingEntry) yield break;
+
+        isProcessingEntry = true;
+        yield return null;
+
+        while (effectEntryQueue.Count > 0)
+        {
+            var (firstEntry, firstUser, actionType, firstSkill, firstPassiveSkill, firstPassiveEntry) 
+                = effectEntryQueue.Dequeue();
+
+            
+            pendingEffectEntry = firstEntry;
+            pendingUser = firstUser;
+            pendingSkill = firstSkill;
+            pendingPassive = firstPassiveSkill;
+            pendingPassiveEntry = firstPassiveEntry;
+
+            waitingForAction = false;
+            
+            // 執行效果
+            if (actionType == ActionType.Card)
+            {
+                Player player = firstUser.ownerPlayer;
+                Player enemyPlayer = (player == player1)? player2 : player1;
+
+                List<CharacterHealth> targets = CardEffectTarget(firstEntry, firstUser, player);
+                if (targets.Count == 0)
+                {
+                    continue;
+                }
+
+                List<CharacterHealth> aliveTargets = targets.Where(c => c.currentHealth > 0).ToList();
+                
+                if (aliveTargets.Count == targets.Count || aliveTargets.Count >= firstEntry.maxTargets)
+                {
+                    targets = aliveTargets;
+                }
+
+                targets = targets.Take(firstEntry.maxTargets).ToList();
+                
+                yield return EffectExecutor.ApplyEffects(firstUser, targets, firstEntry.effects);
+            }
+            else
+            {
+                if (firstEntry.NeedChoose)
+                {
+                    inputValue?.CloseInput();
+                    selectedTargets.Clear();
+                    actionCancelled = false;
+                    waitingForAction = false;
+                    waitingForTarget = true;
+                    if (firstUser.team != TeamID.Enemy)
+                        checkButton.SetActive(true);
+
+                    string TargetTip = "";
+                    switch(firstEntry.targetType)
+                    {
+                        case TargetType.Self:
+                            TargetTip = "自己";
+                            break;
+                        case TargetType.Other:
+                            TargetTip = "其他角色";
+                            break;
+                        case TargetType.Any:
+                            TargetTip = "任何角色";
+                            break;
+                        case TargetType.EventTrigger:
+                            TargetTip = "事件觸發者";
+                            break;
+                        case TargetType.enemy:
+                            TargetTip = "敵人";
+                            break;
+                        case TargetType.teammate:
+                            TargetTip = "隊友";
+                            break;
+
+                    }
+                    switch (actionType)
+                    {
+                        case ActionType.Skill:
+                            if (firstSkill != null)
+                                UseTips.text = $"請選擇技能:{firstSkill.skillName}的目標:{TargetTip}";
+                            break;
+                        case ActionType.PassiveSkill:
+                            if (firstPassiveSkill != null)
+                                UseTips.text = $"請選擇被動:{firstPassiveSkill.skillName}的目標:{TargetTip}";
+                            break;
+                    }
+                    if (firstEntry.canInputValue) inputValue.CanInput(firstEntry.MaxInputValue);
+
+                    // 自動選擇
+                    yield return AutoChoseTarget(firstEntry, firstUser);
+                    // 等待玩家完成選擇
+                    yield return new WaitUntil(() => !waitingForTarget && canContinue());
+                    if (actionCancelled)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        yield return EffectExecutor.ApplyEffects(firstUser, selectedTargets, firstEntry.effects);
+                    }
+                }
+                else
+                {
+                    // 直接套用效果
+                    yield return ApplyEffectImmediate(firstEntry, firstUser);
+                }
+            }
+
+            // 結算
+            if (actionType == ActionType.Skill)
+            {
+                if (actionCancelled)
+                {
+                    effectEntryQueue = 
+                    new Queue<ExecutionEffectEntry>
+                        (
+                            effectEntryQueue.Where(e => e.Skill != firstSkill)
+                        );
+                }
+                if (!effectEntryQueue.Any(e => e.Skill == firstSkill))
+                {
+                    if (!actionCancelled || firstEntry != firstSkill.effectEntries[0])
+                    {
+                        // 結尾清理
+                        Debug.Log($"{firstUser.character_data.characterName}的技能:{firstSkill.skillName}結算完畢");
+                        var key = (firstUser, firstSkill);
+
+                        if (!skillUseCounter.ContainsKey(key))
+                            skillUseCounter[key] = 0;
+
+                        skillUseCounter[key]++;
+                        OnAnySkillEnd?.Invoke(firstUser, firstSkill);
+                    }
+                }
+            }
+            else if (actionType == ActionType.PassiveSkill)
+            {
+                if (actionCancelled)
+                {
+                    effectEntryQueue = 
+                    new Queue<ExecutionEffectEntry>
+                        (
+                            effectEntryQueue.Where(e => !firstPassiveEntry.effectEntries.Contains(e.Entry))
+                        );
+                }
+                if (!effectEntryQueue.Any(e => firstPassiveEntry.effectEntries.Contains(e.Entry)))
+                {
+                    if (!actionCancelled || firstEntry != firstPassiveEntry.effectEntries[0])
+                    {
+                        // 結尾清理
+                        firstUser.passiveSkillCtrl.PassiveFinish(firstPassiveSkill);
+                        OnAnyPassiveSkillEnd?.Invoke(pendingUser, firstPassiveSkill);
+                        Debug.Log($"{firstUser.character_data.characterName}的被動:{firstPassiveSkill.skillName}結算完成");
+                    }
+                }
+            }
+
+            yield return null;
+            yield return null;
+        }
+        waitingForAction = true;
+        waitingForTarget = false;
+        isProcessingEntry = false;
+        // 回合結束
+        if (TurnEnded && effectEntryQueue.Count == 0)
+        {
+            if (effectEntryQueue.Count == 0)
+            {
+                if (currentEndTurn != null)
+                    StopCoroutine(currentEndTurn);
+                
+                currentEndTurn = StartCoroutine(EndTurnDelay());
+            }
+            else
+            {
+                yield return ApplyEffectEntry();
+            }
+        }
+    }
+
+    #endregion
+
     #region Target Select
 
     public void OnTargetToggled(CharacterHealth target)// 技能或卡牌的選中和取消選中(回報動作)
@@ -494,14 +648,14 @@ public class TurnManager : MonoBehaviour
         if (!target.IsAlive)
         {
             Debug.LogWarning("目標已死亡");
-            LogWarning.Instance.Warning($"目標已死亡");
             return;
         }
         // 決定目標上限
         int maxTargets = 1;
-        if (pendingSkill != null) maxTargets = pendingEffectEntry.maxTargets;
-        if (pendingCard != null) maxTargets = pendingEffectEntry.maxTargets;
-        if (pendingPassive != null) maxTargets = pendingEffectEntry.maxTargets;
+        if (pendingEffectEntry != null)
+        {
+            maxTargets = pendingEffectEntry.maxTargets;
+        }
 
         if (selectedTargets.Contains(target))
         {
@@ -518,13 +672,16 @@ public class TurnManager : MonoBehaviour
                 LogWarning.Instance.Warning($"不能再選更多目標(上限 {maxTargets} 個)");
                 return;
             }
+            else
+            {
+                selectedTargets.Add(target);
+                target.ToggleHighlight(true);
+                Debug.Log($"選取了 {target.character_data.characterName}");
+            }
 
-            selectedTargets.Add(target);
-            target.ToggleHighlight(true);
-            Debug.Log($"選取了 {target.character_data.characterName}");
         }
     }
-    public void TryToCancelSelection()// 取消選擇狀態(回報動作)
+    public void TryToCancelSelection()// 取消選擇狀態(物件回報動作)
     {
         if (pendingUser != null && pendingUser.team != TeamID.Enemy)
             CancelSelection();
@@ -532,42 +689,33 @@ public class TurnManager : MonoBehaviour
     public void CancelSelection()// 取消選擇狀態
     {
         if (!waitingForTarget) return;
-        if (pendingEffectEntry != null && pendingEffectEntry.canCancle == false)
+        if (pendingEffectEntry != null && !pendingEffectEntry.canCancle)
         {
+            Debug.LogWarning($"本選擇不能取消");
             LogWarning.Instance.Warning($"本選擇不能取消");
             return;
         }
-
-        LogWarning.Instance.Warning("取消選擇目標");
-        if (pendingCardUI != null)
-            OnCancelCardChoose?.Invoke(pendingCardUI);
-
-        // 清除選中的角色高亮
-        foreach (var target in selectedTargets)
+        else
         {
-            target.ToggleHighlight(false);
+            LogWarning.Instance.Warning("取消選擇目標");
+            // 清除選中的角色高亮
+            foreach (var target in selectedTargets)
+            {
+                target.ToggleHighlight(false);
+            }
+            selectedTargets.Clear();
+            UseTips.text = "";
+            checkButton.SetActive(false);
+            actingPlayer.ISActive = true;
+            if (actingPlayer.team != TeamID.Enemy)
+                endTurnButton.SetActive(true);
+            
+            actionCancelled = true;
+            waitingForTarget = false;
+            OnCancleChoose?.Invoke();
         }
-        if (pendingCardUI != null)
-        {
-            pendingCardUI.DisplayChange();
-        }
-        selectedTargets.Clear();
-        UseTips.text = ("");
-        // pendingEffectEntrys = 0;
-
-        // 重置狀態
-        checkButton.SetActive(false);
-        Remake();
-        actingPlayer.ISActive = true;
-        if (actingPlayer.team != TeamID.Enemy)
-            endTurnButton.SetActive(true);
-        
-        actionCancelled = true;
-        waitingForTarget = false;
-        waitingForAction = true;
-
-        OnCancleChoose?.Invoke();
     }
+
     public void TryToConfirm()// 技能或卡牌確定好目標(回報動作)
     {
         if (pendingUser != null && pendingUser.team != TeamID.Enemy)
@@ -588,18 +736,24 @@ public class TurnManager : MonoBehaviour
             Debug.LogWarning("至少需選擇一個目標");
             return;
         }
-        Debug.Log("確定好目標");
-
-        // 執行目標效果
-        // 技能
-        if (pendingSkill != null && pendingUser != null && pendingEffectEntry != null)
+        // 確認目標
+        if (pendingUser != null && pendingEffectEntry != null)
         {
-            // 確認目標
-            if (TragetChecker.SkillCheckTarget(pendingEffectEntry, selectedTargets, pendingUser, pendingSkill) == false)
+            if (pendingSkill != null 
+                && !TragetChecker.SkillCheckTarget(pendingEffectEntry, selectedTargets, pendingUser, pendingSkill))
             {
                 Debug.LogWarning($"{pendingSkill.skillName}未達到目標要求");
+                LogWarning.Instance.Warning($"{pendingSkill.skillName}未達到目標要求");
                 return;
             }
+            else if (pendingPassive != null 
+                && !TragetChecker.PassiveSkillCheckTarget(pendingEffectEntry, selectedTargets, pendingUser, pendingPassive))
+            {
+                Debug.LogWarning($"{pendingPassive.skillName}未達到目標要求");
+                LogWarning.Instance.Warning($"{pendingPassive.skillName}未達到目標要求");
+                return;
+            }
+            Debug.Log("確定好目標");
             // 改變紀錄值
             if (pendingEffectEntry.canInputValue && pendingUser.team != TeamID.Enemy)
             {
@@ -610,57 +764,11 @@ public class TurnManager : MonoBehaviour
             {
                 target.ToggleHighlight(false);
             }
-            // 執行效果
-            StartCoroutine(EffectExecutor.ApplyEffects(pendingUser, selectedTargets, pendingEffectEntry.effects));
-            Debug.Log($"技能 {pendingSkill.skillName} 已施放");
-            waitingForAction = true;
-            waitingForTarget = false;
-        }
-        // 被動技能
-        else if (pendingPassiveCtrl != null && pendingPassive != null && pendingEffectEntry != null)
-        {
-            // 確認目標
-            if (TragetChecker.PassiveSkillCheckTarget(pendingEffectEntry, selectedTargets, pendingUser, pendingPassive) == false)
-            {
-                Debug.LogWarning($"{pendingPassive.skillName}未達到目標要求");
-                LogWarning.Instance.Warning($"{pendingPassive.skillName}未達到目標要求");
-                return;
-            }
-            if (pendingEffectEntry.canInputValue && pendingUser.team != TeamID.Enemy)
-            {
-                inputValue.ChangeEnterValue();
-                Debug.Log("數值輸入成功");
-            }
-            waitingForAction = true;
-            waitingForTarget = false;
-        }
-        // 卡片
-        else if (pendingCard != null && pendingUser != null && pendingEffectEntry != null)
-        {
-            // 確認目標
-            if (TragetChecker.CardCheckTarget(pendingEffectEntry, selectedTargets, pendingUser, pendingCard) == false)
-            {
-                Debug.LogWarning($"{pendingCard.cardName}未達到目標要求");
-                LogWarning.Instance.Warning($"{pendingCard.cardName}未達到目標要求");
-                return;
-            }
-            if (pendingEffectEntry.canInputValue && pendingUser.team != TeamID.Enemy)
-            {
-                inputValue.ChangeEnterValue();
-                Debug.Log("數值輸入成功");
-            }
-            // 清掉高亮
-            foreach (var target in selectedTargets)
-            {
-                target.ToggleHighlight(false);
-            }
-            // 執行
-            StartCoroutine(EffectExecutor.ApplyEffects(pendingUser, selectedTargets, pendingEffectEntry.effects));
-            Debug.Log($"卡牌 {pendingCard.cardName} 已使用");
-            waitingForAction = true;
+            actionCancelled = false;
             waitingForTarget = false;
         }
     }
+    
     #endregion
 
     #region Passive
@@ -668,31 +776,31 @@ public class TurnManager : MonoBehaviour
     public void EnqueuePassive(List<PassiveSkill> passiveSkills,
         List<PassiveEntry> entries, PassiveSkilCtrl ctrl, CharacterHealth user)
     {
-        passiveQueue.Enqueue((new List<PassiveSkill>(passiveSkills), new List<PassiveEntry>(entries), ctrl, user));
-        if (passiveQueue.Count == 1 && !isProcessingPassive)
+        passiveQueue.Enqueue((passiveSkills, entries, ctrl, user));
+        if (passiveQueue.Count == 1)
         {
-            isProcessingPassive = true;
             StartCoroutine(TryPassive());
         }
     }
     private IEnumerator TryPassive()
     {
-        yield return null;
-        if (passiveQueue.Count > 0 && pendingPassive == null)
+        while(passiveQueue.Count > 0)
         {
             var (firstPassiveSkills, firstEntry, firstCtrl, firstUser) = passiveQueue.Dequeue();
-            StartCoroutine(HandlePassiveRoutine(firstPassiveSkills, firstEntry, firstCtrl, firstUser));
+            yield return HandlePassiveRoutine(firstPassiveSkills, firstEntry, firstCtrl, firstUser);
         }
     }
     public IEnumerator HandlePassiveRoutine(List<PassiveSkill> passiveSkills,
         List<PassiveEntry> entries, PassiveSkilCtrl ctrl, CharacterHealth user)
     {
-        yield return null;
-
         foreach (PassiveSkill passiveSkill in passiveSkills)
         {
             // 檢查發動次數
             var key = (user, passiveSkill);
+            if (!user.passiveSkillCtrl.passiveUseCounter.ContainsKey(key))
+            {
+                user.passiveSkillCtrl.passiveUseCounter[key] = 0;
+            }
             if (ctrl.passiveUseCounter[key] >= passiveSkill.maxTriggersPerTurn && passiveSkill.LimitedTimes)
             {
                 Debug.Log($"{passiveSkill.skillName}已達觸發上限");
@@ -703,10 +811,6 @@ public class TurnManager : MonoBehaviour
             OnAnyPassiveSkillBegin?.Invoke(user, passiveSkill);
             foreach (var passiveEntry in passiveSkill.passiveEntry)
             {
-                pendingPassive = passiveSkill;
-                pendingPassiveCtrl = ctrl;
-                pendingUser = user;
-
                 // 效果是否可執行
                 if (!entries.Contains(passiveEntry))
                 {
@@ -716,98 +820,12 @@ public class TurnManager : MonoBehaviour
                 foreach (var entry in passiveEntry.effectEntries)
                 {
                     Debug.Log($"{passiveSkill.skillName}執行效果集:{passiveEntry.effectEntries.IndexOf(entry)}");
-                    pendingEffectEntry = entry;
-                    if (entry.NeedChoose)
-                    {
-                        // 進入選擇狀態
-                        inputValue?.CloseInput();
-                        selectedTargets.Clear();
-                        actionCancelled = false;
-                        waitingForAction = false;
-                        waitingForTarget = true;
-                        if (user.team != TeamID.Enemy)
-                            checkButton.SetActive(true);
-
-                        string TargetTip = "";
-                        switch (entry.targetType)
-                        {
-                            case TargetType.Self:
-                                TargetTip = "自己";
-                                break;
-                            case TargetType.Other:
-                                TargetTip = "其他人";
-                                break;
-                            case TargetType.Any:
-                                TargetTip = "任何人";
-                                break;
-                        }
-                        UseTips.text = $"{user.character_data.characterName}的被動{passiveSkill.skillName}觸發" +
-                            $"選擇目標:{TargetTip}";
-                            
-                        if (entry.canInputValue) 
-                            inputValue.CanInput(entry.MaxInputValue);
-                        yield return AutoChoseTarget(entry, user);
-
-                        // 等待玩家完成選擇
-                        yield return new WaitUntil(() => !waitingForTarget);
-                        if (actionCancelled) 
-                        {
-                            actionCancelled = false;
-                            break;
-                        }
-                        else
-                        {
-                            foreach (var target in selectedTargets)
-                            {
-                                target.ToggleHighlight(false);
-                            }
-                            yield return null;
-                            yield return EffectExecutor.ApplyEffects(user, selectedTargets, entry.effects);
-                        }
-                    }
-                    else
-                    {
-                        pendingUser = user;
-                        yield return ApplyEffectImmediate(entry, user);
-                    }
+                    yield return EnqueueEffectEntry(entry, user, ActionType.PassiveSkill, null, passiveSkill, passiveEntry);
                 }
             }
-            yield return null;
-            pendingPassive = passiveSkill;
-            pendingPassiveCtrl = ctrl;
-            pendingUser = user;
-            ctrl.PassiveFinish(passiveSkill);
-            OnAnyPassiveSkillEnd?.Invoke(pendingUser, passiveSkill);
-            Debug.Log($"{user.character_data.characterName}的被動:{passiveSkill.skillName}結算完成");
-        }
-        FinishPassive();
-    }
-    private void FinishPassive() // 結尾清理
-    {
-        selectedTargets.Clear();
-        checkButton.SetActive(false);
-        UseTips.text = "";
-
-        Remake();
-        waitingForAction = true;
-        waitingForTarget = false;
-
-        if (passiveQueue.Count > 0 && pendingPassive == null)
-        {
-            StartCoroutine(TryPassive());
-            return;
-        }
-        isProcessingPassive = false;
-
-        // 回合結束後沒有剩餘被動，回合結束
-        if (TurnEnded && passiveQueue.Count == 0)
-        {
-            if (currentEndTurn != null)
-                StopCoroutine(currentEndTurn);
-                
-            currentEndTurn = StartCoroutine(EndTurnDelay());
         }
     }
+
     #endregion
 
     #region Turn end
@@ -833,7 +851,7 @@ public class TurnManager : MonoBehaviour
         Debug.Log($"<color=#FFDD55>等待結算結束</color>");
         yield return new WaitForSeconds(0.1f);   // 等待0.1秒
         yield return new WaitUntil(() =>
-        !isProcessingPassive && pendingEffectEntrys == 0 &&
+        !isProcessingEntry &&
         (WaitCardManager.Instance == null || WaitCardManager.Instance.IsIdle)
         );
         currentEndTurn = null;
@@ -872,8 +890,6 @@ public class TurnManager : MonoBehaviour
                 passiveCtrl.ResetPassives();
             }
         }
-        isProcessingPassive = false;
-        pendingEffectEntrys = 0;
         CheckBattleEnd();
         if (IsBattleOver) yield break;
 
@@ -964,11 +980,8 @@ public class TurnManager : MonoBehaviour
         UseTips.text = "";
         pendingUser = null;
         pendingSkill = null;
-        pendingPassiveCtrl = null;
         pendingPassive = null;
         pendingEffectEntry = null;
-        pendingCard = null;
-        pendingCardUI = null;
     }
 
     #region Tool

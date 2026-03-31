@@ -62,7 +62,6 @@ public class CardCtrl : MonoBehaviour,
     {
         TurnManager.OnTurnStart += StateCheck;
         TurnManager.OnRealTurnEnd += StateCheck;
-        TurnManager.OnCancelCardChoose += CancelUseCard;
     }
     void Start()
     {
@@ -79,7 +78,6 @@ public class CardCtrl : MonoBehaviour,
     {
         TurnManager.OnTurnStart -= StateCheck;
         TurnManager.OnRealTurnEnd -= StateCheck;
-        TurnManager.OnCancelCardChoose -= CancelUseCard;
     }
     void Update()
     {

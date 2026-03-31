@@ -11,7 +11,7 @@ public enum ActionType
     Card,
     Skill,
     PassiveSkill,
-    ContinuedEffect
+    ContinuedEffect,
 }
 // 掛在玩家上
 public class CharacterHealth : MonoBehaviour

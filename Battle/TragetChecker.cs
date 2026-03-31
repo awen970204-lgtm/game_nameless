@@ -266,9 +266,10 @@ public static class TragetChecker
         return(false);
     }
     // 被動技能
-    public static bool PassiveSkillCheckTarget(EffectEntry entry, List<CharacterHealth> targets, CharacterHealth user, PassiveSkill skill)
+    public static bool PassiveSkillCheckTarget(EffectEntry entry, List<CharacterHealth> targets,
+        CharacterHealth user, PassiveSkill skill)
     {
-        if (entry != null && TurnManager.Instance.pendingPassiveCtrl != null)  
+        if (entry != null && skill != null)
         {
             if (entry.targetType == TargetType.Self && (!targets.Contains(user) || targets.Any(c => c != user)))
             {
