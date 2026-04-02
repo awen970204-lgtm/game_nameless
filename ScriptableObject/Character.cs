@@ -5,14 +5,22 @@ using System.Collections.Generic;
 public class Character : ScriptableObject
 {
     // 角色類型
-    public enum CHARACTER_TYPE
+    public enum CharacterGender
     {
         ELSE,
         MALE,
         FEMALE,
     }
+    public enum CharacterCamp
+    {
+        Travelers,
+        Demons,
+        Church,
+        Pirates,
+        Magicians,
+    }
 
-    public CHARACTER_TYPE characterTYPE;   //性別類型 
+    public CharacterGender characterGender;   //性別類型 
     public string characterName;           //角色名
     public Sprite characterPicture;        //角色表現圖
     public Sprite characterIllustration;

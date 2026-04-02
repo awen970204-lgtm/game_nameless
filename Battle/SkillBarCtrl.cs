@@ -38,15 +38,15 @@ public class SkillBarCtrl : MonoBehaviour
 
         TMP_Text name = SI.transform.GetChild(0).GetComponentInChildren<TMP_Text>();
         name.text = character.characterName;
-        switch (character.characterTYPE)
+        switch (character.characterGender)
         {
-            case Character.CHARACTER_TYPE.MALE:
+            case Character.CharacterGender.MALE:
                 name.color = Color.blue;
                 break;
-            case Character.CHARACTER_TYPE.FEMALE:
+            case Character.CharacterGender.FEMALE:
                 name.color = Color.mediumVioletRed;
                 break;
-            case Character.CHARACTER_TYPE.ELSE:
+            case Character.CharacterGender.ELSE:
                 name.color = Color.black;
                 break;
         }
@@ -116,15 +116,15 @@ public class SkillBarCtrl : MonoBehaviour
 
         TMP_Text name = SI.transform.GetChild(0).GetComponentInChildren<TMP_Text>();
         name.text = character.character_data.characterName;
-        switch (character.character_data.characterTYPE)
+        switch (character.character_data.characterGender)
         {
-            case Character.CHARACTER_TYPE.MALE:
+            case Character.CharacterGender.MALE:
                 name.color = Color.blue;
                 break;
-            case Character.CHARACTER_TYPE.FEMALE:
+            case Character.CharacterGender.FEMALE:
                 name.color = Color.mediumVioletRed;
                 break;
-            case Character.CHARACTER_TYPE.ELSE:
+            case Character.CharacterGender.ELSE:
                 name.color = Color.black;
                 break;
         }

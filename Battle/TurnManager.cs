@@ -1166,17 +1166,17 @@ public class TurnManager : MonoBehaviour
         switch (effect.effectType)
         {
             case EffectType.Heal: // 滿血 = 0分
-                effectScore = missingHP > 0 ? (missingHP / target.currentMaxHP)*0.5f +
+                effectScore = missingHP > 0 ? Mathf.Clamp01((float) missingHP / target.currentMaxHP) * 0.5f +
                 Mathf.Min(missingHP , value + self.currentHealPower)*0.3f : 0f;
                 break;
 
             case EffectType.Damage: // 越少血越值得打
-                effectScore = target.currentMaxHP > 0 ? ((missingHP) / target.currentMaxHP) * 0.5f + 
+                effectScore = target.currentMaxHP > 0 ? Mathf.Clamp01(missingHP / target.currentMaxHP) * 0.5f + 
                 (effect.value + self.currentAttackPower - target.currentDefense) * effect.multiplier * 0.3f : 
                 (effect.value + self.currentAttackPower - target.currentDefense) * effect.multiplier * 0.3f;
                 break;
             case EffectType.ConsumeHP: // 越少血越值得打
-                effectScore = target.currentMaxHP > 0 ? ((missingHP) / target.currentMaxHP) * 2f + 
+                effectScore = target.currentMaxHP > 0 ? Mathf.Clamp01(missingHP / target.currentMaxHP) * 2f + 
                 value * 0.3f : value * 0.3f;
                 break;
 
