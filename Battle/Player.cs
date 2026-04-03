@@ -199,6 +199,10 @@ public class Player : MonoBehaviour
         }
     }
 
+    #endregion
+    
+    #region AutoTakeTurn
+
     public IEnumerator TakeTurnAction()
     {
         HasTakeAction = true;

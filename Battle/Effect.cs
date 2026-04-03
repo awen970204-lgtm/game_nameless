@@ -72,6 +72,7 @@ public enum SpecialEffects
 public class EffectEntry
 {
     public TargetType targetType;       // 效果對象
+    public List<NeedState> targetsNeeds;
     public bool NeedChoose = false;     // 是否需要玩家手動選擇
     public bool canInputValue = false;
     public int MaxInputValue = 1;

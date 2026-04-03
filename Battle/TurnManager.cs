@@ -155,7 +155,8 @@ public class TurnManager : MonoBehaviour
         character.ownerPlayer.playerCharacters.Remove(character);
         StartCoroutine(CharacterSelectionManager.Instance.ShowTeamMenbers(character.ownerPlayer));
 
-        Destroy(character.gameObject);
+        character.IsAlive = false;
+        character.gameObject.SetActive(false);
         CheckBattleEnd();
     }
 
@@ -210,6 +211,15 @@ public class TurnManager : MonoBehaviour
     public void StartTurn()
     {
         if (player1.playerCharacters.Count == 0 || player2.playerCharacters.Count == 0) return;
+        // 清除實體
+        foreach(var character in player1.playerCharacters.Where(c => !c.IsAlive))
+        {
+            Destroy(character.gameObject);
+        }
+        foreach(var character in player2.playerCharacters.Where(c => !c.IsAlive))
+        {
+            Destroy(character.gameObject);
+        }
 
         if (actingPlayer == player1)
             actingPlayer = player2;
@@ -638,7 +648,7 @@ public class TurnManager : MonoBehaviour
 
     #region Target Select
 
-    public void OnTargetToggled(CharacterHealth target)// 技能或卡牌的選中和取消選中(回報動作)
+    public void OnTargetToggled(CharacterHealth target)// 技能選中和取消選中(回報動作)
     {
         if (!waitingForTarget)
         {
@@ -650,11 +660,17 @@ public class TurnManager : MonoBehaviour
             Debug.LogWarning("目標已死亡");
             return;
         }
+        
         // 決定目標上限
         int maxTargets = 1;
-        if (pendingEffectEntry != null)
+        if (pendingEffectEntry != null && pendingUser != null)
         {
             maxTargets = pendingEffectEntry.maxTargets;
+            if (LimitChecker.Limited(pendingEffectEntry.targetsNeeds, target, pendingUser))
+            {
+                Debug.Log($"{target.character_data.characterName}不滿足目標限制");
+                return;
+            }
         }
 
         if (selectedTargets.Contains(target))
@@ -1051,6 +1067,7 @@ public class TurnManager : MonoBehaviour
             .OrderByDescending(kv => kv.Value)
             .Take(entry.maxTargets)
             .Select(kv => kv.Key)
+            .Where(c => !LimitChecker.Limited(entry.targetsNeeds, c, self))
             .ToList();
     }
     private float CalculateEntryScore(EffectEntry entry, CharacterHealth self, CharacterHealth target) // 計算一對一分數
