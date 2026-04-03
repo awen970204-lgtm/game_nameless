@@ -126,6 +126,8 @@ public class CardCtrl : MonoBehaviour,
         }
         else
         {
+            Debug.Log($"{card_data.cardName} Change Display");
+            
             cardAvailableDisplay.SetActive(TurnManager.Instance.actingPlayer == null || 
                 TurnManager.Instance.actingPlayer != ownerPlayer);
             if (isTriggered)
@@ -143,6 +145,9 @@ public class CardCtrl : MonoBehaviour,
     public void OnClick() // Use Event trigger
     {
         if (IsUseing) return;
+
+        Debug.Log($"{card_data.cardName} on click");
+
         if (ownerPlayer.IsDising)
         {
             if (ownerPlayer.stealCardBuffer.Contains(this))

@@ -480,6 +480,7 @@ public class TurnManager : MonoBehaviour
             pendingPassiveEntry = firstPassiveEntry;
 
             waitingForAction = false;
+            checkButton.SetActive(false);
             
             // 執行效果
             if (actionType == ActionType.Card)
@@ -627,6 +628,9 @@ public class TurnManager : MonoBehaviour
         waitingForAction = true;
         waitingForTarget = false;
         isProcessingEntry = false;
+        checkButton.SetActive(false);
+        endTurnButton.SetActive(true);
+
         // 回合結束
         if (TurnEnded && effectEntryQueue.Count == 0)
         {
@@ -666,6 +670,39 @@ public class TurnManager : MonoBehaviour
         if (pendingEffectEntry != null && pendingUser != null)
         {
             maxTargets = pendingEffectEntry.maxTargets;
+            switch(pendingEffectEntry.targetType)
+            {
+                case TargetType.Self:
+                    if (target != pendingUser)
+                    {
+                        Debug.Log($"{target.character_data.characterName}不滿足目標限制");
+                        return;
+                    }
+                    break;
+                case TargetType.Other:
+                    if (target == pendingUser)
+                    {
+                        Debug.Log($"{target.character_data.characterName}不滿足目標限制");
+                        return;
+                    }
+                    break;
+                case TargetType.teammate:
+                    if (target.team != pendingUser.team)
+                    {
+                        Debug.Log($"{target.character_data.characterName}不滿足目標限制");
+                        return;
+                    }
+                    break;
+                case TargetType.enemy:
+                    if (target.team == pendingUser.team)
+                    {
+                        Debug.Log($"{target.character_data.characterName}不滿足目標限制");
+                        return;
+                    }
+                    break;
+
+
+            }
             if (LimitChecker.Limited(pendingEffectEntry.targetsNeeds, target, pendingUser))
             {
                 Debug.Log($"{target.character_data.characterName}不滿足目標限制");
