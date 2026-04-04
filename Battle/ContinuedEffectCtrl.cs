@@ -176,66 +176,7 @@ public class ContinuedEffectCtrl : MonoBehaviour
 
         foreach (var effect in activeEffects)
         {
-            foreach (var entry in effect.effectData.continuedEffectEntrys)
-            {
-                if (entry.triggerTime != time) continue;
-
-                bool restricted = false;
-                if (entry.Needs != null)
-                {
-                    foreach (var need in entry.Needs)
-                    {
-                        if (!LimitChecker.CheckLimit(need, self, acting)) restricted = true;
-                    }
-                }
-                if (restricted) continue;
-
-                bool match = false;
-                switch (entry.triggerCharacter)
-                {
-                    case Trigger_Character.Self:
-                        match = (acting == self);
-                        break;
-                    case Trigger_Character.Other:
-                        match = (acting != self);
-                        break;
-                    case Trigger_Character.All:
-                        match = (acting != null);
-                        break;
-                }
-                if (!match) continue;
-                
-                // 檢查是否達到上限
-                if (effect.triggerCount >= effect.effectData.TriggerTimes)
-                {
-                    if (effect.effectData.LimitedTimes) continue;
-                }
-                // 套用效果
-                List<CharacterHealth> targets = new();
-                switch (entry.effectTarget)
-                {
-                    case TargetType.Self:
-                        targets.Add(self);
-                        break;
-                    case TargetType.AllOther:
-                        targets = new List<CharacterHealth>();
-                        targets.AddRange(TurnManager.Instance.player1.playerCharacters);
-                        targets.AddRange(TurnManager.Instance.player2.playerCharacters);
-                        targets.Remove(self);
-                        break;
-                    case TargetType.All:
-                        targets = new List<CharacterHealth>();
-                        targets.AddRange(TurnManager.Instance.player1.playerCharacters);
-                        targets.AddRange(TurnManager.Instance.player2.playerCharacters);
-                        break;
-                }
-                Debug.Log($"持續效果:{effect.effectData.EffectName}觸發");
-                StartCoroutine(EffectExecutor.ApplyEffects(self, targets, entry.effects));
-                // 紀錄觸發次數
-                effect.triggerCount++;
-                OnEffectTriggered?.Invoke(effect, self);
-                
-            }
+            TryTriggerSingle(effect, time, acting);
 
             // 扣減持續時間
             if (time == TriggerTime.OnRealTurnEnd)
@@ -268,7 +209,7 @@ public class ContinuedEffectCtrl : MonoBehaviour
             }
         }
     }
-    // 僅檢查單一效果
+    // 檢查單一效果
     private void TryTriggerSingle(EffectInstance effect, TriggerTime time, CharacterHealth acting)
     {        
         if (!activeEffects.Contains(effect)) return;
@@ -277,55 +218,44 @@ public class ContinuedEffectCtrl : MonoBehaviour
         {
             if (entry.triggerTime != time) continue;
 
-            bool match = false;
-            switch (entry.triggerCharacter)
-            {
-                case Trigger_Character.Self:
-                    match = (acting == self);
-                    break;
-                case Trigger_Character.Other:
-                    match = (acting != self);
-                    break;
-                case Trigger_Character.All:
-                    match = (acting != null);
-                    break;
-            }
-
-            if (!match) continue;
-
-            // 檢查觸發次數
-            if (effect.triggerCount >= effect.effectData.TriggerTimes)
-            {
-                continue;
-            }
-
-            // 找目標
-            List<CharacterHealth> targets = new();
-            switch (entry.effectTarget)
-            {
-                case TargetType.Self:
-                    targets.Add(self);
-                    break;
-                case TargetType.AllOther:
-                    targets = new List<CharacterHealth>();
-                    targets.AddRange(TurnManager.Instance.player1.playerCharacters);
-                    targets.AddRange(TurnManager.Instance.player2.playerCharacters);
-                    targets.Remove(self);
-                    break;
-                case TargetType.All:
-                    targets = new List<CharacterHealth>();
-                    targets.AddRange(TurnManager.Instance.player1.playerCharacters);
-                    targets.AddRange(TurnManager.Instance.player2.playerCharacters);
-                    break;
-            }
-            Debug.Log($"持續效果:{effect.effectData.EffectName}觸發");
-            StartCoroutine(EffectExecutor.ApplyEffects(self, targets, entry.effects));
-
-            // 紀錄觸發次數
-            effect.triggerCount++;
-
-            OnEffectTriggered?.Invoke(effect, self);
+                bool match = false;
+                switch (entry.triggerCharacter)
+                {
+                    case Trigger_Character.Self:
+                        match = (acting == self);
+                        break;
+                    case Trigger_Character.Other:
+                        match = (acting != self);
+                        break;
+                    case Trigger_Character.All:
+                        match = (acting != null);
+                        break;
+                    case Trigger_Character.teammate:
+                        match = (acting.team == self.team);
+                        break;
+                    case Trigger_Character.enemy:
+                        match = (acting.team != self.team);
+                        break;
+                }
+                if (!match) continue;
+                
+                // 檢查是否達到上限
+                if (effect.triggerCount >= effect.effectData.TriggerTimes)
+                {
+                    if (effect.effectData.LimitedTimes) continue;
+                }
+                // 套用效果
+                StartCoroutine(TurnManager.Instance
+                    .EnqueueEffectEntry(entry.effectEntry, self, ActionType.ContinuedEffect, null, null, null, effect));
         }
+    }
+
+    public void ContinuedEffectApplyOver(EffectInstance effect)
+    {
+        Debug.Log($"持續效果:{effect.effectData.EffectName}觸發");
+        effect.triggerCount++;
+        // 紀錄觸發次數
+        OnEffectTriggered?.Invoke(effect, self);
     }
 
     // 不同時機觸發

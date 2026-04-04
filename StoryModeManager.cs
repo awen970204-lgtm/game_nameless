@@ -8,6 +8,8 @@ using TMPro;
 using Unity.VisualScripting;
 using System.Linq;
 
+// PlayerUnlockedCharacter0
+// UnlockCharacter0Times
 public class StoryModeManager : MonoBehaviour
 {
     public static StoryModeManager Instance { get; private set; }
@@ -87,6 +89,9 @@ public class StoryModeManager : MonoBehaviour
         cards.AddRange(GameModeManager.Instance.cardDatas.Where(c => c.holderCharacter == character));
 
         PlayerPrefs.SetInt($"PlayerUnlockedCharacter{GameModeManager.Instance.characterDatas.IndexOf(character)}", 1);
+
+        PlayerPrefs.SetInt($"UnlockCharacter{GameModeManager.Instance.characterDatas.IndexOf(character)}Times",
+            PlayerPrefs.GetInt($"UnlockCharacter{GameModeManager.Instance.characterDatas.IndexOf(character)}Times") + 1);
 
         StartCoroutine(ShowActivity(character.characterAvatar, "角色加入隊伍", $"{character.characterName}"));
     }

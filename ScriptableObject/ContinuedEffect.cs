@@ -6,9 +6,7 @@ public class ContinuedEffectEntry
 {
     public Trigger_Character triggerCharacter;
     public TriggerTime triggerTime;
-    public TargetType effectTarget;
-    public List<NeedState> Needs;
-    public List<Effect> effects;
+    public EffectEntry effectEntry;
 }
 
 public enum EffectTendency

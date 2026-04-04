@@ -18,8 +18,12 @@ public enum TargetType
 public enum Limit
 {
     // 狀態類
-    selfHealth,
-    selfMaxHP,
+    MaxHealth,
+    MinHealth,
+    MaxMaximumHP,
+    MinMaximumHP,
+    MaxHP_Persent,
+    MinHP_Persent,
     // 傷害類
     MaxCauseDamage,
     MinCauseDamage,
@@ -45,10 +49,6 @@ public enum Limit
     MinHealValueInTrun,
     MaxDrawCardsInTrun,
     MinDrawCardsInTrun,
-    MaxUseCardTimesInTrun,
-    MinUseCardTimesInTrun,
-    MaxUseSkillTimesInTrun,
-    MinUseSkillTimesInTrun,
     // 持續效果
     holdContinueEffect,
     NotholdContinueEffect,
@@ -103,11 +103,17 @@ public static class LimitChecker
         switch (need.limit)
         {
             // 狀態類
-            case Limit.selfHealth:
-                if (ch.currentHealth >= MinLimit && ch.currentHealth <= MaxLimit)return(true);
+            case Limit.MaxHealth:
+                if (ch.currentHealth <= MaxLimit) return(true);
                 break;
-            case Limit.selfMaxHP:
-                if (ch.currentMaxHP >= MinLimit && ch.currentMaxHP <= MaxLimit)return(true);
+            case Limit.MinHealth:
+                if (ch.currentHealth >= MinLimit) return(true);
+                break;
+            case Limit.MaxMaximumHP:
+                if (ch.currentMaxHP <= MaxLimit) return(true);
+                break;
+            case Limit.MinMaximumHP:
+                if (ch.currentMaxHP >= MinLimit) return(true);
                 break;
             
             // 傷害類
@@ -146,18 +152,6 @@ public static class LimitChecker
                 break;
             case Limit.MinDrawCardsInTrun:
                 if (ch.ownerPlayer.DrawCardsInTrun >= MinLimit)return(true);
-                break;
-            case Limit.MaxUseCardTimesInTrun:
-                // if (ch.ownerPlayer.UseCardTimesInTrun <= MaxLimit)return(true);
-                break;
-            case Limit.MinUseCardTimesInTrun:
-                // if (ch.ownerPlayer.UseCardTimesInTrun >= MinLimit)return(true);
-                break;
-            case Limit.MaxUseSkillTimesInTrun:
-                if (ch.UseSkillTimesInTrun <= MaxLimit)return(true);
-                break;
-            case Limit.MinUseSkillTimesInTrun:
-                if (ch.UseSkillTimesInTrun >= MinLimit)return(true);
                 break;
             
             // 持有類

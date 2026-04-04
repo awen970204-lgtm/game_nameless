@@ -11,6 +11,15 @@ public class TurnManager : MonoBehaviour
     public static TurnManager Instance { get; private set; }
     public static bool playerVictory = false;
     // 回合系統
+    [Header("UI 綁定")]
+    public TMP_Text turnText;
+    public TMP_Text UseTips;
+    public GameObject skillBarCtrl;
+    public InputValue inputValue;
+    public GameObject checkButton;
+    public GameObject endTurnButton;
+    public GameObject battleOverPanel;
+
     public Player player1;
     public Player player2;
     [HideInInspector] public List<CharacterHealth> selectedTargets = new List<CharacterHealth>();  // 目標清單
@@ -19,21 +28,17 @@ public class TurnManager : MonoBehaviour
     [HideInInspector] public bool waitingForAction = false;         // 等待行動狀態
     [HideInInspector] public bool waitingForTarget = false;         // 等待選擇狀態
     [HideInInspector] public Player actingPlayer;                   // 回合進行中角色
-    // [HideInInspector] public PassiveSkilCtrl pendingPassiveCtrl;    // 暫存被動執行者
-    [HideInInspector] public EffectEntry pendingEffectEntry;        // 暫存效果組合
     [HideInInspector] public CharacterHealth pendingUser;           // 技能/卡片的實際使用者
-    [HideInInspector] public Skill pendingSkill;                    // 暫存技能
-    [HideInInspector] public PassiveSkill pendingPassive;           // 暫存被動技能
+    private EffectEntry pendingEffectEntry;        // 暫存效果組合
+    private Skill pendingSkill;                    // 暫存技能
+    private PassiveSkill pendingPassive;           // 暫存被動技能
     private PassiveEntry pendingPassiveEntry;      // 暫存被動組合
-    private ContinuedEffect pendingContinuedEffect; // 暫存持續效果
+    private EffectInstance pendingContinuedEffect; // 暫存持續效果
 
-    // [HideInInspector] public Card pendingCard;                      // 暫存卡片
-    // [HideInInspector] public CardCtrl pendingCardUI;                // 暫存卡片UI
     // 執行狀態
     [HideInInspector] public bool GameStart = false;        // 遊戲開始狀態
     [HideInInspector] public bool TurnEnded = false;        // 回合結束狀態
     [HideInInspector] public bool actionCancelled = false;  // 取消了
-    // [HideInInspector] public int pendingEffectEntrys = 0;   // 尚未結算的效果數量
 
     // 技能使用次數
     [HideInInspector] public Dictionary<(CharacterHealth, Skill), int> skillUseCounter
@@ -53,6 +58,7 @@ public class TurnManager : MonoBehaviour
         public Skill Skill { get; }
         public PassiveSkill PassiveSkill { get; }
         public PassiveEntry PassiveEntry { get; }
+        public EffectInstance ContinuedEffect { get; }
 
         public ExecutionEffectEntry(
             EffectEntry entry,
@@ -60,7 +66,8 @@ public class TurnManager : MonoBehaviour
             ActionType actionType,
             Skill skill,
             PassiveSkill passiveSkill,
-            PassiveEntry passiveEntry)
+            PassiveEntry passiveEntry,
+            EffectInstance continuedEffect)
         {
             Entry = entry;
             User = user;
@@ -68,6 +75,7 @@ public class TurnManager : MonoBehaviour
             Skill = skill;
             PassiveSkill = passiveSkill;
             PassiveEntry = passiveEntry;
+            ContinuedEffect = continuedEffect;
         }
 
         public void Deconstruct(
@@ -76,7 +84,8 @@ public class TurnManager : MonoBehaviour
             out ActionType actionType,
             out Skill skill,
             out PassiveSkill passiveSkill,
-            out PassiveEntry passiveEntry)
+            out PassiveEntry passiveEntry,
+            out EffectInstance continuedEffect)
         {
             entry = Entry;
             user = User;
@@ -84,17 +93,9 @@ public class TurnManager : MonoBehaviour
             skill = Skill;
             passiveSkill = PassiveSkill;
             passiveEntry = PassiveEntry;
+            continuedEffect = ContinuedEffect;
         }
     }
-
-    [Header("UI 綁定")]
-    public TMP_Text turnText;
-    public TMP_Text UseTips;
-    public GameObject skillBarCtrl;
-    public InputValue inputValue;
-    public GameObject checkButton;
-    public GameObject endTurnButton;
-    public GameObject battleOverPanel;
 
     #region Event
     public static event System.Action OnBattleBegin;
@@ -295,7 +296,7 @@ public class TurnManager : MonoBehaviour
         OnAnySkillBegin?.Invoke(user, skill);
         foreach(var entry in skill.effectEntries)
         {
-            yield return EnqueueEffectEntry(entry, user, ActionType.Skill, skill, null, null);
+            yield return EnqueueEffectEntry(entry, user, ActionType.Skill, skill, null, null, null);
         }
     }
 
@@ -338,7 +339,7 @@ public class TurnManager : MonoBehaviour
     {
         foreach(var entry in entries)
         {
-            yield return EnqueueEffectEntry(entry, user, ActionType.Card, null, null, null);
+            yield return EnqueueEffectEntry(entry, user, ActionType.Card, null, null, null, null);
         }
         yield return null;
     }
@@ -436,12 +437,14 @@ public class TurnManager : MonoBehaviour
                 selectedTargets = new List<CharacterHealth>(turnOrder.Where(c => c.team != user.team));
                 break;
         }
+        selectedTargets = new List<CharacterHealth>
+        (selectedTargets.Where(c => !LimitChecker.Limited(entry.targetsNeeds, c, user)));
 
         yield return EffectExecutor.ApplyEffects(user, selectedTargets, entry.effects);
     }
 
     public IEnumerator EnqueueEffectEntry(EffectEntry entry, CharacterHealth user, ActionType actionType,
-        Skill skill, PassiveSkill passiveSkill, PassiveEntry passiveEntry)
+        Skill skill, PassiveSkill passiveSkill, PassiveEntry passiveEntry, EffectInstance continuedEffect)
     {
         if (entry == null || user == null || actionType == ActionType.None) yield break;
 
@@ -451,13 +454,14 @@ public class TurnManager : MonoBehaviour
             actionType,
             skill,
             passiveSkill,
-            passiveEntry
+            passiveEntry,
+            continuedEffect
         );
 
         effectEntryQueue.Enqueue(effectEntry);
         if (!isProcessingEntry)
         {
-            StartCoroutine(ApplyEffectEntry());
+            yield return (ApplyEffectEntry());
         }
     }
     private IEnumerator ApplyEffectEntry()
@@ -469,15 +473,16 @@ public class TurnManager : MonoBehaviour
 
         while (effectEntryQueue.Count > 0)
         {
-            var (firstEntry, firstUser, actionType, firstSkill, firstPassiveSkill, firstPassiveEntry) 
+            var (firstEntry, firstUser, actionType,
+                firstSkill, firstPassiveSkill, firstPassiveEntry, firstContinuedEffect) 
                 = effectEntryQueue.Dequeue();
 
-            
             pendingEffectEntry = firstEntry;
             pendingUser = firstUser;
             pendingSkill = firstSkill;
             pendingPassive = firstPassiveSkill;
             pendingPassiveEntry = firstPassiveEntry;
+            pendingContinuedEffect = firstContinuedEffect;
 
             waitingForAction = false;
             checkButton.SetActive(false);
@@ -574,7 +579,7 @@ public class TurnManager : MonoBehaviour
             }
 
             // 結算
-            if (actionType == ActionType.Skill)
+            if (actionType == ActionType.Skill && firstSkill != null)
             {
                 if (actionCancelled)
                 {
@@ -600,7 +605,7 @@ public class TurnManager : MonoBehaviour
                     }
                 }
             }
-            else if (actionType == ActionType.PassiveSkill)
+            else if (actionType == ActionType.PassiveSkill && firstPassiveEntry != null)
             {
                 if (actionCancelled)
                 {
@@ -619,6 +624,21 @@ public class TurnManager : MonoBehaviour
                         OnAnyPassiveSkillEnd?.Invoke(pendingUser, firstPassiveSkill);
                         Debug.Log($"{firstUser.character_data.characterName}的被動:{firstPassiveSkill.skillName}結算完成");
                     }
+                }
+            }
+            else if (actionType == ActionType.ContinuedEffect && firstContinuedEffect != null)
+            {
+                if (actionCancelled)
+                {
+                    effectEntryQueue = 
+                    new Queue<ExecutionEffectEntry>
+                        (
+                            effectEntryQueue.Where(e => e.ContinuedEffect != firstContinuedEffect)
+                        );
+                }
+                if (firstUser != null)
+                {
+                    firstUser.effectCtrl.ContinuedEffectApplyOver(firstContinuedEffect);
                 }
             }
 
@@ -873,7 +893,9 @@ public class TurnManager : MonoBehaviour
                 foreach (var entry in passiveEntry.effectEntries)
                 {
                     Debug.Log($"{passiveSkill.skillName}執行效果集:{passiveEntry.effectEntries.IndexOf(entry)}");
-                    yield return EnqueueEffectEntry(entry, user, ActionType.PassiveSkill, null, passiveSkill, passiveEntry);
+                    yield return 
+                    EnqueueEffectEntry(entry, user, ActionType.PassiveSkill,
+                         null, passiveSkill, passiveEntry, null);
                 }
             }
         }
@@ -1262,7 +1284,7 @@ public class TurnManager : MonoBehaviour
                 float TotalContinuedEffectScore = 0;
                 foreach (var continuedEffectEntry in effect.continuedEffect.continuedEffectEntrys)
                 {
-                    foreach (var continuedEffect in continuedEffectEntry.effects)
+                    foreach (var continuedEffect in continuedEffectEntry.effectEntry.effects)
                     {
                         float continuedEffectScore = EffectTendency(continuedEffect, self, target, isBeneficial, isHarmful);
                         TotalContinuedEffectScore += continuedEffectScore;

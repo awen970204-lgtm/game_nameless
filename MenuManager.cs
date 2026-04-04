@@ -7,6 +7,8 @@ using UnityEngine.SceneManagement;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine.Rendering;
+using System.Linq;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -41,6 +43,12 @@ public class MenuManager : MonoBehaviour
     public Transform characterIconsTransform;
     public GameObject characterIcon;
     public GameObject characterPanelPrefab;
+    public TMP_Dropdown characterLayoutTypeDropdown;
+    private enum LayoutType
+    {
+        normal,
+        Camp,
+    }
 
     public Transform cardIconsTransform;
     public GameObject cardIcon;
@@ -147,16 +155,11 @@ public class MenuManager : MonoBehaviour
             illuatratedGuideButton.onClick.AddListener(()=> SetIlluatratedGuidePanel());
         }
 
-        if (characterIcon != null && characterIconsTransform != null)
+        if (characterIcon != null && characterIconsTransform != null && characterLayoutTypeDropdown != null)
         {
-            foreach(var character in GameModeManager.Instance?.characterDatas)
-            {
-                GameObject go = Instantiate(characterIcon, characterIconsTransform);
-                go.transform.GetChild(0).GetComponent<Image>().sprite = character.characterAvatar;
-                go.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(()=> CheckCharacterInMenu(character));
-                go.transform.GetChild(1).GetComponent<TMP_Text>().text = character.characterName;
-                go.SetActive(true);
-            }
+            LayoutCharacterIcon(LayoutType.normal);
+            characterLayoutTypeDropdown.onValueChanged
+                .AddListener(ChangeLayoutType);
         }
         if (cardIcon != null && cardIconsTransform != null)
         {
@@ -303,7 +306,7 @@ public class MenuManager : MonoBehaviour
             getCharacterButton.onClick.RemoveAllListeners();
         }
     }
-
+    
     private void CheckCharacterInMenu(Character character)
     {
         if (characterPanelPrefab == null || panelTransform == null) return;
@@ -314,6 +317,19 @@ public class MenuManager : MonoBehaviour
         cpGo.transform.GetChild(1).GetComponent<TMP_Text>().text = character.characterName;
         cpGo.transform.GetChild(2).GetComponent<Image>().sprite = character.characterPicture;
         cpGo.transform.GetChild(3).GetChild(0).GetComponent<TMP_Text>().text = character.backgroundStory;
+        cpGo.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text = 
+        character.characterCamp switch
+        {
+            Character.CharacterCamp.Travelers => "陣營:旅者",
+            Character.CharacterCamp.Demons => "陣營:惡魔",
+            Character.CharacterCamp.Church => "陣營:教會",
+            Character.CharacterCamp.Pirates => "陣營:海盜",
+            Character.CharacterCamp.Magicians => "陣營:魔法師",
+            _ => "陣營:無",
+        };
+
+        cpGo.transform.GetChild(3).GetChild(2).GetComponent<TMP_Text>().text = 
+        $"相遇次數:{PlayerPrefs.GetInt($"UnlockCharacter{GameModeManager.Instance.characterDatas.IndexOf(character)}Times")}";
 
         Transform skillTransform = cpGo.transform.GetChild(4).GetChild(0).GetChild(0).GetChild(0);
         GameObject skillButton = cpGo.transform.GetChild(4).GetChild(0).GetChild(0).GetChild(0).GetChild(0).gameObject;
@@ -409,6 +425,37 @@ public class MenuManager : MonoBehaviour
         endGo.SetActive(true);
     }
 
+    private void ChangeLayoutType(int value)
+    {
+        if (Enum.IsDefined(typeof(LayoutType), value))
+        {
+            LayoutCharacterIcon((LayoutType)characterLayoutTypeDropdown.value);
+        }
+    }
+    private void LayoutCharacterIcon(LayoutType layoutType) // 產生圖標
+    {
+        foreach(Transform transform in characterIconsTransform)
+        {
+            Destroy(transform.gameObject);
+        }
+        List<Character> characters = new List<Character>(GameModeManager.Instance?.characterDatas);
+        characters = layoutType switch
+        {
+            LayoutType.normal => characters,
+            LayoutType.Camp => characters.OrderBy(c => c.characterCamp).ToList(),
+            _ => characters,
+        };
+
+        foreach(var character in characters)
+        {
+            GameObject go = Instantiate(characterIcon, characterIconsTransform);
+            go.transform.GetChild(0).GetComponent<Image>().sprite = character.characterAvatar;
+            go.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(()=> CheckCharacterInMenu(character));
+            go.transform.GetChild(1).GetComponent<TMP_Text>().text = character.characterName;
+            go.SetActive(true);
+        }
+    }
+    
     #region Card
 
     private void SetDeck() // 設定牌堆
