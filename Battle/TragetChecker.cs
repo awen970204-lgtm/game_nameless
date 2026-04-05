@@ -22,8 +22,8 @@ public enum Limit
     MinHealth,
     MaxMaximumHP,
     MinMaximumHP,
-    MaxHP_Persent,
-    MinHP_Persent,
+    IsUsingCard,
+    NotUsingCard,
     // 傷害類
     MaxCauseDamage,
     MinCauseDamage,
@@ -114,6 +114,12 @@ public static class LimitChecker
                 break;
             case Limit.MinMaximumHP:
                 if (ch.currentMaxHP >= MinLimit) return(true);
+                break;
+            case Limit.IsUsingCard:
+                if (ch.usingCard != null) return true;
+                break;
+            case Limit.NotUsingCard:
+                if (ch.usingCard == null) return true;
                 break;
             
             // 傷害類

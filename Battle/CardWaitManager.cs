@@ -213,7 +213,7 @@ public class WaitCardManager : MonoBehaviour
         if (waitEventQueue.Count <= 0) yield break;
         else currentEvent = waitEventQueue.Dequeue();
         IsIdle = false;
-        Debug.Log($"<color=#FFDD55>#</color> deal with event: {currentEvent.trigger}");
+        Debug.Log($"<color=#FFDD55># deal with event: {currentEvent.trigger}</color>");
 
         // 顯示提示
         string tip = GetTipText(currentEvent.trigger);
@@ -223,8 +223,6 @@ public class WaitCardManager : MonoBehaviour
         foreach (var card in currentEvent.relatedCards)
         {
             card.ownerPlayer.PlayCard(card.user, card);
-            yield return null;
-            yield return new WaitUntil(()=> TurnManager.Instance.waitingForAction);
         }
 
         // 等待直到事件被解決

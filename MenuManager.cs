@@ -387,7 +387,9 @@ public class MenuManager : MonoBehaviour
             $"回復力:{character.healPower}\n"+
             $"防禦:{character.defense}\n"+
             $"傷害倍率:{character.damageMultiplier*100}%\n"+
-            $"受傷減免:{character.damageReduction}";
+            $"受傷減免:{character.damageReduction}\n"+
+            $"基礎抽牌數:{character.drawCount}\n"+
+            $"嘲諷等級:{character.tauntLevel}";
 
         cpGo.SetActive(true);
     }

@@ -45,8 +45,9 @@ public class TurnManager : MonoBehaviour
      = new Dictionary<(CharacterHealth, Skill), int>();
     // 被動技能序列
     // private bool isProcessingPassive = false;
-    [HideInInspector] public Queue<(List<PassiveSkill>, List<PassiveEntry>, PassiveSkilCtrl,  CharacterHealth)> passiveQueue 
-     = new Queue<(List<PassiveSkill>, List<PassiveEntry>, PassiveSkilCtrl, CharacterHealth)>();
+    [HideInInspector] 
+    public Queue<(List<PassiveSkill>, List<PassiveEntry>, PassiveSkilCtrl, CharacterHealth, CharacterHealth)> passiveQueue 
+     = new Queue<(List<PassiveSkill>, List<PassiveEntry>, PassiveSkilCtrl, CharacterHealth, CharacterHealth)>();
     // 效果序列
     private bool isProcessingEntry = false;
     private Queue<ExecutionEffectEntry> effectEntryQueue  = new Queue<ExecutionEffectEntry>();
@@ -58,6 +59,7 @@ public class TurnManager : MonoBehaviour
         public Skill Skill { get; }
         public PassiveSkill PassiveSkill { get; }
         public PassiveEntry PassiveEntry { get; }
+        public CharacterHealth Trigger { get; }
         public EffectInstance ContinuedEffect { get; }
 
         public ExecutionEffectEntry(
@@ -67,6 +69,7 @@ public class TurnManager : MonoBehaviour
             Skill skill,
             PassiveSkill passiveSkill,
             PassiveEntry passiveEntry,
+            CharacterHealth trigger,
             EffectInstance continuedEffect)
         {
             Entry = entry;
@@ -75,6 +78,7 @@ public class TurnManager : MonoBehaviour
             Skill = skill;
             PassiveSkill = passiveSkill;
             PassiveEntry = passiveEntry;
+            Trigger = trigger;
             ContinuedEffect = continuedEffect;
         }
 
@@ -85,6 +89,7 @@ public class TurnManager : MonoBehaviour
             out Skill skill,
             out PassiveSkill passiveSkill,
             out PassiveEntry passiveEntry,
+            out CharacterHealth trigger,
             out EffectInstance continuedEffect)
         {
             entry = Entry;
@@ -93,6 +98,7 @@ public class TurnManager : MonoBehaviour
             skill = Skill;
             passiveSkill = PassiveSkill;
             passiveEntry = PassiveEntry;
+            trigger = Trigger;
             continuedEffect = ContinuedEffect;
         }
     }
@@ -296,7 +302,7 @@ public class TurnManager : MonoBehaviour
         OnAnySkillBegin?.Invoke(user, skill);
         foreach(var entry in skill.effectEntries)
         {
-            yield return EnqueueEffectEntry(entry, user, ActionType.Skill, skill, null, null, null);
+            yield return EnqueueEffectEntry(entry, user, ActionType.Skill, skill, null, null, null, null);
         }
     }
 
@@ -339,7 +345,7 @@ public class TurnManager : MonoBehaviour
     {
         foreach(var entry in entries)
         {
-            yield return EnqueueEffectEntry(entry, user, ActionType.Card, null, null, null, null);
+            yield return EnqueueEffectEntry(entry, user, ActionType.Card, null, null, null, null, null);
         }
         yield return null;
     }
@@ -404,7 +410,8 @@ public class TurnManager : MonoBehaviour
 
     #region Effect Apply
 
-    private IEnumerator ApplyEffectImmediate(EffectEntry entry, CharacterHealth user) // 立即生效的效果
+    private IEnumerator ApplyEffectImmediate(EffectEntry entry, ActionType actionType,
+        CharacterHealth user, CharacterHealth trigger) // 立即生效的效果
     {
         if (user == null)
         {
@@ -428,7 +435,10 @@ public class TurnManager : MonoBehaviour
                 selectedTargets = new List<CharacterHealth>(turnOrder);
                 break;
             case TargetType.EventTrigger:
-                selectedTargets = new List<CharacterHealth>{ WaitCardManager.Instance?.currentEvent.actor };
+                if (actionType == ActionType.Card)
+                    selectedTargets = new List<CharacterHealth>{ WaitCardManager.Instance?.currentEvent.actor };
+                else if (trigger != null)
+                    selectedTargets = new List<CharacterHealth> { trigger };
                 break;
             case TargetType.teammate:
                 selectedTargets = new List<CharacterHealth>(turnOrder.Where(c => c.team == user.team));
@@ -444,7 +454,9 @@ public class TurnManager : MonoBehaviour
     }
 
     public IEnumerator EnqueueEffectEntry(EffectEntry entry, CharacterHealth user, ActionType actionType,
-        Skill skill, PassiveSkill passiveSkill, PassiveEntry passiveEntry, EffectInstance continuedEffect)
+        Skill skill,
+        PassiveSkill passiveSkill, PassiveEntry passiveEntry, CharacterHealth trigger,
+        EffectInstance continuedEffect)
     {
         if (entry == null || user == null || actionType == ActionType.None) yield break;
 
@@ -455,6 +467,7 @@ public class TurnManager : MonoBehaviour
             skill,
             passiveSkill,
             passiveEntry,
+            trigger,
             continuedEffect
         );
 
@@ -474,7 +487,9 @@ public class TurnManager : MonoBehaviour
         while (effectEntryQueue.Count > 0)
         {
             var (firstEntry, firstUser, actionType,
-                firstSkill, firstPassiveSkill, firstPassiveEntry, firstContinuedEffect) 
+                 firstSkill,
+                 firstPassiveSkill, firstPassiveEntry, firstTrigger,
+                 firstContinuedEffect) 
                 = effectEntryQueue.Dequeue();
 
             pendingEffectEntry = firstEntry;
@@ -574,7 +589,7 @@ public class TurnManager : MonoBehaviour
                 else
                 {
                     // 直接套用效果
-                    yield return ApplyEffectImmediate(firstEntry, firstUser);
+                    yield return ApplyEffectImmediate(firstEntry, actionType, firstUser, firstTrigger);
                 }
             }
 
@@ -847,9 +862,9 @@ public class TurnManager : MonoBehaviour
     #region Passive
 
     public void EnqueuePassive(List<PassiveSkill> passiveSkills,
-        List<PassiveEntry> entries, PassiveSkilCtrl ctrl, CharacterHealth user)
+        List<PassiveEntry> entries, PassiveSkilCtrl ctrl, CharacterHealth user, CharacterHealth trigger)
     {
-        passiveQueue.Enqueue((passiveSkills, entries, ctrl, user));
+        passiveQueue.Enqueue((passiveSkills, entries, ctrl, user, trigger));
         if (passiveQueue.Count == 1)
         {
             StartCoroutine(TryPassive());
@@ -859,12 +874,12 @@ public class TurnManager : MonoBehaviour
     {
         while(passiveQueue.Count > 0)
         {
-            var (firstPassiveSkills, firstEntry, firstCtrl, firstUser) = passiveQueue.Dequeue();
-            yield return HandlePassiveRoutine(firstPassiveSkills, firstEntry, firstCtrl, firstUser);
+            var (firstPassiveSkills, firstEntry, firstCtrl, firstUser, firstTrigger) = passiveQueue.Dequeue();
+            yield return HandlePassiveRoutine(firstPassiveSkills, firstEntry, firstCtrl, firstUser, firstTrigger);
         }
     }
     public IEnumerator HandlePassiveRoutine(List<PassiveSkill> passiveSkills,
-        List<PassiveEntry> entries, PassiveSkilCtrl ctrl, CharacterHealth user)
+        List<PassiveEntry> entries, PassiveSkilCtrl ctrl, CharacterHealth user, CharacterHealth trigger)
     {
         foreach (PassiveSkill passiveSkill in passiveSkills)
         {
@@ -895,7 +910,7 @@ public class TurnManager : MonoBehaviour
                     Debug.Log($"{passiveSkill.skillName}執行效果集:{passiveEntry.effectEntries.IndexOf(entry)}");
                     yield return 
                     EnqueueEffectEntry(entry, user, ActionType.PassiveSkill,
-                         null, passiveSkill, passiveEntry, null);
+                         null, passiveSkill, passiveEntry, trigger, null);
                 }
             }
         }

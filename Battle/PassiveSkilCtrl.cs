@@ -142,16 +142,23 @@ public class PassiveSkilCtrl : MonoBehaviour
                                 toTrigger.Add(skill);
                             }
                             break;
+                        case Trigger_Character.otherTeammate:
+                            if (trigger.team == self.team && trigger != self)
+                            {
+                                Executable_PassiveEntry.Add(passive_entry);
+                                toTrigger.Add(skill);
+                            }
+                            break;
                     }
                 }
             }
         }
         // 統一在最後觸發
-        PassiveSkillBegin(toTrigger);
+        PassiveSkillBegin(toTrigger, trigger);
     }
 
     // 開始被動流程
-    private void PassiveSkillBegin(List<PassiveSkill> skills)
+    private void PassiveSkillBegin(List<PassiveSkill> skills, CharacterHealth trigger)
     {
         // 會生效的技能
         List<PassiveSkill> toEffective = new List<PassiveSkill>();
@@ -175,7 +182,8 @@ public class PassiveSkilCtrl : MonoBehaviour
             }
             // 紀錄被動
             toEffective.Add(skill);
-            TurnManager.Instance.EnqueuePassive(toEffective, new List<PassiveEntry>(Executable_PassiveEntry), this, self);
+            TurnManager.Instance
+            .EnqueuePassive(toEffective, new List<PassiveEntry>(Executable_PassiveEntry), this, self, trigger);
             Executable_PassiveEntry.Clear();
         }
     }

@@ -236,6 +236,9 @@ public class ContinuedEffectCtrl : MonoBehaviour
                     case Trigger_Character.enemy:
                         match = (acting.team != self.team);
                         break;
+                    case Trigger_Character.otherTeammate:
+                        match = (acting.team == self.team && acting != self);
+                        break;
                 }
                 if (!match) continue;
                 
@@ -246,7 +249,7 @@ public class ContinuedEffectCtrl : MonoBehaviour
                 }
                 // 套用效果
                 StartCoroutine(TurnManager.Instance
-                    .EnqueueEffectEntry(entry.effectEntry, self, ActionType.ContinuedEffect, null, null, null, effect));
+                    .EnqueueEffectEntry(entry.effectEntry, self, ActionType.ContinuedEffect, null, null, null, null, effect));
         }
     }
 
