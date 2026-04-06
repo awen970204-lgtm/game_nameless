@@ -8,6 +8,8 @@ using TMPro;
 using Unity.VisualScripting;
 using UnityEngine.Rendering;
 using System.Linq;
+using NUnit.Framework.Internal;
+
 
 
 #if UNITY_EDITOR
@@ -34,53 +36,64 @@ public class MenuManager : MonoBehaviour
     public GameObject freeModeSets;
 
     [Header("Menu Sets")]
-    public Button ExitGameButton;
-    public GameObject illuatratedGuidePanel;
-    public Button illuatratedGuideButton;
-    public Transform panelTransform;
-    public GameObject relatedButton;
+    [SerializeField] private Button ExitGameButton;
+    [SerializeField] private GameObject illuatratedGuidePanel;
+    [SerializeField] private Button illuatratedGuideButton;
+    [SerializeField] private Transform panelTransform;
+    [SerializeField] private GameObject relatedButton;
 
-    public Transform characterIconsTransform;
-    public GameObject characterIcon;
-    public GameObject characterPanelPrefab;
-    public TMP_Dropdown characterLayoutTypeDropdown;
+    [Header("Character Icon")]
+    [SerializeField] private Transform characterIconsTransform;
+    [SerializeField] private GameObject characterIcon;
+    [SerializeField] private GameObject characterPanelPrefab;
+    [SerializeField] private TMP_Dropdown characterLayoutTypeDropdown;
     private enum LayoutType
     {
         normal,
         Camp,
+        MaxHP,
+        StartHP,
+        AttackPower,
+        Defense,
+        TauntLevel,
     }
+    [SerializeField] private Toggle ReverseToggle;
+    private bool Reverse = false;
 
-    public Transform cardIconsTransform;
-    public GameObject cardIcon;
-    public GameObject cardPanelPrefab;
+    [Header("Card Icon")]
+    [SerializeField] private Transform cardIconsTransform;
+    [SerializeField] private GameObject cardIcon;
+    [SerializeField] private GameObject cardPanelPrefab;
 
-    public Transform storyEndIconsTransform;
-    public GameObject storyEndIcon;
-    public GameObject storyEndPanelPrefab;
+    [Header("StoryEnd Icon")]
+    [SerializeField] private Transform storyEndIconsTransform;
+    [SerializeField] private GameObject storyEndIcon;
+    [SerializeField] private GameObject storyEndPanelPrefab;
+
     [Header("Panel Active")]
-    public GameObject basePanel;
-    public Button characterCheckButton;
-    public Button cardCheckButton;
-    public Button storyEndCheckButton;
+    [SerializeField] private GameObject basePanel;
+    [SerializeField] private Button characterCheckButton;
+    [SerializeField] private Button cardCheckButton;
+    [SerializeField] private Button storyEndCheckButton;
 
     [Header("Free Battle Sets")]
-    public Toggle AISetToggle;
+    [SerializeField] private Toggle AISetToggle;
     public static bool useEnemyAI = false;
-    public Button StartFreeModeButton;
+    [SerializeField] private Button StartFreeModeButton;
 
     [Header("Level")]
-    public TMP_Text playerLevelText;
-    public Slider playerLevelSlider;
+    [SerializeField] private TMP_Text playerLevelText;
+    [SerializeField] private Slider playerLevelSlider;
     public static int playerLevel = 1;
 
-    public TMP_Text enemyLevelText;
-    public Slider enemyLevelSlider;
+    [SerializeField] private TMP_Text enemyLevelText;
+    [SerializeField] private Slider enemyLevelSlider;
     public static int enemyLevel = 1;
 
     [Header("Card")]
-    public GameObject CardSetPrefab;
-    public Transform Player1CardSetContent;
-    public Transform Player2CardSetContent;
+    [SerializeField] private GameObject CardSetPrefab;
+    [SerializeField] private Transform Player1CardSetContent;
+    [SerializeField] private Transform Player2CardSetContent;
 
     public static List<Card> player1Cards = new List<Card>();
     public static List<Card> player2Cards = new List<Card>();
@@ -88,19 +101,19 @@ public class MenuManager : MonoBehaviour
     [Header("Story Select")]
     public static Character pendingInitialCharacter;
     public static int currentCharacterNumber = 0;
-    public Image characterImage;
-    public TMP_Text characterName;
-    public GameObject skillButtonPref;
-    public Transform skillTransform;
-    public TMP_Text skillIntro;
-    public Button ContinueStoryButton;
-    public Button StartStoryModeButton;
+    [SerializeField] private Image characterImage;
+    [SerializeField] private TMP_Text characterName;
+    [SerializeField] private GameObject skillButtonPref;
+    [SerializeField] private Transform skillTransform;
+    [SerializeField] private TMP_Text skillIntro;
+    [SerializeField] private Button ContinueStoryButton;
+    [SerializeField] private Button StartStoryModeButton;
 
-    public GameObject characterButtonPrefab;
-    public Transform characterButtonContent;
+    [SerializeField] private GameObject characterButtonPrefab;
+    [SerializeField] private Transform characterButtonContent;
 
-    public Button getCharacterButton;
-    public GameObject WarningHoldText;
+    [SerializeField] private Button getCharacterButton;
+    [SerializeField] private GameObject WarningHoldText;
 
     void Awake()
     {
@@ -160,6 +173,11 @@ public class MenuManager : MonoBehaviour
             LayoutCharacterIcon(LayoutType.normal);
             characterLayoutTypeDropdown.onValueChanged
                 .AddListener(ChangeLayoutType);
+            if (ReverseToggle != null)
+            {
+                ReverseToggle.isOn = false;
+                ReverseToggle.onValueChanged.AddListener(ChangeCharacterIconSort);
+            }
         }
         if (cardIcon != null && cardIconsTransform != null)
         {
@@ -427,7 +445,21 @@ public class MenuManager : MonoBehaviour
         endGo.SetActive(true);
     }
 
-    private void ChangeLayoutType(int value)
+    private void ChangeCharacterIconSort(bool reverse)
+    {
+        if (ReverseToggle != null)
+        {
+            Reverse = reverse;
+            Text label = ReverseToggle.GetComponentInChildren<Text>();
+            label.text = reverse ? "由大到小" : "由小到大";
+        }
+        if (characterLayoutTypeDropdown != null)
+        {
+            ChangeLayoutType(characterLayoutTypeDropdown.value);
+        }
+    }
+
+    private void ChangeLayoutType(int value) // 改變圖標排序
     {
         if (Enum.IsDefined(typeof(LayoutType), value))
         {
@@ -445,8 +477,15 @@ public class MenuManager : MonoBehaviour
         {
             LayoutType.normal => characters,
             LayoutType.Camp => characters.OrderBy(c => c.characterCamp).ToList(),
+            LayoutType.MaxHP => characters.OrderBy(c => c.characterMaxHP).ToList(),
+            LayoutType.StartHP => characters.OrderBy(c => c.characterStartHP).ToList(),
+            LayoutType.AttackPower => characters.OrderBy(c => c.attackPower).ToList(),
+            LayoutType.Defense => characters.OrderBy(c => c.defense).ToList(),
+            LayoutType.TauntLevel => characters.OrderBy(c => c.tauntLevel).ToList(),
             _ => characters,
         };
+        if (Reverse)
+            characters.Reverse();
 
         foreach(var character in characters)
         {
