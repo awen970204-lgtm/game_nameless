@@ -137,6 +137,10 @@ public class CardCtrl : MonoBehaviour,
             }
             
             cardDiscardDisplay.SetActive(ownerPlayer.disCard.Contains(this) || ownerPlayer.stealCardBuffer.Contains(this));
+            if (ownerPlayer.IsDising || ownerPlayer.IsStealing)
+            {
+                cardAvailableDisplay.SetActive(false);
+            }
         }
     }
 
@@ -152,7 +156,7 @@ public class CardCtrl : MonoBehaviour,
         {
             if (ownerPlayer.stealCardBuffer.Contains(this))
                 return;
-            if (ownerPlayer.disCard.Contains(this))
+            if (!ownerPlayer.disCard.Contains(this))
                 ownerPlayer.disCard.Add(this);
             else
                 ownerPlayer.disCard.Remove(this);
@@ -162,7 +166,7 @@ public class CardCtrl : MonoBehaviour,
         {
             if (ownerPlayer.disCard.Contains(this))
                 return;
-            if (ownerPlayer.stealCardBuffer.Contains(this))
+            if (!ownerPlayer.stealCardBuffer.Contains(this))
                 ownerPlayer.stealCardBuffer.Add(this);
             else
                 ownerPlayer.stealCardBuffer.Remove(this);
