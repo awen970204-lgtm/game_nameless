@@ -347,7 +347,9 @@ public class MenuManager : MonoBehaviour
         };
 
         cpGo.transform.GetChild(3).GetChild(2).GetComponent<TMP_Text>().text = 
-        $"相遇次數:{PlayerPrefs.GetInt($"UnlockCharacter{GameModeManager.Instance.characterDatas.IndexOf(character)}Times")}";
+        (GameModeManager.Instance.characterDatas.Contains(character)) ?
+        $"相遇次數:{PlayerPrefs.GetInt($"UnlockCharacter{GameModeManager.Instance.characterDatas.IndexOf(character)}Times")}"
+        : "";
 
         Transform skillTransform = cpGo.transform.GetChild(4).GetChild(0).GetChild(0).GetChild(0);
         GameObject skillButton = cpGo.transform.GetChild(4).GetChild(0).GetChild(0).GetChild(0).GetChild(0).gameObject;
