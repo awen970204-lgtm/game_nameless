@@ -73,9 +73,8 @@ public class SetManager : MonoBehaviour
     {
         SetManager.backgroundMusicVolume = value / backgroundMusicVolumeSlider.maxValue;
         PlayerPrefs.SetFloat("backgroundMusicVolume", backgroundMusicVolume);
-        float volume = Mathf.Clamp01(backgroundMusicVolume * backgroundMusicVolumeSlider.maxValue);
-        backgroundMusicVolumeText.text = $"{volume}";
-        backgroundMusicVolumeSlider.SetValueWithoutNotify(volume);
+        backgroundMusicVolumeText.text = $"{Mathf.RoundToInt(value)}";
+        backgroundMusicVolumeSlider.SetValueWithoutNotify(value);
 
         if (EventUI.Instance != null)
         {
@@ -91,9 +90,8 @@ public class SetManager : MonoBehaviour
     {
         SetManager.specialEffectsVolume = value  / specialEffectsVolumeSlider.maxValue;
         PlayerPrefs.SetFloat("specialEffectsVolume", specialEffectsVolume);
-        float volume = Mathf.Clamp01(specialEffectsVolume * specialEffectsVolumeSlider.maxValue);
-        specialEffectsVolumeText.text = $"{volume}";
-        specialEffectsVolumeSlider.SetValueWithoutNotify(volume);
+        specialEffectsVolumeText.text = $"{Mathf.RoundToInt(value)}";
+        specialEffectsVolumeSlider.SetValueWithoutNotify(value);
 
         if (TooltipUI.Instance != null)
         {
