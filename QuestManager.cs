@@ -10,7 +10,6 @@ using System.Linq;
 public class QuestManager : MonoBehaviour
 {
     public static QuestManager Instance { get; private set; }
-    public static bool AutoAcceptQuest = false;
 
     [Header("UI")]
     public Button openQuestButton;
@@ -21,8 +20,6 @@ public class QuestManager : MonoBehaviour
     public GameObject questPrefabs;
     public Transform questsTransform;
     public GameObject questsPanel;
-
-    public Toggle AutoAcceptQuest_Toggle;
 
     [Header("Data")]
     public DialogueData defaultDialogue;
@@ -50,14 +47,7 @@ public class QuestManager : MonoBehaviour
         openQuestButton.gameObject.SetActive(true);
         closeQuestButton.gameObject.SetActive(false);
 
-        // 自動接任務
-        if (!PlayerPrefs.HasKey("AutoAcceptQuest"))
-        {
-            PlayerPrefs.SetInt("AutoAcceptQuest", 1);
-        }
-        bool auto = PlayerPrefs.GetInt("AutoAcceptQuest") == 1;
-        AutoAcceptQuest_Toggle.SetIsOnWithoutNotify(auto);
-        AutoAcceptQuest = auto;
+        
 
         // 任務預設值
         foreach(var quest in GameModeManager.Instance.questDatas)
@@ -68,17 +58,10 @@ public class QuestManager : MonoBehaviour
             }
         }
 
-        AutoAcceptQuest_Toggle.onValueChanged.AddListener(ChangeAutoAccept);
         openQuestButton.onClick.AddListener(()=> OnClickQuestButton());
         closeQuestButton.onClick.AddListener(()=> OnClickQuestButton());
     }
-    private void ChangeAutoAccept(bool auto) // 設定自動接取
-    {
-        AutoAcceptQuest_Toggle.SetIsOnWithoutNotify(auto);
-        AutoAcceptQuest = auto;
 
-        PlayerPrefs.SetInt("AutoAcceptQuest", auto ? 1 : 0);
-    }
     private void OnClickQuestButton()
     {
         StoryModeManager.Instance.teamPanel.SetActive(false);
@@ -279,7 +262,7 @@ public class QuestManager : MonoBehaviour
                     .GetComponentsInChildren<TMP_Text>(true)
                     .FirstOrDefault(t => t.text == quest.questName)?.transform.parent.gameObject);
 
-        if (AutoAcceptQuest && MainQuests.Count > 0)
+        if (SetManager.AutoAcceptQuest && MainQuests.Count > 0)
         {
             SetCurrentQuest(MainQuests[0]);
         }

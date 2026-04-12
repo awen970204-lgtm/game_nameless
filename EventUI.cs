@@ -18,10 +18,7 @@ public class EventUI : MonoBehaviour
     public GameObject SetPanel;
     public Button SaveButton;
 
-    private static int backgroundMusicVoice = 10;
     public AudioSource backgroundMusicSource;
-    public Slider backgroundMusicVoiceSlider;
-    public TMP_Text backgroundMusicVoiceText;
 
     [Header("Event UI References")]
     public GameObject panel;
@@ -76,16 +73,9 @@ public class EventUI : MonoBehaviour
         SaveButton.onClick.AddListener(()=> StartCoroutine(SaveStoryMode()));
         endStoryButton.onClick.AddListener(()=> StartCoroutine(GameModeManager.Instance.StoryModeEnd()));
         triggerEventButton.GetComponent<Button>().onClick.AddListener(()=> TriggerPendingEvent());
+        backgroundMusicSource.volume = Mathf.Clamp01(SetManager.backgroundMusicVolume);
 
         StoryUI.SetActive(true);
-
-        if (!PlayerPrefs.HasKey("backgroundMusicVoice"))
-        {
-            PlayerPrefs.SetInt("backgroundMusicVoice", 10);
-        }
-        backgroundMusicVoice = PlayerPrefs.GetInt("backgroundMusicVoice");
-        ChangeBackgroundVoice(backgroundMusicVoice);
-        backgroundMusicVoiceSlider.onValueChanged.AddListener(ChangeBackgroundVoice);
     }
 
     // 介面互動
@@ -414,7 +404,7 @@ public class EventUI : MonoBehaviour
     }
     public void BattleOverCheck()
     {
-        backgroundMusicSource.volume = backgroundMusicVoice;
+        backgroundMusicSource.volume = SetManager.backgroundMusicVolume;
         if (GameModeManager.Instance.gameMode == GameMode.story)
         {
             if (lastEventBattleData != null)
@@ -468,16 +458,6 @@ public class EventUI : MonoBehaviour
     }
 
     #endregion
-
-    // 聲音
-    private void ChangeBackgroundVoice(float value)
-    {
-        backgroundMusicVoice = Mathf.FloorToInt(value);
-        PlayerPrefs.SetInt("backgroundMusicVoice", backgroundMusicVoice);
-        float volume = Mathf.Clamp01(backgroundMusicVoice / backgroundMusicVoiceSlider.maxValue);
-        backgroundMusicSource.volume = volume;
-        backgroundMusicVoiceText.text = $"{backgroundMusicVoice}";
-    }
 
     // 結局
     private IEnumerator ShowStoryEnd(StoryEnd storyEndData)

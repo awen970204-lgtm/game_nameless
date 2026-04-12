@@ -10,8 +10,6 @@ using UnityEngine.Rendering;
 using System.Linq;
 using NUnit.Framework.Internal;
 
-
-
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -41,6 +39,7 @@ public class MenuManager : MonoBehaviour
     [SerializeField] private Button illuatratedGuideButton;
     [SerializeField] private Transform panelTransform;
     [SerializeField] private GameObject relatedButton;
+    public AudioSource backgroundMusicSource;
 
     [Header("Character Icon")]
     [SerializeField] private Transform characterIconsTransform;
@@ -75,6 +74,8 @@ public class MenuManager : MonoBehaviour
     [SerializeField] private Button characterCheckButton;
     [SerializeField] private Button cardCheckButton;
     [SerializeField] private Button storyEndCheckButton;
+    [SerializeField] private Button setsCheckButton;
+    [SerializeField] private GameObject setsPanel;
 
     [Header("Free Battle Sets")]
     [SerializeField] private Toggle AISetToggle;
@@ -124,9 +125,10 @@ public class MenuManager : MonoBehaviour
     {
         CheckGameMode();
         PlayerPrefs.SetInt($"PlayerUnlockedCharacter0", 1);
-        if (!gameObject.activeInHierarchy)
-            return;
+        if (!gameObject.activeInHierarchy) return;
         
+        SetManager.Initialize();
+        backgroundMusicSource.volume = Mathf.Clamp01(SetManager.backgroundMusicVolume);
         SetDeck();
         CreateCharacterButtons();
         enemyLevelText.text = $"Enemy_Level:{enemyLevel}";
@@ -207,6 +209,10 @@ public class MenuManager : MonoBehaviour
             characterCheckButton.onClick.AddListener(()=> ClickCharacetrCheckButton());
             cardCheckButton.onClick.AddListener(()=> ClickCardCheckButton());
             storyEndCheckButton.onClick.AddListener(()=> ClickStoryEndCheckButton());
+        }
+        if (setsCheckButton != null) // 點擊查看設定
+        {
+            setsCheckButton.onClick.AddListener(()=> setsPanel.SetActive(!setsPanel.activeInHierarchy));
         }
 
         StartCoroutine(SetInitialCharacter(0));

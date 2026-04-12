@@ -14,7 +14,7 @@ public class TooltipUI : MonoBehaviour
     public TMP_Text cardNameText;
     public TMP_Text cardTooltipText;
     [HideInInspector] public bool IsDragging = false;
-    private AudioSource audioSource;
+    public AudioSource audioSource;
     [SerializeField] private AudioClip hoverSound;
 
     [Header("ContinuedEffect")]
@@ -48,6 +48,8 @@ public class TooltipUI : MonoBehaviour
         CardTooltipPanel.SetActive(false);
         EffectTooltipPanel.SetActive(false);
         CharacterTooltipPanel.SetActive(false);
+
+        audioSource.volume = Mathf.Clamp01(SetManager.specialEffectsVolume);
     }
 
     void Update()

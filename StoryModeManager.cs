@@ -27,6 +27,10 @@ public class StoryModeManager : MonoBehaviour
 
     public Button teamButton;
     public GameObject teamPanel;
+
+    public Button inventoryButton;
+    public GameObject inventoryPanel;
+
     [Header("Activity")]
     public GameObject activityPrefab;
     public Transform activityContainer;
@@ -43,6 +47,7 @@ public class StoryModeManager : MonoBehaviour
     {
         CheckLevel();
         teamButton.onClick.AddListener(()=> OnClickTeamButton());
+        inventoryButton.onClick.AddListener(() => OnclickInventoryPanel());
     }
 
     #region level
@@ -103,6 +108,14 @@ public class StoryModeManager : MonoBehaviour
         QuestManager.Instance.closeQuestButton.gameObject.SetActive(false);
 
         teamPanel.SetActive(!teamPanel.activeInHierarchy);
+    }
+    private void OnclickInventoryPanel()
+    {
+        QuestManager.Instance.questsPanel.SetActive(false);
+        QuestManager.Instance.openQuestButton.gameObject.SetActive(true);
+        QuestManager.Instance.closeQuestButton.gameObject.SetActive(false);
+
+        inventoryPanel.SetActive(!inventoryPanel.activeInHierarchy);
     }
 
     #endregion
