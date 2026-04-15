@@ -55,7 +55,7 @@ public enum EffectiveTarget{target, Initiator,}
 [System.Serializable]
 public class ValueEntry
 {
-    public EffectiveTarget valueTurget;
+    public EffectiveTarget valueTarget;
     public TargetValue targetValue;
     public float multiplier = 1f;
     public ContinuedEffect continuedEffect;
@@ -80,6 +80,9 @@ public class EffectEntry
     public int maxTargets = 1;          // 目標數上限
     public int minTargets = 0;          // 目標數下限
     public List<Effect> effects;        // 對該目標套用的效果
+    public bool random = false;
+    public int randomCount;
+    public ValueEntry randomCountEntry;
 }
 // 效果
 [System.Serializable]

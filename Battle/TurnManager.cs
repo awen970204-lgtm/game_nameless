@@ -450,7 +450,7 @@ public class TurnManager : MonoBehaviour
         selectedTargets = new List<CharacterHealth>
         (selectedTargets.Where(c => !LimitChecker.Limited(entry.targetsNeeds, c, user)));
 
-        yield return EffectExecutor.ApplyEffects(user, selectedTargets, entry.effects);
+        yield return EffectExecutor.ApplyEffects(user, selectedTargets, entry.effects, entry);
     }
 
     public IEnumerator EnqueueEffectEntry(EffectEntry entry, CharacterHealth user, ActionType actionType,
@@ -523,7 +523,7 @@ public class TurnManager : MonoBehaviour
 
                 targets = targets.Take(firstEntry.maxTargets).ToList();
                 
-                yield return EffectExecutor.ApplyEffects(firstUser, targets, firstEntry.effects);
+                yield return EffectExecutor.ApplyEffects(firstUser, targets, firstEntry.effects, firstEntry);
             }
             else
             {
@@ -583,7 +583,7 @@ public class TurnManager : MonoBehaviour
                     }
                     else
                     {
-                        yield return EffectExecutor.ApplyEffects(firstUser, selectedTargets, firstEntry.effects);
+                        yield return EffectExecutor.ApplyEffects(firstUser, selectedTargets, firstEntry.effects, firstEntry);
                     }
                 }
                 else

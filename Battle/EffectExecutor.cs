@@ -5,11 +5,19 @@ using System.Linq;
 
 public static class EffectExecutor
 {
-    public static IEnumerator ApplyEffects(CharacterHealth user, List<CharacterHealth> targets, List<Effect> effects)
+    public static IEnumerator ApplyEffects(CharacterHealth user, List<CharacterHealth> targets, List<Effect> effects,
+        EffectEntry effectEntry)
     {
         // 建立副本避免被修改
         var targetsCopy = new List<CharacterHealth>(targets);
         var effectsCopy = new List<Effect>(effects);
+        if (effectEntry.random)
+        {
+            effectsCopy = effectsCopy
+            .OrderBy(_ => Random.value)
+            .Take(GetValue(effectEntry.randomCountEntry, user, user) + effectEntry.randomCount)
+            .ToList();
+        }
 
         foreach (var target in targetsCopy)
         {
@@ -160,7 +168,7 @@ public static class EffectExecutor
     public static int GetValue(ValueEntry targetEntry, CharacterHealth user, CharacterHealth target)
     {
         CharacterHealth ch = null;
-        switch (targetEntry.valueTurget)
+        switch (targetEntry.valueTarget)
         {
             case EffectiveTarget.Initiator:
                 ch = user;
