@@ -71,12 +71,17 @@ public class CharacterHealth : MonoBehaviour
     [HideInInspector] public List<Skill> invalidSkills = new List<Skill>();
     [HideInInspector] public List<PassiveSkill> invalidPassiveSkills = new List<PassiveSkill>();
     [HideInInspector] public bool IsAlive = true;
+
     [HideInInspector] public ActionType LastAttackType;
     [HideInInspector] public int lastAttackDamage = 0;
+    [HideInInspector] public CharacterHealth lastAttacker;
+
     [HideInInspector] public ActionType LastDamageType;
     [HideInInspector] public int lastBeAttackedDamage = 0;
+
     [HideInInspector] public ActionType LastHealType;
     [HideInInspector] public int lastHealAmount = 0;
+
     [HideInInspector] public CharacterHealth killer;
     [HideInInspector] public int EnterValue = 0;
     // 單回合記數
@@ -291,7 +296,7 @@ public class CharacterHealth : MonoBehaviour
     }
 
     #region Character Acting
-    public IEnumerator ReadyToAttact(int damage, CharacterHealth injured) // 受傷前
+    public IEnumerator ReadyToAttact(int damage, CharacterHealth injured) // 攻擊前
     {
         yield return injured.TakeDamage(damage, this);
     }
@@ -304,6 +309,9 @@ public class CharacterHealth : MonoBehaviour
         currentHealth = Mathf.Clamp(currentHealth, -currentMaxHP, currentMaxHP);
         lastBeAttackedDamage = damage;
         DamageValueInTrun += damage;
+        lastAttacker = attacker;
+        // 是否擊殺
+        if (currentHealth <= 0) killer = attacker;
         
         // 顯示傷害
         Debug.Log($"{attacker.character_data.characterName} 對 {character_data.characterName} 造成 {damage} 點傷害");
@@ -311,8 +319,6 @@ public class CharacterHealth : MonoBehaviour
         UpdateHealthUI();
         TurnManager.Instance.RaiseAnyAttackEvent(attacker, this);
 
-        // 是否擊殺
-        if (currentHealth <= 0) killer = attacker;
 
         yield return new WaitForSeconds(0.1f);
     }

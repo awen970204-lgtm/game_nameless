@@ -30,10 +30,10 @@ public enum Limit
     MaxAffectedDamage,
     MinAffectedDamage,
     // 持有類
-    holdSkill_self,
-    NotHoldSkill_self,
-    holdPassiveSkill_self,
-    NotHoldPassiveSkill_self,
+    holdSkill,
+    NotHoldSkill,
+    holdPassiveSkill,
+    NotHoldPassiveSkill,
     // 手牌數
     holdCards_Max,
     holdCards_Min,
@@ -55,6 +55,11 @@ public enum Limit
     ContinueEffect_StackTimes,
     ContinueEffect_MaxStackTimes,
     ContinueEffect_MinStackTimes,
+    // 角色判斷
+    IsAttacter,
+    IsNotAttacter,
+    IsKiller,
+    IsNotKiller,
 }
 // 檢查限制
 public static class LimitChecker
@@ -161,16 +166,16 @@ public static class LimitChecker
                 break;
             
             // 持有類
-            case Limit.holdSkill_self:
+            case Limit.holdSkill:
                 if (ch.currentSkills.Contains(need.skill))return(true);
                 break;
-            case Limit.NotHoldSkill_self:
+            case Limit.NotHoldSkill:
                 if (!ch.currentSkills.Contains(need.skill))return(true);
                 break;
-            case Limit.holdPassiveSkill_self:
+            case Limit.holdPassiveSkill:
                 if (ch.currentPassiveSkills.Contains(need.passiveSkill))return(true);
                 break;
-            case Limit.NotHoldPassiveSkill_self:
+            case Limit.NotHoldPassiveSkill:
                 if (!ch.currentPassiveSkills.Contains(need.passiveSkill))
                 {
                     Debug.Log($"LimitChecker/{ch.character_data.characterName}未持有被動:{need.passiveSkill.skillName}");
@@ -216,6 +221,19 @@ public static class LimitChecker
             case Limit.holdCards_Wait:
                 if(ch.ownerPlayer.hand.Any(c => c.cardType == Card.CARD_TYPE.WAIT))
                     return(true);
+                break;
+            
+            case Limit.IsAttacter:
+                if (ch.lastAttacker == acting) return true;
+                break;
+            case Limit.IsNotAttacter:
+                if (ch.lastAttacker != acting) return true;
+                break;
+            case Limit.IsKiller:
+                if (ch.killer == acting) return true;
+                break;
+            case Limit.IsNotKiller:
+                if (ch.killer != acting) return true;
                 break;
         }
         return false;   
