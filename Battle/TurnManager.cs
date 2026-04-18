@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Linq;
-using Unity.Mathematics;
 
 public class TurnManager : MonoBehaviour
 {
@@ -421,6 +420,11 @@ public class TurnManager : MonoBehaviour
         List<CharacterHealth> turnOrder = new List<CharacterHealth>();
         turnOrder.AddRange(player1.playerCharacters);
         turnOrder.AddRange(player2.playerCharacters);
+        if (entry.randomTarget)
+        {
+            turnOrder = turnOrder.OrderBy(_ => Random.value)
+            .ToList();
+        }
 
         switch (entry.targetType)
         {
@@ -447,8 +451,11 @@ public class TurnManager : MonoBehaviour
                 selectedTargets = new List<CharacterHealth>(turnOrder.Where(c => c.team != user.team));
                 break;
         }
-        selectedTargets = new List<CharacterHealth>
-        (selectedTargets.Where(c => !LimitChecker.Limited(entry.targetsNeeds, c, user)));
+
+        selectedTargets = selectedTargets
+            .Where(c => !LimitChecker.Limited(entry.targetsNeeds, c, user))
+            .Take(entry.maxTargets)
+            .ToList();
 
         yield return EffectExecutor.ApplyEffects(user, selectedTargets, entry.effects, entry);
     }
@@ -1100,12 +1107,12 @@ public class TurnManager : MonoBehaviour
             float score = CalculateEntryScore(entry, user, target);
             if (score > 0)
             {
-                Debug.Log($"自動選擇目標:{target.character_data.characterName};{math.ceil(score * 100) / 100f}分");
+                Debug.Log($"自動選擇目標:{target.character_data.characterName};{Mathf.FloorToInt(score * 100) / 100f}分");
                 OnTargetToggled(target);
             }
             else
             {
-                Debug.Log($"取消自動選擇目標:{target.character_data.characterName};{math.ceil(score * 100) / 100f}分");
+                Debug.Log($"取消自動選擇目標:{target.character_data.characterName};{Mathf.FloorToInt(score * 100) / 100f}分");
             }
 
             yield return new WaitForSeconds(0.1f);

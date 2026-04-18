@@ -74,6 +74,7 @@ public class EffectEntry
     public TargetType targetType;       // 效果對象
     public List<NeedState> targetsNeeds;
     public bool NeedChoose = false;     // 是否需要玩家手動選擇
+    public bool randomTarget = false;
     public bool canInputValue = false;
     public int MaxInputValue = 1;
     public bool canCancle = true;       // 是否能取消
