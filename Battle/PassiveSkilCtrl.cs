@@ -40,7 +40,7 @@ public class PassiveSkilCtrl : MonoBehaviour
         TurnManager.OnAnyCharacterDead += HandleCharacterDead;
         TurnManager.OnAttackEvent += HandleAttactEvent;
         TurnManager.OnAnyConsumeHP += HandleConsumeHP;
-
+        TurnManager.OnAnyCardPlayed += HandleCardUsed;
     }
     void OnDisable()// 解除訂閱事件
     {
@@ -53,6 +53,7 @@ public class PassiveSkilCtrl : MonoBehaviour
         TurnManager.OnAnyCharacterDead -= HandleCharacterDead;
         TurnManager.OnAttackEvent -= HandleAttactEvent;
         TurnManager.OnAnyConsumeHP -= HandleConsumeHP;
+        TurnManager.OnAnyCardPlayed -= HandleCardUsed;
     }
 
     private void HandleBattleStart() => TryTrigger(TriggerTime.OnBattleStart, self);
@@ -70,6 +71,7 @@ public class PassiveSkilCtrl : MonoBehaviour
     private void HandleBeHealed(CharacterHealth acting) => TryTrigger(TriggerTime.OnBeHealed, acting);
     private void HandleCharacterDead(CharacterHealth acting) => TryTrigger(TriggerTime.OnCharacterDeath, acting);
     private void HandleConsumeHP(CharacterHealth acting) => TryTrigger(TriggerTime.OnConsumeHP, acting);
+    private void HandleCardUsed(CharacterHealth acting, Card card) => TryTrigger(TriggerTime.OnCardPlayed, acting);
 
     // 嘗試執行
     private void TryTrigger(TriggerTime time, CharacterHealth trigger)

@@ -43,7 +43,7 @@ public class SetManager : MonoBehaviour
         // 背景音量
         if (!PlayerPrefs.HasKey("backgroundMusicVolume"))
         {
-            PlayerPrefs.SetFloat("backgroundMusicVolume", 1);
+            PlayerPrefs.SetFloat("backgroundMusicVolume", 5);
         }
         backgroundMusicVolume = PlayerPrefs.GetFloat("backgroundMusicVolume");
         if (EventUI.Instance != null)
@@ -57,7 +57,7 @@ public class SetManager : MonoBehaviour
         // 特效音量
         if (!PlayerPrefs.HasKey("specialEffectsVolume"))
         {
-            PlayerPrefs.SetFloat("specialEffectsVolume", 1);
+            PlayerPrefs.SetFloat("specialEffectsVolume", 5);
         }
         specialEffectsVolume = PlayerPrefs.GetFloat("specialEffectsVolume");
 

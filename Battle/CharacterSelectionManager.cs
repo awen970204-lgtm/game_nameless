@@ -26,8 +26,7 @@ public class CharacterSelectionManager : MonoBehaviour
     public Player player1;
     public Player player2;
     [Header("special")]
-    public GameObject OnDamage;
-    public GameObject OnHeal;
+    public List<GameObject> effectSpecials;
 
     public static Player currentSelectingPlayer;  // 當前正在選角的玩家
     public static bool PVP_Mode = false;

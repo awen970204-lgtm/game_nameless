@@ -177,14 +177,14 @@ public class ToolController : MonoBehaviour
         string acting = $"<color=#0080FF>(P{act.Player_nunber})</color>";
         WriteReport($" {acting}抽了{number}張牌");
     }
-    private void HandleCardPlayBegin(Player act, Card card)
+    private void HandleCardPlayBegin(CharacterHealth act, Card card)
     {
-        string acting = $"<color=#0080FF>(P{act.Player_nunber})</color>";
+        string acting = $"<color=#0080FF>(P{act.ownerPlayer.Player_nunber})</color>";
         WriteReport($" {acting}使用了卡片<color=#FFDD55>{card.cardName}</color>");
     }
-    private void HandleCardPlayed(Player act, Card card)
+    private void HandleCardPlayed(CharacterHealth act, Card card)
     {
-        string acting = $"<color=#0080FF>(P{act.Player_nunber})</color>";
+        string acting = $"<color=#0080FF>(P{act.ownerPlayer.Player_nunber})</color>";
         WriteReport($" {acting}使用完卡片<color=#FFDD55>{card.cardName}</color>");
     }
 

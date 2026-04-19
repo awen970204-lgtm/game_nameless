@@ -60,6 +60,13 @@ public enum Limit
     IsNotAttacter,
     IsKiller,
     IsNotKiller,
+    // 用牌
+    LastUsedNowCard,
+    LastUsedWaitCard,
+    LastUsedDelayCard,
+    // 回合數
+    MaxTurnCounts,
+    MinTurnCounts,
 }
 // 檢查限制
 public static class LimitChecker
@@ -222,6 +229,15 @@ public static class LimitChecker
                 if(ch.ownerPlayer.hand.Any(c => c.cardType == Card.CARD_TYPE.WAIT))
                     return(true);
                 break;
+            case Limit.LastUsedNowCard:
+                if (ch.lastUsedCardType == Card.CARD_TYPE.NOW) return true;
+                break;
+            case Limit.LastUsedWaitCard:
+                if (ch.lastUsedCardType == Card.CARD_TYPE.WAIT) return true;
+                break;
+            case Limit.LastUsedDelayCard:
+                if (ch.lastUsedCardType == Card.CARD_TYPE.DELAY) return true;
+                break;
             
             case Limit.IsAttacter:
                 if (ch.lastAttacker == acting) return true;
@@ -234,6 +250,13 @@ public static class LimitChecker
                 break;
             case Limit.IsNotKiller:
                 if (ch.killer != acting) return true;
+                break;
+
+            case Limit.MaxTurnCounts:
+                if (ch.ownerPlayer.turnCount <= MaxLimit) return true;
+                break;
+            case Limit.MinTurnCounts:
+                if (ch.ownerPlayer.turnCount >= MinLimit) return true;
                 break;
         }
         return false;   

@@ -66,6 +66,8 @@ public enum SpecialEffects
     None,
     OnDamage_Normal,
     OnHeal_Normal,
+    buff,
+    debuff,
 }
 
 [System.Serializable]

@@ -111,8 +111,8 @@ public class TurnManager : MonoBehaviour
     // public static event System.Action<CardCtrl> OnCancelCardChoose;
 
     public static event System.Action<Card> OnCardRemove;
-    public static event System.Action<Player, Card> OnAnyCardPlayBegin;
-    public static event System.Action<Player, Card> OnAnyCardPlayed;
+    public static event System.Action<CharacterHealth, Card> OnAnyCardPlayBegin;
+    public static event System.Action<CharacterHealth, Card> OnAnyCardPlayed;
     public static event System.Action<CharacterHealth, Skill> OnAnySkillBegin;
     public static event System.Action<CharacterHealth, Skill> OnAnySkillEnd;
     public static event System.Action<CharacterHealth, PassiveSkill> OnAnyPassiveSkillBegin;
@@ -246,6 +246,7 @@ public class TurnManager : MonoBehaviour
         Debug.Log($"P{actingPlayer.Player_nunber} 回合開始");
         Debug.Log(turnText.text);
         actingPlayer.ISActive = true;
+        actingPlayer.turnCount++;
 
         skillUseCounter.Clear();
         Remake();
@@ -321,7 +322,7 @@ public class TurnManager : MonoBehaviour
     {
         if (cardCtrl == null || user == null || player == null ) return;
 
-        OnAnyCardPlayBegin.Invoke(player, cardCtrl.card_data);
+        OnAnyCardPlayBegin.Invoke(user, cardCtrl.card_data);
 
         StartCoroutine(handleUseCard(cardCtrl, user, player));
     }
@@ -381,8 +382,10 @@ public class TurnManager : MonoBehaviour
     }
     private void UseCardOver(CardCtrl cardCtrl, CharacterHealth user, Player player)
     {
+        user.lastUsedCardType = cardCtrl.card_data.cardType;
+
         Debug.Log($"(P{player.Player_nunber}){cardCtrl.card_data.cardName}:Used");
-        OnAnyCardPlayed.Invoke(player, cardCtrl.card_data);
+        OnAnyCardPlayed.Invoke(user, cardCtrl.card_data);
 
         WaitCardManager.Instance.ResolveCard(cardCtrl);
         user.usingCard = null;
@@ -521,7 +524,7 @@ public class TurnManager : MonoBehaviour
                     continue;
                 }
 
-                List<CharacterHealth> aliveTargets = targets.Where(c => c.currentHealth > 0).ToList();
+                List<CharacterHealth> aliveTargets = new List<CharacterHealth>(targets.Where(c => c.currentHealth > 0));
                 
                 if (aliveTargets.Count == targets.Count || aliveTargets.Count >= firstEntry.maxTargets)
                 {

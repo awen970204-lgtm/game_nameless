@@ -84,6 +84,7 @@ public class CharacterHealth : MonoBehaviour
 
     [HideInInspector] public CharacterHealth killer;
     [HideInInspector] public int EnterValue = 0;
+    [HideInInspector] public Card.CARD_TYPE lastUsedCardType;
     // 單回合記數
     [HideInInspector] public int AttackValueInTrun = 0;
     [HideInInspector] public int DamageValueInTrun = 0;
@@ -468,17 +469,20 @@ public class CharacterHealth : MonoBehaviour
     {
         if (special == SpecialEffects.None)
             yield break;
-        switch (special)
-        {
-            case SpecialEffects.OnDamage_Normal:
-                GameObject OD_N = Instantiate(CharacterSelectionManager.Instance.OnDamage, character_Picture.transform);
-                OD_N.SetActive(true);
-                break;
-            case SpecialEffects.OnHeal_Normal:
-                GameObject OH_N = Instantiate(CharacterSelectionManager.Instance.OnHeal, character_Picture.transform);
-                OH_N.SetActive(true);
-                break;
 
+        GameObject ES = CharacterSelectionManager.Instance.effectSpecials[(int)special - 1];
+        if (ES != null)
+        {
+            switch(special)
+            {
+                case SpecialEffects.OnDamage_Normal:
+                case SpecialEffects.OnHeal_Normal:
+                case SpecialEffects.buff:
+                case SpecialEffects.debuff:
+                    Instantiate(ES, character_Picture.transform);
+                    ES.SetActive(true);
+                    break;
+            }
         }
     }
 

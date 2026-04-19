@@ -27,8 +27,10 @@ public class Player : MonoBehaviour
     public Button SelectButton;
 
     // 判定用
-    // 角色
     [HideInInspector] public bool ISActive = false;
+    [HideInInspector] public int turnCount = 0;
+
+    // 角色
     [HideInInspector] public int MaxMenber = 1;
     [HideInInspector] public List<CharacterHealth> playerCharacters;       // 玩家操控的角色
     [HideInInspector] public List<Card> hand = new List<Card>();           // 手牌
