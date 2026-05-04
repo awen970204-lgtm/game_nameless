@@ -25,6 +25,7 @@ public class Player : MonoBehaviour
     public GameObject discardButton;             // 棄置按鈕
     public GameObject stealCardButton;           // 偷取按鈕
     public Button SelectButton;
+    public Button autoTakeActionButton;
 
     // 判定用
     [HideInInspector] public bool ISActive = false;
@@ -35,7 +36,7 @@ public class Player : MonoBehaviour
     [HideInInspector] public List<CharacterHealth> playerCharacters;       // 玩家操控的角色
     [HideInInspector] public List<Card> hand = new List<Card>();           // 手牌
     [HideInInspector] public List<CardCtrl> handUI = new List<CardCtrl>(); // 手牌
-    public bool AutoActivity = false;
+    [HideInInspector] public bool AutoActivity = false;
     private bool HasTakeAction = false;
 
     private List<Card> drawPile = new List<Card>();    // 當前可抽取
@@ -61,6 +62,7 @@ public class Player : MonoBehaviour
     {
         CharacterSelectionManager.Instance.SetCurrentPlayer(this);
         CharacterSelectionManager.Instance.chosingPamel.SetActive(true);
+        autoTakeActionButton.onClick.AddListener(()=> ChangeAutoTakeButton());
     }
     public void SetPlayerLevel(int level)
     {
@@ -205,7 +207,35 @@ public class Player : MonoBehaviour
     
     #region AutoTakeTurn
 
-    public IEnumerator TakeTurnAction()
+    private void ChangeAutoTakeButton()
+    {
+        if (team == TeamID.Enemy)
+        {
+            Debug.LogWarning("Can't Change Auto!");
+            return;
+        }
+
+        Debug.Log("Change Auto");
+        AutoActivity = !AutoActivity;
+        autoTakeActionButton.GetComponentInChildren<Animator>().enabled = AutoActivity;
+        if (AutoActivity)
+        {
+            TakeTurn();
+        }
+        else
+            StopCoroutine(turnAction);
+    }
+
+    public void TakeTurn()
+    {
+        autoTakeActionButton.GetComponentInChildren<Animator>().enabled = AutoActivity;
+        if (AutoActivity)
+            turnAction = StartCoroutine(TakeTurnAction());
+    }
+
+    private Coroutine turnAction;
+
+    private IEnumerator TakeTurnAction()
     {
         HasTakeAction = true;
         yield return new WaitForSeconds(1f);

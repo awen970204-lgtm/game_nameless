@@ -38,6 +38,7 @@ public class TurnManager : MonoBehaviour
     [HideInInspector] public bool GameStart = false;        // 遊戲開始狀態
     [HideInInspector] public bool TurnEnded = false;        // 回合結束狀態
     [HideInInspector] public bool actionCancelled = false;  // 取消了
+    private int overActionPlayer = 0;
 
     // 技能使用次數
     [HideInInspector] public Dictionary<(CharacterHealth, Skill), int> skillUseCounter
@@ -247,22 +248,31 @@ public class TurnManager : MonoBehaviour
         Debug.Log(turnText.text);
         actingPlayer.ISActive = true;
         actingPlayer.turnCount++;
-
         skillUseCounter.Clear();
         Remake();
+
+        if (overActionPlayer == 0 || overActionPlayer > 2)
+        {
+            overActionPlayer = 0;
+            foreach(var c in player1.playerCharacters)
+            {
+                actingPlayer?.DrawCard(c.DrawCardAtTurnStart);
+            }
+            foreach(var c in player2.playerCharacters)
+            {
+                actingPlayer?.DrawCard(c.DrawCardAtTurnStart);
+            }
+        }
+        
         TurnEnded = false;
         waitingForAction = true;
-        endTurnButton.SetActive(true);
+        endTurnButton?.SetActive(true);
         OnTurnStart?.Invoke(actingPlayer);
-        foreach(var c in actingPlayer.playerCharacters)
-        {
-            actingPlayer?.DrawCard(c.DrawCardAtTurnStart);
-        }
-
-        // 開AI
+        
+        // 開自動
         if (actingPlayer.team == TeamID.Enemy)
         {
-            StartCoroutine(actingPlayer.TakeTurnAction());
+            actingPlayer.TakeTurn();
         }
     }
 
@@ -970,6 +980,7 @@ public class TurnManager : MonoBehaviour
         actingPlayer.ISActive = false;
         waitingForTarget = false;
         waitingForAction = true;
+        overActionPlayer ++;
         Remake();
 
         // 重置技能使用次數
