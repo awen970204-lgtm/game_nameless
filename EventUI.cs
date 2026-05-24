@@ -217,7 +217,17 @@ public class EventUI : MonoBehaviour
                         break;
                     case EventEffect.GetMenber:
                         if (entry.characterData != null)
-                            StoryModeManager.Instance.GetNewMenber(entry.characterData);
+                        {
+                            btn.GetComponent<Button>().onClick.AddListener(() => 
+                                StoryModeManager.Instance.GetNewMenber(entry.characterData));
+                        }
+                        break;
+                    case EventEffect.GetItem:
+                        if (entry.itemData != null)
+                        {
+                            btn.GetComponent<Button>().onClick.AddListener(() => 
+                                StoryModeManager.Instance.GetItem(entry.itemData, entry.value));
+                        }
                         break;
                 }
                 if (choice.recordEvent)
@@ -384,6 +394,12 @@ public class EventUI : MonoBehaviour
                     if (entry.characterData != null)
                         StoryModeManager.Instance.GetNewMenber(entry.characterData);
                     break;
+                case EventEffect.GetItem:
+                    if (entry.itemData != null)
+                    {
+                        StoryModeManager.Instance.GetItem(entry.itemData, entry.value);
+                    }
+                    break;
             }
         }
         
@@ -450,6 +466,12 @@ public class EventUI : MonoBehaviour
                         case EventEffect.GetMenber:
                             if (entry.characterData != null)
                                 StoryModeManager.Instance.GetNewMenber(entry.characterData);
+                            break;
+                        case EventEffect.GetItem:
+                            if (entry.itemData != null)
+                            {
+                                StoryModeManager.Instance.GetItem(entry.itemData, entry.value);
+                            }
                             break;
                     }
                 }

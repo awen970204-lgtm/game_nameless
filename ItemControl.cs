@@ -18,4 +18,11 @@ public class ItemControl : MonoBehaviour
             itemName.text = item.itemName;
         }
     }
+
+    public void SetUp(Item target)
+    {
+        item = target;
+        itemPicter.sprite = target.itemPicture;
+        itemName.text = target.itemName;
+    }
 }

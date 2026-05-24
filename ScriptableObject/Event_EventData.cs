@@ -24,6 +24,7 @@ public class Choices
 public class EventEffectEntry
 {
     public EventEffect eventEffect;
+    public int value;
 
     public EventData eventData;
     public DialogueData dialogueData;
@@ -31,6 +32,7 @@ public class EventEffectEntry
     public QuestData questData;
     public Character characterData;
     public StoryEnd storyEndData;
+    public Item itemData;
 }
 public enum EventEffect
 {
@@ -43,7 +45,7 @@ public enum EventEffect
     EndStory,
     // 遊戲資源
     GetMenber,
-
+    GetItem,
 }
 
 

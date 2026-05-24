@@ -30,6 +30,11 @@ public class StoryModeManager : MonoBehaviour
 
     public Button inventoryButton;
     public GameObject inventoryPanel;
+    
+    [Header("Item")]
+    public GameObject itemPrefab;
+    public Transform itemContent;
+    public static Dictionary<Item, int> items = new Dictionary<Item, int>();
 
     [Header("Activity")]
     public GameObject activityPrefab;
@@ -75,6 +80,25 @@ public class StoryModeManager : MonoBehaviour
 
         levelText.text = $"Level:{playerLevel}({nowExperience}/{levelupExperience})";
     }
+    #endregion
+
+    #region item
+
+    public void GetItem(Item item, int times)
+    {
+        if (items.ContainsKey(item))
+        {
+            items[item] += times;
+        }
+        else
+        {
+            items[item] = times;
+            GameObject go = Instantiate(itemPrefab, itemContent);
+            ItemControl itemControl = go.GetComponent<ItemControl>();
+            itemControl?.SetUp(item);
+        }
+    }
+
     #endregion
 
     #region character
