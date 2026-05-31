@@ -154,13 +154,14 @@ public static class EffectExecutor
                 break;
             // 角色召喚
             case EffectType.SummonTeammate:
-                yield return CharacterSelectionManager.Instance.CreateCharacter(effect.character, target.ownerPlayer);
+                yield return CharacterSelectionManager.Instance.CreateCharacter(effect.character, target.ownerPlayer, user);
                 break;
             case EffectType.SummonEnemy:
                 yield return CharacterSelectionManager.Instance.CreateCharacter(effect.character, 
                 (target.ownerPlayer == CharacterSelectionManager.Instance.player1) ? 
                     CharacterSelectionManager.Instance.player2 : 
-                    CharacterSelectionManager.Instance.player1);
+                    CharacterSelectionManager.Instance.player1,
+                    user);
                 break;
         }
     }

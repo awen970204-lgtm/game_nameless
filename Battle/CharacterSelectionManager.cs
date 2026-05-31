@@ -147,12 +147,12 @@ public class CharacterSelectionManager : MonoBehaviour
             player1.MaxMenber = data.teammates.Length;
         foreach(var c in data.teammates)
         {
-            yield return CreateCharacter(c, player1);
+            yield return CreateCharacter(c, player1, null);
         }
         player2.MaxMenber = data.enemys.Length;
         foreach(var c in data.enemys)
         {
-            yield return CreateCharacter(c, player2);
+            yield return CreateCharacter(c, player2, null);
         }
 
         StartChose();
@@ -188,10 +188,10 @@ public class CharacterSelectionManager : MonoBehaviour
             }
         }
 
-        StartCoroutine(CreateCharacter(characterData, currentSelectingPlayer));
+        StartCoroutine(CreateCharacter(characterData, currentSelectingPlayer, null));
         currentSelectingPlayer = null;
     }
-    public IEnumerator CreateCharacter(Character characterData, Player player) // 生成角色
+    public IEnumerator CreateCharacter(Character characterData, Player player, CharacterHealth summoner) // 生成角色
     {
         if (player.playerCharacters.Count >= player.MaxMenber)
         {
@@ -262,6 +262,10 @@ public class CharacterSelectionManager : MonoBehaviour
             player.playerCharacters[i].transform.SetSiblingIndex(i);
         }
 
+        if (summoner != null)
+        {
+            ch_H.summoner = summoner;
+        }
     }
     public IEnumerator ShowTeamMenbers(Player player) // 顯示隊伍人數
     {

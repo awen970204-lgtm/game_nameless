@@ -151,6 +151,13 @@ public class PassiveSkilCtrl : MonoBehaviour
                                 toTrigger.Add(skill);
                             }
                             break;
+                        case Trigger_Character.summoner:
+                            if (self.summoner != null && trigger == self.summoner)
+                            {
+                                Executable_PassiveEntry.Add(passive_entry);
+                                toTrigger.Add(skill);
+                            }
+                            break;
                     }
                 }
             }

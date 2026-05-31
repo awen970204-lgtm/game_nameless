@@ -18,6 +18,7 @@ public class CharacterHealth : MonoBehaviour
 {
     [HideInInspector] public Player ownerPlayer;
     [HideInInspector] public CardCtrl usingCard;
+    [HideInInspector] public CharacterHealth summoner;
 
     [Header("CharacterSystems")]
     public Character character_data;

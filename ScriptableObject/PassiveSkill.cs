@@ -11,6 +11,7 @@ public enum Trigger_Character
     teammate,
     enemy,
     otherTeammate,
+    summoner,
     // 繼續添加...
 }
 // 觸發時機

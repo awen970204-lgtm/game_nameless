@@ -239,6 +239,9 @@ public class ContinuedEffectCtrl : MonoBehaviour
                     case Trigger_Character.otherTeammate:
                         match = (acting.team == self.team && acting != self);
                         break;
+                    case Trigger_Character.summoner:
+                        match = (acting == self.summoner && self.summoner != null);
+                        break;
                 }
                 if (!match) continue;
                 
