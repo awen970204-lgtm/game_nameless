@@ -3,6 +3,7 @@ using System.Collections;
 using System;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using TMPro;
 using Unity.VisualScripting;
@@ -35,6 +36,7 @@ public class MenuManager : MonoBehaviour
 
     [Header("Menu Sets")]
     [SerializeField] private Button ExitGameButton;
+    [SerializeField] private GameObject ExitGamePanel;
     [SerializeField] private GameObject illuatratedGuidePanel;
     [SerializeField] private Button illuatratedGuideButton;
     [SerializeField] private Transform panelTransform;
@@ -282,6 +284,32 @@ public class MenuManager : MonoBehaviour
         basePanel.transform.GetChild(0).gameObject.SetActive(false);
         basePanel.transform.GetChild(1).gameObject.SetActive(false);
         basePanel.transform.GetChild(2).gameObject.SetActive(!active);
+    }
+
+    void Update()
+    {
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            if (ExitGamePanel.activeInHierarchy)
+            {
+                ExitGamePanel.SetActive(false);
+            }
+            else if (panelTransform.childCount > 0)
+            {
+                Destroy(panelTransform.transform.GetChild(panelTransform.childCount - 1).gameObject);
+            }
+            else if (basePanel.activeInHierarchy)
+            {
+                basePanel.SetActive(false);
+                basePanel.transform.GetChild(0).gameObject.SetActive(false);
+                basePanel.transform.GetChild(1).gameObject.SetActive(false);
+                basePanel.transform.GetChild(2).gameObject.SetActive(false);
+            }
+            else if (!ExitGamePanel.activeInHierarchy)
+            {
+                ExitGamePanel.SetActive(true);
+            }
+        }
     }
 
     void StartStoryMode()
@@ -674,6 +702,9 @@ public class MenuManager : MonoBehaviour
     void OnEnemyToggleChange(bool isOn) // 啟用電腦
     {
         useEnemyAI = isOn;
+        enemyLevelText.text = useEnemyAI ? 
+            $"Enemy_Level:{enemyLevel}" : 
+            $"Player2_Level:{enemyLevel}";
         PlayerPrefs.SetInt("FreeModeSet:EnemyAI", isOn ? 1 : 0);
     }
 
@@ -699,7 +730,7 @@ public class MenuManager : MonoBehaviour
             playerLevel = Mathf.Max(1 ,Mathf.FloorToInt(playerLevelSlider.minValue));
 
         playerLevelSlider.value = playerLevel;
-        playerLevelText.text = $"Enemy_Level:{playerLevel}";
+        playerLevelText.text = $"Player1_Level:{playerLevel}";
         PlayerPrefs.SetInt("FreeModePlayerLevel", playerLevel);
     }
     void PlusEnemyLevel(int value)
@@ -711,7 +742,9 @@ public class MenuManager : MonoBehaviour
             enemyLevel = Mathf.Max(1 ,Mathf.FloorToInt(enemyLevelSlider.minValue));
 
         enemyLevelSlider.value = enemyLevel;
-        enemyLevelText.text = $"Enemy_Level:{enemyLevel}";
+        enemyLevelText.text = useEnemyAI ? 
+            $"Enemy_Level:{enemyLevel}" : 
+            $"Player2_Level:{enemyLevel}";
         PlayerPrefs.SetInt("FreeModeEnemyLevel", enemyLevel);
     }
 
