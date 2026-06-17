@@ -266,7 +266,10 @@ public class CharacterSelectionManager : MonoBehaviour
         {
             ch_H.summoner = summoner;
         }
+        // 事件
+        TurnManager.Instance.RaiseAnyCharacterEntry(ch_H);
     }
+
     public IEnumerator ShowTeamMenbers(Player player) // 顯示隊伍人數
     {
         player.PlayerMenbers.text = $"{player.playerCharacters.Count}/{player.MaxMenber}";

@@ -30,6 +30,7 @@ public enum TriggerTime
     OnLoseEffect,
     OnConsumeHP,
     OnBattleStart,
+    OnCharacterEnter,
     // 繼續添加...
 }
 

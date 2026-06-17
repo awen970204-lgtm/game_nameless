@@ -37,6 +37,7 @@ public class PassiveSkilCtrl : MonoBehaviour
         TurnManager.OnTurnStart += HandleTurnStart;
         TurnManager.OnTurnEnd += HandleTurnEnd;
         TurnManager.OnAnyBeHealed += HandleBeHealed;
+        TurnManager.OnAnyCharacterEnter += HandleCharacterEnter;
         TurnManager.OnAnyCharacterDead += HandleCharacterDead;
         TurnManager.OnAttackEvent += HandleAttactEvent;
         TurnManager.OnAnyConsumeHP += HandleConsumeHP;
@@ -50,11 +51,14 @@ public class PassiveSkilCtrl : MonoBehaviour
         TurnManager.OnTurnStart -= HandleTurnStart;
         TurnManager.OnTurnEnd -= HandleTurnEnd;
         TurnManager.OnAnyBeHealed -= HandleBeHealed;
+        TurnManager.OnAnyCharacterEnter -= HandleCharacterEnter;
         TurnManager.OnAnyCharacterDead -= HandleCharacterDead;
         TurnManager.OnAttackEvent -= HandleAttactEvent;
         TurnManager.OnAnyConsumeHP -= HandleConsumeHP;
         TurnManager.OnAnyCardPlayed -= HandleCardUsed;
     }
+
+    #region handle event
 
     private void HandleBattleStart() => TryTrigger(TriggerTime.OnBattleStart, self);
     private void HandleTurnStart(Player player) => TryTrigger(TriggerTime.OnTurnStart, 
@@ -69,9 +73,12 @@ public class PassiveSkilCtrl : MonoBehaviour
         TryTrigger(TriggerTime.OnBeAttacted, injured);
     }
     private void HandleBeHealed(CharacterHealth acting) => TryTrigger(TriggerTime.OnBeHealed, acting);
+    private void HandleCharacterEnter(CharacterHealth acting) => TryTrigger(TriggerTime.OnCharacterEnter, acting);
     private void HandleCharacterDead(CharacterHealth acting) => TryTrigger(TriggerTime.OnCharacterDeath, acting);
     private void HandleConsumeHP(CharacterHealth acting) => TryTrigger(TriggerTime.OnConsumeHP, acting);
     private void HandleCardUsed(CharacterHealth acting, Card card) => TryTrigger(TriggerTime.OnCardPlayed, acting);
+
+    #endregion
 
     // 嘗試執行
     private void TryTrigger(TriggerTime time, CharacterHealth trigger)

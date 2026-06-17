@@ -104,6 +104,7 @@ public class TurnManager : MonoBehaviour
     }
 
     #region Event
+
     public static event System.Action OnBattleBegin;
     public static event System.Action OnCancleChoose;
     public static event System.Action<Player> OnTurnStart;
@@ -120,6 +121,7 @@ public class TurnManager : MonoBehaviour
     public static event System.Action<CharacterHealth, PassiveSkill> OnAnyPassiveSkillEnd;
     public static event System.Action<CharacterHealth> OnAnyConsumeHP;
     public static event System.Action<CharacterHealth> OnAnyBeHealed;
+    public static event System.Action<CharacterHealth> OnAnyCharacterEnter;//
     public static event System.Action<CharacterHealth> OnAnyCharacterDead;
 
     public static event System.Action<CharacterHealth, CharacterHealth> OnAttackEvent;
@@ -128,6 +130,7 @@ public class TurnManager : MonoBehaviour
     public void RaiseAnyAttackEvent(CharacterHealth attacker, CharacterHealth injured) => OnAttackEvent?.Invoke(attacker, injured);
     public void RaiseAnyConsumeHP(CharacterHealth ch) => OnAnyConsumeHP?.Invoke(ch);
     public void RaiseAnyBeHealed(CharacterHealth ch) => OnAnyBeHealed?.Invoke(ch);
+    public void RaiseAnyCharacterEntry(CharacterHealth ch) => OnAnyCharacterEnter?.Invoke(ch);
     public void RaiseAnyCharacterDead(CharacterHealth ch) => OnAnyCharacterDead?.Invoke(ch);
     public void RaiseAnyOnCardRemove(Card card) => OnCardRemove?.Invoke(card);
     #endregion
@@ -201,7 +204,23 @@ public class TurnManager : MonoBehaviour
         GameStart = true;
         waitingForAction = true;
         OnBattleBegin?.Invoke();
-        StartCoroutine(StartTurnDelay());
+
+        StartCoroutine(StartBattleDelay());
+    }
+
+    private IEnumerator StartBattleDelay()
+    {
+        List<CharacterHealth> characters = new List<CharacterHealth>(player1.playerCharacters);
+        characters.AddRange(player2.playerCharacters);
+        foreach(var ch in characters)
+        {
+            RaiseAnyCharacterEntry(ch);
+        }
+        yield return new WaitForSeconds(0.1f);
+
+        yield return new WaitUntil(()=> waitingForAction && !waitingForTarget && WaitCardManager.Instance.IsIdle);
+
+        yield return StartTurnDelay();
     }
 
     #region Turn Start

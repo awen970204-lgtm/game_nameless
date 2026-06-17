@@ -39,6 +39,7 @@ public class ContinuedEffectCtrl : MonoBehaviour
         TurnManager.OnTurnEnd += HandleTurnEnd;
         TurnManager.OnAttackEvent += HandleAttactEvent;
         TurnManager.OnAnyBeHealed += HandleBeHealed;
+        TurnManager.OnAnyCharacterEnter += HandleCharacterEnter;
         TurnManager.OnAnyCharacterDead += HandleCharacterDead;
         TurnManager.OnRealTurnEnd += HandleRealTurnEnd;
         ContinuedEffectCtrl.OnEffectGot += HandleEffectGot;
@@ -53,6 +54,7 @@ public class ContinuedEffectCtrl : MonoBehaviour
         TurnManager.OnTurnEnd -= HandleTurnEnd;
         TurnManager.OnAttackEvent -= HandleAttactEvent;
         TurnManager.OnAnyBeHealed -= HandleBeHealed;
+        TurnManager.OnAnyCharacterEnter -= HandleCharacterEnter;
         TurnManager.OnAnyCharacterDead -= HandleCharacterDead;
         TurnManager.OnRealTurnEnd -= HandleRealTurnEnd;
         ContinuedEffectCtrl.OnEffectGot -= HandleEffectGot;
@@ -264,7 +266,8 @@ public class ContinuedEffectCtrl : MonoBehaviour
         OnEffectTriggered?.Invoke(effect, self);
     }
 
-    // 不同時機觸發
+    #region handle event
+
     private void HandleBattleStart() => TryTrigger(TriggerTime.OnBattleStart, self);
     private void HandleTurnStart(Player player) => TryTrigger(TriggerTime.OnTurnStart, 
         TurnManager.Instance.actingPlayer.team == self.team ? 
@@ -273,6 +276,7 @@ public class ContinuedEffectCtrl : MonoBehaviour
         TurnManager.Instance.actingPlayer.team == self.team ? 
         self : TurnManager.Instance.actingPlayer.playerCharacters.Find(c => c.currentHealth > 0));
     private void HandleBeHealed(CharacterHealth acting) => TryTrigger(TriggerTime.OnBeHealed, acting);
+    private void HandleCharacterEnter(CharacterHealth acting) => TryTrigger(TriggerTime.OnCharacterEnter, acting);
     private void HandleCharacterDead(CharacterHealth acting) => TryTrigger(TriggerTime.OnCharacterDeath, acting);
     private void HandleAttactEvent(CharacterHealth attacker, CharacterHealth injured)
     {
@@ -302,4 +306,6 @@ public class ContinuedEffectCtrl : MonoBehaviour
             e.triggerCount = 0;
         }
     }
+
+    #endregion
 }
