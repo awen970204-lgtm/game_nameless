@@ -83,9 +83,9 @@ public class EffectEntry
     public int maxTargets = 1;          // 目標數上限
     public int minTargets = 0;          // 目標數下限
     public List<Effect> effects;        // 對該目標套用的效果
-    public bool random = false;
-    public int randomCount;
-    public ValueEntry randomCountEntry;
+    public bool randomEffects = false;
+    public int randomCounts;
+    public ValueEntry randomCountsEntry;
 }
 // 效果
 [System.Serializable]

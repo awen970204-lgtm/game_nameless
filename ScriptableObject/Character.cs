@@ -20,6 +20,8 @@ public class Character : ScriptableObject
         Magicians,
     }
 
+    public int serialNumber = 0; // 編號
+
     public CharacterGender characterGender;   //性別類型 
     public string characterName;           //角色名
     public Sprite characterPicture;        //角色表現圖

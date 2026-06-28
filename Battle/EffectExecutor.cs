@@ -11,11 +11,11 @@ public static class EffectExecutor
         // 建立副本避免被修改
         var targetsCopy = new List<CharacterHealth>(targets);
         var effectsCopy = new List<Effect>(effects);
-        if (effectEntry.random)
+        if (effectEntry.randomEffects)
         {
             effectsCopy = effectsCopy
             .OrderBy(_ => Random.value)
-            .Take(GetValue(effectEntry.randomCountEntry, user, user) + effectEntry.randomCount)
+            .Take(GetValue(effectEntry.randomCountsEntry, user, user) + effectEntry.randomCounts)
             .ToList();
         }
 

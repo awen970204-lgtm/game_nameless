@@ -18,19 +18,19 @@ public enum Trigger_Character
 public enum TriggerTime
 {
     None,
+    OnBattleStart,
     OnTurnStart,
     OnTurnEnd,
+    OnRealTurnEnd,
     OnAttact,
     OnBeAttacted,
     OnBeHealed,
+    OnConsumeHP,
+    OnCharacterEnter,
     OnCharacterDeath,
     OnCardPlayed,
-    OnRealTurnEnd,
     OnGetEffect,
     OnLoseEffect,
-    OnConsumeHP,
-    OnBattleStart,
-    OnCharacterEnter,
     // 繼續添加...
 }
 

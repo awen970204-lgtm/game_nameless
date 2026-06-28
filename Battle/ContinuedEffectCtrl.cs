@@ -65,7 +65,7 @@ public class ContinuedEffectCtrl : MonoBehaviour
     {
         if (effect == null) yield break;
         if (effect.MaxOverlay <= 0) yield break;
-        if (effect.Duration <= 0) yield break;
+        if (effect.Duration <= 0 && effect.endable) yield break;
 
         // 取得同類效果
         var sameEffects = activeEffects
