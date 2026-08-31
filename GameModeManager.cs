@@ -115,8 +115,8 @@ public class GameModeManager : MonoBehaviour
             StoryModeManager.Instance?.GetNewMenber(pendingInitialCharacter);
         }
 
-        GameCharacterManager.Instance.SetActing(GameCharacterManager.Instance.actingCharacter);
-        GameCharacterManager.Instance.StorySet();
+        // GameCharacterManager.Instance.SetActing(GameCharacterManager.Instance.actingCharacter);
+        // GameCharacterManager.Instance.StorySet();
     }
 
     public void ContinueStory() // 繼續遊戲
