@@ -42,10 +42,20 @@ public enum EventEffect
     OpenNewBattle,
     ClosureEvent,
     GetQuest,
+    OverFloor,
     EndStory,
     // 遊戲資源
     GetMenber,
     GetItem,
 }
-
+// Event display
+public enum EventCategory
+{
+    NonCombat,      // 無戰鬥 / 純敘事
+    NormalBattle,   // 一般戰鬥
+    HardBattle,     // 困難戰鬥 / 精英
+    Shop,           // 商店
+    Rest,           // 休息點
+    Boss            // BOSS 戰
+}
 

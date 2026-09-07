@@ -115,8 +115,11 @@ public class GameModeManager : MonoBehaviour
             StoryModeManager.Instance?.GetNewMenber(pendingInitialCharacter);
         }
 
+        if (GameCharacterManager.Instance != null)
+        {
         // GameCharacterManager.Instance.SetActing(GameCharacterManager.Instance.actingCharacter);
         // GameCharacterManager.Instance.StorySet();
+        }
     }
 
     public void ContinueStory() // 繼續遊戲
