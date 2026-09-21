@@ -6,7 +6,7 @@ public class FloorManager : MonoBehaviour
 {
     public static FloorManager Instance { get; private set; }
 
-    public static List<FloorEventEntry> floorEventEntries = new List<FloorEventEntry>();
+    public List<FloorEventEntry> floorEventEntries = new List<FloorEventEntry>();
 
     void Awake()
     {
