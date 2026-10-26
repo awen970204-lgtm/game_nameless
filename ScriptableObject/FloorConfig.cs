@@ -19,45 +19,73 @@ public class FloorEventCondition
 {
     [Header("樓層限制")]
     public int minFloorLevel = 1;
+    public int maxFloorLevel = 999;
 
-    [Header("任務/紀錄 前置需求")]
-    public List<QuestData> requiredQuests;       // 必須任務
-    public List<QuestData> requiredOverQuests;   // 必須已完成的任務
-    public List<EventData> requiredOverEvents;   // 必須已觸發過的事件
-    public List<EventBattleData> requiredOverBattles; // 必須戰鬥
+    [Header("要有的 任務/紀錄 前置需求")]
+    public List<QuestData> reqQuests;           // 進行中的任務
+    public List<QuestData> reqCompletedQuests;  // 已完成的任務
+    public List<EventData> reqCompletedEvents;  // 已觸發過的事件
+    public List<EventBattleData> reqCompletedBattles; // 已完成的戰鬥
+
+    [Header("不能有的 任務/紀錄 前置需求")]
+    public List<QuestData> excludeQuests;           // 不能進行中的任務
+    public List<QuestData> excludeCompletedQuests;  // 不能已完成的任務
+    public List<EventData> excludeCompletedEvents;  // 不能已觸發過的事件
+    public List<EventBattleData> excludeCompletedBattles; // 不能已完成的戰鬥
 
     // 檢查當前條件是否滿足
     public bool IsSatisfied(int currentFloor)
     {
         // 1. 樓層檢查
-        if (currentFloor < minFloorLevel) return false;
+        if (currentFloor <= minFloorLevel && currentFloor >= maxFloorLevel) 
+            return false;
 
-        // 2. 必須接取過任務檢查
-        if (requiredQuests != null)
+        // 2. 接取過任務檢查
+        if (reqQuests != null)
         {
-            foreach (var q in requiredQuests)
+            foreach (var q in reqQuests)
                 if (!QuestManager.MainQuests.Contains(q)) return false;
         }
-
-        // 3. 必須完成任務檢查
-        if (requiredOverQuests != null)
+        if (excludeQuests != null)
         {
-            foreach (var q in requiredOverQuests)
+            foreach(var q in excludeQuests)
+                if (QuestManager.MainQuests.Contains(q)) return false;
+        }
+
+        // 3. 完成任務檢查
+        if (reqCompletedQuests != null)
+        {
+            foreach (var q in reqCompletedQuests)
                 if (!QuestManager.OverQuests.Contains(q)) return false;
         }
-
-        // 4. 必須完成事件檢查
-        if (requiredOverEvents != null)
+        if (excludeCompletedQuests != null)
         {
-            foreach (var e in requiredOverEvents)
-                if (!QuestManager.OverEvents.Contains(e)) return false;
+            foreach (var q in excludeCompletedQuests)
+                if (QuestManager.OverQuests.Contains(q)) return false;
         }
 
-        // 5. 必須完成戰鬥檢查
-        if (requiredOverBattles != null)
+        // 4. 完成事件檢查
+        if (reqCompletedEvents != null)
         {
-            foreach (var b in requiredOverBattles)
+            foreach (var e in reqCompletedEvents)
+                if (!QuestManager.OverEvents.Contains(e)) return false;
+        }
+        if (excludeCompletedEvents != null)
+        {
+            foreach (var e in excludeCompletedEvents)
+                if (QuestManager.OverEvents.Contains(e)) return false;
+        }
+
+        // 5. 完成戰鬥檢查
+        if (reqCompletedBattles != null)
+        {
+            foreach (var b in reqCompletedBattles)
                 if (!QuestManager.OverBattles.Contains(b)) return false;
+        }
+        if (excludeCompletedBattles != null)
+        {
+            foreach (var b in excludeCompletedBattles)
+                if (QuestManager.OverBattles.Contains(b)) return false;
         }
 
         return true;

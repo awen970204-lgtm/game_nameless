@@ -35,6 +35,7 @@ public class GameModeManager : MonoBehaviour
     public CanvasGroup canvasGroup;
     public TMP_Text tip;
     [SerializeField] private float fadeDuration = 1f;
+
     [Header("Data")]
     public List<string> fadeTips = new List<string>();
     public List<Card> defaultCards = new List<Card>();
@@ -84,11 +85,21 @@ public class GameModeManager : MonoBehaviour
 
         gameMode = GameMode.story;
         GameStarted = true;
-        GamecharacterControl.CanMove = true;
+        // GamecharacterControl.CanMove = true;
         foreach(var character in characterDatas)
         {
             PlayerPrefs.SetInt($"PlayerHoldCharacter{GameModeManager.Instance.characterDatas.IndexOf(character)}InStory", 0);
         }
+        foreach(var quest in questDatas)
+        {
+            PlayerPrefs.SetInt($"StoryModeHasQuest{questDatas.IndexOf(quest)}" , -1);
+        }
+        foreach(var card in cardDatas)
+        {
+            PlayerPrefs.SetInt($"StoryModeHoldCard{cardDatas.IndexOf(card)}" , -1);
+            
+        }
+
         StartCoroutine(StoryModeBegin());
     }
     private IEnumerator StoryModeBegin()
@@ -99,15 +110,12 @@ public class GameModeManager : MonoBehaviour
         
         GameCharacters?.SetActive(true);
         GameEventUI?.SetActive(true);
-        EventUI.Instance?.StoryUI.SetActive(true);
-        EventUI.Instance?.SetPanel.SetActive(false);
-        EventUI.Instance?.eventPanel.SetActive(false);
-        EventUI.Instance?.DialoguePanel.SetActive(false);
-        EventUI.Instance?.panel.SetActive(false);
+
+        EventUI.Instance?.SetStoryMode();
 
         QuestManager.Instance?.SetStoryMode();
 
-        StoryModeManager.cards.AddRange(defaultCards);
+        // StoryModeManager.cards.AddRange(defaultCards);
         StoryModeManager.Instance?.RemakeLevel();
 
         if (pendingInitialCharacter != null)
@@ -120,6 +128,8 @@ public class GameModeManager : MonoBehaviour
         // GameCharacterManager.Instance.SetActing(GameCharacterManager.Instance.actingCharacter);
         // GameCharacterManager.Instance.StorySet();
         }
+
+        FloorManager.Instance.GameStart();
     }
 
     public void ContinueStory() // 繼續遊戲
@@ -153,12 +163,14 @@ public class GameModeManager : MonoBehaviour
         }
         foreach(var card in cardDatas)
         {
-            if (PlayerPrefs.GetInt($"StoryModeHoldCard{GameModeManager.Instance.cardDatas.IndexOf(card)}") == 1)
+            if (PlayerPrefs.GetInt($"StoryModeHoldCard{cardDatas.IndexOf(card)}") == 1)
                 StoryModeManager.cards.Add(card);
         }
-        
-        GameCharacterManager.Instance.SetActing(GameCharacterManager.Instance.actingCharacter);
-        GameCharacterManager.Instance.StorySet();
+
+        FloorManager.Instance.GameContinue();
+
+        // GameCharacterManager.Instance.SetActing(GameCharacterManager.Instance.actingCharacter);
+        // GameCharacterManager.Instance.StorySet();
     }
 
     public void StartStoryBattle(EventBattleData data)

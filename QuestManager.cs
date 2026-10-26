@@ -47,8 +47,6 @@ public class QuestManager : MonoBehaviour
         openQuestButton.gameObject.SetActive(true);
         closeQuestButton.gameObject.SetActive(false);
 
-        
-
         // 任務預設值
         foreach(var quest in GameModeManager.Instance.questDatas)
         {
@@ -78,7 +76,7 @@ public class QuestManager : MonoBehaviour
         ClearRecords();
         GetQuest(defaultQuest);
         SetCurrentQuest(defaultQuest);
-        EventUI.Instance.StartDialogue(defaultDialogue);
+        // EventUI.Instance.StartDialogue(defaultDialogue);
     }
 
     private void ClearRecords() // 清空紀錄

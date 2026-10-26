@@ -79,7 +79,7 @@ public class EventUI : MonoBehaviour
     }
 
     // 介面互動
-    private IEnumerator SaveStoryMode()
+    private IEnumerator SaveStoryMode() // 保存
     {
         if (!GameModeManager.GameStarted) yield break;
         
@@ -107,6 +107,16 @@ public class EventUI : MonoBehaviour
         {
             PlayerPrefs.SetInt($"StoryModeHoldCard:{GameModeManager.Instance.cardDatas.IndexOf(card)}", 1);
         }
+
+        foreach(var eventEntry in FloorManager.Instance.finishedEventEntries)
+        {
+            PlayerPrefs.SetInt($"finishedEventEntry:"+
+                $"{FloorManager.Instance.finishedEventEntries.IndexOf(eventEntry)}", 1);
+        }
+        PlayerPrefs.SetInt("pendingEventEntry", 
+            FloorManager.Instance.finishedEventEntries
+                .IndexOf(FloorManager.Instance.pendingEventEntry));
+        PlayerPrefs.SetInt("floorNumber", FloorManager.floorNumber);
     }
 
     public void OnPlayerInEvent(EventData Data)
@@ -131,6 +141,15 @@ public class EventUI : MonoBehaviour
             if (triggerEventButton != null)
                 triggerEventButton.SetActive(false);
         }
+    }
+
+    public void SetStoryMode()
+    {
+        StoryUI.SetActive(true);
+        SetPanel.SetActive(false);
+        eventPanel.SetActive(false);
+        DialoguePanel.SetActive(false);
+        panel.SetActive(false);
     }
 
     #region Event
@@ -227,6 +246,13 @@ public class EventUI : MonoBehaviour
                         {
                             btn.GetComponent<Button>().onClick.AddListener(() => 
                                 StoryModeManager.Instance.GetItem(entry.itemData, entry.value));
+                        }
+                        break;
+                    case EventEffect.OverFloor:
+                        if(FloorManager.Instance != null)
+                        {
+                            btn.GetComponent<Button>().onClick.AddListener(() =>
+                                FloorManager.Instance.OverFloor());
                         }
                         break;
                 }
