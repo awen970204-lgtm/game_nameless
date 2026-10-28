@@ -99,4 +99,10 @@ public class FloorManager : MonoBehaviour
     {
         
     }
+
+    public void CompletedSelectionEvent(FloorEventEntry eventEntry)
+    {
+        foreach (Transform child in choiceTransform)
+            Destroy(child.gameObject);
+    }
 }
