@@ -30,7 +30,7 @@ public class FloorChoiceCtrl : MonoBehaviour
         switch (eventEntry.category)
         {
             case FloorEventCategory.NonCombat:
-                eventName.text = "空閒";
+                eventName.text = "事件";
                 break;
             case FloorEventCategory.NormalBattle:
                 eventName.text = "一般戰鬥";
