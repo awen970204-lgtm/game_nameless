@@ -38,14 +38,14 @@ public class FloorChoiceCtrl : MonoBehaviour
             case FloorEventCategory.HardBattle:
                 eventName.text = "菁英戰鬥";
                 break;
-            case FloorEventCategory.Boss:
-                eventName.text = "首領戰鬥";
+            case FloorEventCategory.Shop:
+                eventName.text = "商店";
                 break;
             case FloorEventCategory.Rest:
                 eventName.text = "休整";
                 break;
-            case FloorEventCategory.Shop:
-                eventName.text = "商店";
+            case FloorEventCategory.Boss:
+                eventName.text = "首領戰鬥";
                 break;
             default :
                 eventName.text = "未包含";

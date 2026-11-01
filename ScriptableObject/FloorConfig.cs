@@ -19,6 +19,7 @@ public class FloorEventCondition
 {
     [Header("樓層限制")]
     public int minFloorLevel = 1;
+    public bool limitMaxFloor = false;
     public int maxFloorLevel = 999;
 
     [Header("要有的 任務/紀錄 前置需求")]
@@ -37,7 +38,9 @@ public class FloorEventCondition
     public bool IsSatisfied(int currentFloor)
     {
         // 1. 樓層檢查
-        if (currentFloor <= minFloorLevel && currentFloor >= maxFloorLevel) 
+        if (currentFloor < minFloorLevel) 
+            return false;
+        if (limitMaxFloor && currentFloor > maxFloorLevel)
             return false;
 
         // 2. 接取過任務檢查
