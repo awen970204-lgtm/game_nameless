@@ -220,6 +220,7 @@ public class ToolController : MonoBehaviour
     }
     private void HandleSkillEnd(CharacterHealth act, Skill skill)
     {
+        if (act == null || skill == null) return;
         string acting = $"<color=#0080FF>{act.character_data.characterName}(P{act.ownerPlayer.Player_nunber})</color>";
         WriteReport($" {acting}發動完技能<color=#FFDD55>{skill.skillName}</color>");
     }

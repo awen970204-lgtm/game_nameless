@@ -21,11 +21,15 @@ public static class EffectExecutor
 
         foreach (var target in targetsCopy)
         {
+            yield return null;
             foreach (var effect in effectsCopy)
             {
-                yield return ExecuteEffectCoroutine(user, target, effect);
+                yield return null;
                 if (!LimitChecker.Limited(effect.targetNeeds, target, user))
+                {
+                    yield return ExecuteEffectCoroutine(user, target, effect);
                     yield return target.SpecialDisplay(effect.special, targetsCopy);
+                }
             }
         }
     }

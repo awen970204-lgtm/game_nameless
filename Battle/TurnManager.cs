@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Linq;
+using Unity.VisualScripting;
 
 public class TurnManager : MonoBehaviour
 {
@@ -18,6 +19,9 @@ public class TurnManager : MonoBehaviour
     public GameObject checkButton;
     public GameObject endTurnButton;
     public GameObject battleOverPanel;
+
+    public GameObject turnStartPanel;
+    public TMP_Text turnStartText;
 
     public Player player1;
     public Player player2;
@@ -141,17 +145,10 @@ public class TurnManager : MonoBehaviour
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
     }
-    void OnEnable()
-    {
-        
-    }
     void Start()
     {
         turnText.text = "Chosing Stage";
-    }
-    void OnDisable()
-    {
-        
+        turnStartPanel.SetActive(false);
     }
     
     public void Register(CharacterHealth character)// 註冊角色進行動清單
@@ -231,12 +228,51 @@ public class TurnManager : MonoBehaviour
         if (!IsBattleOver)
         {
             yield return new WaitUntil(()=> waitingForAction && !waitingForTarget && WaitCardManager.Instance.IsIdle);
-            StartTurn();
+            yield return StartTurn();
         }
     }
-    public void StartTurn()
+    private IEnumerator ShowTrunText()
     {
-        if (player1.playerCharacters.Count == 0 || player2.playerCharacters.Count == 0) return;
+        if (turnStartText == null) yield break;
+        RectTransform rectTransform = turnStartText.GetComponentInParent<RectTransform>();
+        if (rectTransform == null) yield break;
+
+        float t = 0f;
+        Vector2 basePosition = new Vector2 (0, 90);
+        Vector2 targetPosition = new Vector2 (0, 180);
+        rectTransform.anchoredPosition = basePosition;
+        
+        string pl = "";
+        switch(actingPlayer.team)
+        {
+            case TeamID.Team1:
+                pl = "player1";
+                break;
+            case TeamID.Team2:
+                pl = "player2";
+                break;
+            case TeamID.Enemy:
+                pl = "enemy";
+                break;
+        }
+
+        turnStartText.text = $"Turn {actingPlayer.turnCount}\n{pl}";
+
+        turnStartPanel.SetActive(true);
+        while (t < 2)
+        {
+            t += Time.deltaTime;
+            rectTransform.anchoredPosition = 
+                Vector2.Lerp(rectTransform.anchoredPosition, targetPosition, t / 2);
+            yield return null;
+        }
+        turnStartPanel.SetActive(false);
+    }
+
+    public IEnumerator StartTurn()
+    {
+        if (player1.playerCharacters.Count == 0 || player2.playerCharacters.Count == 0) 
+            yield break;
         // 清除實體
         foreach(var character in player1.playerCharacters.Where(c => !c.IsAlive))
         {
@@ -255,7 +291,7 @@ public class TurnManager : MonoBehaviour
         if (actingPlayer.playerCharacters.Count == 0)
         { 
             EndTurn(); 
-            return;
+            yield break;
         }
 
         if (actingPlayer.team != TeamID.Enemy)
@@ -286,6 +322,9 @@ public class TurnManager : MonoBehaviour
         TurnEnded = false;
         waitingForAction = true;
         endTurnButton?.SetActive(true);
+
+        yield return ShowTrunText();
+
         OnTurnStart?.Invoke(actingPlayer);
         
         // 開自動

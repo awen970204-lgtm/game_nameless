@@ -176,11 +176,20 @@ public class TooltipUI : MonoBehaviour
             DurationText.text = $"剩餘回合數:{currentDuration}";
         else DurationText.text = "";
 
-        if (Effect.stack > 1)
+        if (Effect.stack > 1 && Effect.effectData.MaxOverlay > 1)
             EffectOverlayText.text = $"疊加層數:{currentOverlay}/{Effect.effectData.MaxOverlay}";
-        else EffectOverlayText.text = "";
+        else if (Effect.effectData.MaxOverlay == 0)
+            EffectOverlayText.text = "";
+        else
+            EffectOverlayText.text = $"疊加層數:{currentOverlay}";
 
-        TriggerTimesText.text = $"剩餘觸發次數:{remainingTriggers}";
+        if (Effect.effectData.LimitedTimes)
+        {
+            TriggerTimesText.text = $"剩餘觸發次數:{remainingTriggers}";
+        }
+        else
+            TriggerTimesText.text = "";
+        
         EffectTooltipText.text = Effect.effectData.Introduse;
 
         CardTooltipPanel.SetActive(false);

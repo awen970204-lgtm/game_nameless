@@ -165,7 +165,11 @@ public class CharacterHealth : MonoBehaviour
     private void UpdateHPBars()
     {
         if (healthImage == null) return;
-        targetFill = Mathf.Clamp01((float)currentHealth / currentMaxHP);
+        if (currentMaxHP > 0)
+        {
+            targetFill = Mathf.Clamp01((float)currentHealth / currentMaxHP);
+        }
+        else targetFill = 0;
         greenBufferImage.fillAmount = targetFill;
 
         // 主血條
@@ -480,8 +484,11 @@ public class CharacterHealth : MonoBehaviour
                 case SpecialEffects.OnHeal_Normal:
                 case SpecialEffects.buff:
                 case SpecialEffects.debuff:
-                    Instantiate(ES, character_Picture.transform);
-                    ES.SetActive(true);
+                    if (character_Picture.transform != null)
+                    {
+                        GameObject nes = Instantiate(ES, character_Picture.transform);
+                        nes.SetActive(true);
+                    }
                     break;
             }
         }
@@ -492,7 +499,11 @@ public class CharacterHealth : MonoBehaviour
         if (healthText != null)
             healthText.text = $"{currentHealth}/{currentMaxHP}";
 
-        float newFill = Mathf.Clamp01((float)currentHealth / currentMaxHP);
+        float newFill = 0;
+        if (currentMaxHP > 0)
+        {
+            newFill = Mathf.Clamp01((float)currentHealth / currentMaxHP);
+        }
 
         if (newFill < healthImage.fillAmount)
         {
@@ -502,7 +513,7 @@ public class CharacterHealth : MonoBehaviour
                 greenBufferImage.fillAmount = newFill;
                 whiteMoving = true;
             }
-            Debug.Log($"{character_data.characterName}血量降低");
+            Debug.Log($"{character_data.characterName}血量比例降低");
             
             whiteDelayTimer = 0;
             targetFill = newFill;

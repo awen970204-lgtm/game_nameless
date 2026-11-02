@@ -33,7 +33,7 @@ public class SetManager : MonoBehaviour
         backgroundMusicVolumeSlider.onValueChanged.AddListener(ChangeBackgroundVolume);
         // 特效音量
         ChangeSpecialEffectsVolume(specialEffectsVolume);
-        specialEffectsVolumeSlider.onValueChanged.AddListener(ChangeBackgroundVolume);
+        specialEffectsVolumeSlider.onValueChanged.AddListener(ChangeSpecialEffectsVolume);
         // 自動接任務
         AutoAcceptQuest_Toggle.SetIsOnWithoutNotify(AutoAcceptQuest);
         AutoAcceptQuest_Toggle.onValueChanged.AddListener(ChangeAutoAccept);
